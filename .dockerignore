@@ -19,3 +19,4 @@ tests/
 *.db-shm
 *.db-wal
 README.md
+.ruff_cache
