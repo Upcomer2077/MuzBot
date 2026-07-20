@@ -1,0 +1,26 @@
+{
+  "python.analysis.autoImportCompletions": true,
+  "pylint.enabled": false,
+  "python.terminal.useEnvFile": true,
+  "ruff.enable": true,
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.fixAll": "explicit"
+    }
+  },
+  "python.analysis.typeCheckingMode": "basic",
+  "cSpell.words": [
+    "bestaudio",
+    "flac",
+    "kbps",
+    "outtmpl",
+    "postprocessors",
+    "preferredcodec",
+    "preferredquality",
+    "writethumbnail",
+    "ytmusicapi"
+  ]
+}
