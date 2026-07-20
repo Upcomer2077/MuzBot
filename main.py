@@ -19,6 +19,7 @@ commands = [
 
 async def main():
     print("Бот запущен...")
+
     dp.include_router(get_handlers_router())
     await AL.start_gc()
     await bot.delete_webhook(drop_pending_updates=True)

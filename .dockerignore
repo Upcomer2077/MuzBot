@@ -5,13 +5,17 @@ build/
 dist/
 wheels/
 *.egg-info
+.vscode/
+.git/
+data/
+tests/
 
 # Virtual environments
 .venv
 .cache
 .env*
-!.env.example
 .DS_Store
 *.db
 *.db-shm
 *.db-wal
+README.md

@@ -40,7 +40,7 @@ async def handle_download(callback: CallbackQuery):
     TTI = TempTrackStatusInfo()
     message = callback.message or await bot.bot.send_message(
         callback.from_user.id,
-        "|| Системное сообщение, исчезнет после загрузки ||",
+        "||Это системное сообщение, оно исчезнет после загрузки||",
         parse_mode="MarkdownV2",
     )
     answer = await message.answer(f"{TTI.base_answer}")

@@ -1,13 +1,12 @@
 [project]
 name = "muzbot"
-version = "1.0.0"
+version = "1.1.0"
 description = "Download music from youtube music to telegram"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "aiogram>=3.29.1",
     "aiosqlite>=0.22.1",
-    "ffmpeg>=1.4",
     "load-dotenv>=0.1.0",
     "peewee>=4.2.6",
     "peewee-aio>=3.1.6",

@@ -1,0 +1,27 @@
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: MuzBot
+    restart: unless-stopped
+
+    env_file:
+      - ./.env.dist
+      
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - CACHE_ROOT_DIR=${CACHE_ROOT_DIR}
+      - DATABASE_PATH=${DATABASE_PATH}
+
+    volumes:
+       - type: bind
+         source: ./data
+         target: /muzbot/data
+
+    healthcheck:
+      test: ["CMD", "python", "healthcheck.py"]
+      interval: 30s    # Как часто проверять
+      timeout: 8s      # Сколько ждать ответа от скрипта
+      retries: 3       # Количество неудачных попыток до статуса "unhealthy"
+      start_period: 1s # Сколько секунд дать боту на запуск перед первой проверкой

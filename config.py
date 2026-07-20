@@ -3,11 +3,11 @@ import re
 
 from dotenv import load_dotenv
 
-load_dotenv("./.env", override=True)
+load_dotenv("./.env.dist")
+
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CACHE_ROOT_DIR = os.environ["CACHE_ROOT_DIR"]
-DATABASE_DIR = os.environ["DATABASE_DIR"]
-DATABASE_FILENAME = os.environ["DATABASE_FILENAME"]
+DATABASE_PATH = os.environ["DATABASE_PATH"]
 
 MAX_TRACK_DURATION_SECONDS = 60 * 35
 YTM_REGEX = re.compile(

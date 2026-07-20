@@ -1,26 +1,21 @@
-import os
 from datetime import datetime
 
 from peewee_aio import Manager
 
-from config import DATABASE_DIR, DATABASE_FILENAME, MAX_TRACK_DURATION_SECONDS
+from config import DATABASE_PATH, MAX_TRACK_DURATION_SECONDS
 from dungeon.dispatcher import DB_DISPATCHER
 from dungeon.models import TrackCache
 from type import YoutubeSearchResultDict
 
 
 class DungeonMaster:
-    def __init__(self, db_dir: str, db_name: str, db_dispatcher: Manager):
-        self._db_dir = db_dir
-        self._db_name = db_name
+    def __init__(self, db_path: str, db_dispatcher: Manager):
+        self._db_path = db_path
         self._db_dispatcher = db_dispatcher
 
     async def open_dungeon(
         self,
     ):
-        """Создает таблицу в базе данных, если её нет."""
-        os.makedirs(self._db_dir, exist_ok=True)
-
         async with self._db_dispatcher:
             async with self._db_dispatcher.connection():
                 await TrackCache.create_table(safe=True)
@@ -58,7 +53,7 @@ class DungeonMaster:
             # Формируем массовый запрос
             query = TrackCache.insert_many(data_to_insert)
 
-            inserted_rows = await self._db_dispatcher.execute(query)
+            inserted_rows: int = await self._db_dispatcher.execute(query)
             return inserted_rows
 
         except Exception as e:
@@ -115,6 +110,10 @@ class DungeonMaster:
             print(e)
             return False
 
+    async def _get_slaves_count(self):
+        res = await TrackCache.select(TrackCache.video_id).count()
+        return res
+
     async def _finalize(self):
         query = TrackCache.update(is_work_in_progress=False).where(
             TrackCache.is_work_in_progress == True  # noqa: E712
@@ -125,4 +124,4 @@ class DungeonMaster:
             print(f"❌ Не удалось обновить базу данных при выключении: {e}")
 
 
-DM = DungeonMaster(DATABASE_DIR, DATABASE_FILENAME, DB_DISPATCHER)
+DM = DungeonMaster(DATABASE_PATH, DB_DISPATCHER)
