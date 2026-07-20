@@ -20,3 +20,4 @@ tests/
 *.db-wal
 README.md
 .ruff_cache
+.github
