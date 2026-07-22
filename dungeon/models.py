@@ -1,4 +1,6 @@
-from peewee import SQL, BooleanField, CharField, IntegerField
+from datetime import datetime
+
+from peewee import SQL, BooleanField, CharField, DateTimeField, IntegerField
 from peewee_aio import AIOModel
 
 from dungeon.dispatcher import DB_DISPATCHER
@@ -15,6 +17,7 @@ class TrackCache(AIOModel):
     track_duration = IntegerField(default=0)
     is_too_large = BooleanField(default=False, null=True)
     is_work_in_progress = BooleanField(default=False, null=True)
+    created_at = DateTimeField(default=datetime.now, null=True)
 
     class Meta:
         table_name = "tracks"
