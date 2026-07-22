@@ -41,7 +41,6 @@ class CacheOverlord:
             return True
         try:
             shutil.rmtree(p)
-            print(f"Successfully deleted: {p}")
             return True
         except FileNotFoundError:
             print(f"Error: The folder {p} does not exist.")
