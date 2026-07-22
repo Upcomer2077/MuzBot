@@ -60,6 +60,21 @@ class DungeonMaster:
             print(f"Ошибка при массовом сохранении треков: {e}")
             return 0
 
+    async def summon_slaves(self, video_ids: list[str]) -> dict[str, str]:
+        query = (
+            TrackCache.select(TrackCache.video_id, TrackCache.telegram_file_id)
+            .where(TrackCache.video_id.in_(video_ids))
+            .dicts()
+        )
+
+        rows: list[dict[str, str | None]] = await query
+
+        res: dict[str, str] = {}
+        for i in rows:
+            if i["video_id"] and i["telegram_file_id"]:
+                res[i["video_id"]] = i["telegram_file_id"]
+        return res
+
     async def summon_one(self, video_id: str):
         """Ищет трек по его video_id и возвращает в виде словаря."""
         try:

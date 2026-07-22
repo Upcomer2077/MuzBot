@@ -6,6 +6,7 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineQuery,
     InlineQueryResultArticle,
+    InlineQueryResultCachedAudio,
     InputTextMessageContent,
     LinkPreviewOptions,
 )
@@ -32,6 +33,8 @@ async def inline(q: InlineQuery):
         return
     await DM.enslave_bulk(search_result)
 
+    entities = await DM.summon_slaves([one["video_id"] for one in search_result])
+
     inline_results = []
     for idx, video in enumerate(search_result, start=1):
         v_id = video["video_id"]
@@ -41,23 +44,31 @@ async def inline(q: InlineQuery):
 
         if not v_id:
             continue
-
-        card = InlineQueryResultArticle(
-            id=v_id,
-            title=f"{artist} — {title}",
-            description=f"⏱ Длительность: {duration}",
-            hide_url=True,
-            # Текст, который отправится в чат, когда пользователь кликнет на трек
-            input_message_content=InputTextMessageContent(
-                link_preview_options=LinkPreviewOptions(is_disabled=True),
-                message_text=f"{artist} — {title} [{duration}]",
-                disable_web_page_preview=True,
-            ),
-            reply_markup=InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [InlineKeyboardButton(text="⬇️", callback_data=f"dl:{v_id}:{idx}")]
-                ]
-            ),
+        tg_audio_id = entities.get(v_id)
+        card = (
+            InlineQueryResultArticle(
+                id=v_id,
+                title=f"{artist} — {title}",
+                description=f"⏱ Длительность: {duration}",
+                hide_url=True,
+                # Текст, который отправится в чат, когда пользователь кликнет на трек
+                input_message_content=InputTextMessageContent(
+                    link_preview_options=LinkPreviewOptions(is_disabled=True),
+                    message_text=f"{artist} — {title} [{duration}]",
+                    disable_web_page_preview=True,
+                ),
+                reply_markup=InlineKeyboardMarkup(
+                    inline_keyboard=[
+                        [
+                            InlineKeyboardButton(
+                                text="⬇️", callback_data=f"dl:{v_id}:{idx}"
+                            )
+                        ]
+                    ]
+                ),
+            )
+            if not tg_audio_id
+            else InlineQueryResultCachedAudio(id=v_id, audio_file_id=tg_audio_id)
         )
         inline_results.append(card)
     await q.answer(
