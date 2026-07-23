@@ -1,5 +1,6 @@
 import os
 import re
+from concurrent.futures import ProcessPoolExecutor
 
 from dotenv import load_dotenv
 
@@ -8,6 +9,11 @@ load_dotenv("./.env.dist")
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CACHE_ROOT_DIR = os.environ["CACHE_ROOT_DIR"]
 DATABASE_PATH = os.environ["DATABASE_PATH"]
+CPU_COUNT = max(
+    (int(os.environ["CPU_COUNT"]) or os.cpu_count() or 1) - 1,
+    1,
+)
+CPU_POOL = ProcessPoolExecutor(CPU_COUNT, max_tasks_per_child=10)
 
 MAX_TRACK_DURATION_SECONDS = 60 * 35
 YTM_REGEX = re.compile(

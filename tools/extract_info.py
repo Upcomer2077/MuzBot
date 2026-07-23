@@ -36,7 +36,10 @@ async def extract_info(video_id: str):
 
     title: str = item.get("title") or "Unknown"
     artist = ", ".join(
-        [artist for artist in item.get("artists", [item.get("uploader", "Unknown")])]
+        [
+            artist
+            for artist in item.get("artists") or [item.get("uploader") or "Unknown"]
+        ]
     )
     duration: str = item.get("duration_string", "0:00")
     duration_seconds: int = int(item.get("duration", 0) or 0)

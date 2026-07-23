@@ -1,3 +1,4 @@
+import os
 from typing import TYPE_CHECKING
 
 import yt_dlp
@@ -24,18 +25,26 @@ def download(video_id: str):
                 "preferredquality": "192",  # Audio bitrate (192 kbps)
             },
         ],
+        "postprocessor_args": [
+            "-threads",
+            "2",  # Разрешаем использовать до 2 потоков на один процесс кодирования
+            "-vn",  # Вырезаем видео/картинки во время кодирования (обложку мы шлем отдельно)
+            "-sn",  # Отключаем субтитры
+            "-dn",  # Отключаем мусорные потоки данных
+        ],
         "no_warnings": True,
         "outtmpl": f"{CACHE_ROOT_DIR}/{video_id}/%(title)s.%(ext)s",  # Name the file based on the YouTube video title
         "sleep_interval": 5,
         "max_sleep_interval": 15,
         "quiet": True,
+        "retries": 3,
     }
-
+    print(f"Current dl-PID for {video_id}: {os.getpid()}")
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([youtube_url])
-    except Exception:
-        print("Something went wrong")
+    except Exception as e:
+        print("Something went wrong", e)
         return False
 
     return True
