@@ -15,12 +15,19 @@ def cleanup_config():
 
 class TestConfig:
     def test_db_path(self, monkeypatch):
-        monkeypatch.setenv("DATABASE_PATH", "MyENV")
+        monkeypatch.setenv("DB_NAME", "MyENV")
         from config import DATABASE_PATH
 
         assert DATABASE_PATH is not None
         assert type(DATABASE_PATH) is str
-        assert DATABASE_PATH == "MyENV"
+        assert DATABASE_PATH == f"{os.getcwd()}/data/{'MyENV'}.db"
+
+    def test_db_path_default(self, monkeypatch):
+        from config import DATABASE_PATH
+
+        assert DATABASE_PATH is not None
+        assert type(DATABASE_PATH) is str
+        assert DATABASE_PATH == f"{os.getcwd()}/data/db2.db"
 
     def test_bot_token(self, monkeypatch):
         monkeypatch.setenv("BOT_TOKEN", "MyENV")
@@ -73,10 +80,10 @@ class TestConfig:
             from config import QUERY_DOWNLOAD_LIMIT_SECS  # noqa: F401
 
     def test_CACHE_ROOT_DIR(self, monkeypatch):
-        monkeypatch.setenv("CACHE_ROOT_DIR", "CACHE_ROOT_DIR")
         from config import CACHE_ROOT_DIR
 
         assert CACHE_ROOT_DIR is not None
+        assert CACHE_ROOT_DIR == "./.cache"
 
     @pytest.mark.parametrize(
         "v,exp",

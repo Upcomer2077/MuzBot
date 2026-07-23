@@ -8,7 +8,8 @@ from type import YoutubeSearchResultDict
 
 async def check():
     try:
-        print("DB_PATH:", DATABASE_PATH)
+        print("\n-----HEALTH CHECK-----")
+        print("DB_CONTAINER_PATH:", DATABASE_PATH)
         await DM.open_dungeon()
         res = await DM._get_slaves_count()
         print(f"Slaves count: {res}")
@@ -38,6 +39,7 @@ async def check():
     finally:
         await DM.next_door(video_id="0")
         await DM.close_dungeon()
+        print("-----HEALTH CHECK END-----\n")
 
 
 if __name__ == "__main__":

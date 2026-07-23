@@ -48,7 +48,7 @@ async def on_shutdown():
 
 
 if __name__ == "__main__":
-    print("DATABASE_PATH ", DATABASE_PATH)
+    print("DATABASE_CONTAINER_PATH ", DATABASE_PATH)
     print("TRACKS_PER_LIMIT ", TRACKS_PER_LIMIT)
     print("QUERY_DOWNLOAD_LIMIT_SECS ", QUERY_DOWNLOAD_LIMIT_SECS)
     print("CACHE_ROOT_DIR ", CACHE_ROOT_DIR)
