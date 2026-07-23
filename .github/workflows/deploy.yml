@@ -39,8 +39,10 @@ jobs:
       - name: Run Ruff Formatter
         run: uv run ruff format --check .
 
-      # - name: Run Tests
-      #   run: uv run pytest 
+      - name: Run Tests
+        env:
+          PYTHONPATH: .
+        run: uv run pytest 
 
   build-and-push:
     runs-on: ubuntu-latest
