@@ -14,6 +14,7 @@
   "python.analysis.typeCheckingMode": "basic",
   "cSpell.words": [
     "bestaudio",
+    "cooldown",
     "flac",
     "healthcheck",
     "kbps",
