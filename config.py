@@ -6,15 +6,20 @@ from dotenv import load_dotenv
 
 load_dotenv("./.env.dist")
 
+# REQUIRED
 BOT_TOKEN = os.environ["BOT_TOKEN"]
-CACHE_ROOT_DIR = os.environ["CACHE_ROOT_DIR"]
 DATABASE_PATH = os.environ["DATABASE_PATH"]
-CPU_COUNT = max(
-    (int(os.environ["CPU_COUNT"]) or os.cpu_count() or 1) - 1,
-    1,
-)
-CPU_POOL = ProcessPoolExecutor(CPU_COUNT, max_tasks_per_child=10)
+# ------
+# SEMI_REQUIRED
+TRACKS_PER_LIMIT = max(int(os.environ["TRACKS_PER_LIMIT"]), 2)
+QUERY_DOWNLOAD_LIMIT_SECS = max(int(os.environ["QUERY_DOWNLOAD_LIMIT_SECS"]), 30)
+# -------------
+# OPTIONAL
+CACHE_ROOT_DIR = os.environ.get("CACHE_ROOT_DIR", "./.cache")
+CPU_COUNT = int(os.environ.get("CPU_COUNT", 0)) or os.cpu_count() or 1
 
+# --------------
+CPU_POOL = ProcessPoolExecutor(max(CPU_COUNT - 1, 1), max_tasks_per_child=10)
 MAX_TRACK_DURATION_SECONDS = 60 * 35
 YTM_REGEX = re.compile(
     r"(?:https?:\/\/)?music\.youtube\.com/watch\?.*v=([a-zA-Z0-9_\-]{11})"

@@ -6,7 +6,11 @@ from aiogram.types import CallbackQuery, Message
 
 import bot
 from action_limiter import AL
-from config import MAX_TRACK_DURATION_SECONDS
+from config import (
+    MAX_TRACK_DURATION_SECONDS,
+    QUERY_DOWNLOAD_LIMIT_SECS,
+    TRACKS_PER_LIMIT,
+)
 from dungeon import DM
 from helpers.finalize_download import finalize_download
 from helpers.prepare_audio_file_to_send import prepare_audio_file_to_send
@@ -96,6 +100,13 @@ async def handle_download(callback: CallbackQuery):
             await finalize_download(video_id, TTI)
     # ----------------
     if not TTI.cache_sent_successfully:
+        if not AL.is_download_allowed(callback.from_user.id):
+            await answer.edit_text(
+                f"Разрешено загружать не более {TRACKS_PER_LIMIT} треков за {QUERY_DOWNLOAD_LIMIT_SECS} сек"
+            )
+            await asyncio.sleep(5)
+            return answer.delete()
+
         await answer.edit_text(f"{TTI.base_answer}В кэше пусто... Загружаю")
         await DM.fisting(video_id, is_work_in_progress=True)
         await AL.send_action(message.chat.id)

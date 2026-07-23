@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TypedDict
+from typing import Required, TypedDict
 
 from aiogram.types import Message
 
@@ -15,6 +15,11 @@ class YoutubeSearchResultDict(TypedDict):
     title: str
     artist: str
     duration_seconds: int
+
+
+class UserQueryLimit(TypedDict):
+    semaphore: Required[int]
+    ts: Required[float]
 
 
 @dataclass
