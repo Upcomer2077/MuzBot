@@ -115,7 +115,8 @@ async def handle_download(callback: CallbackQuery):
 
         if not TTI.cache_data:
             await finalize_download(video_id, TTI)
-
+            if IS_FROM_INLINE_QUERY and isinstance(message, Message):
+                await message.delete()
             return answer.edit_text(
                 f"Что-то пошло не так при скачивании трека #{idx}... Повторите попытку"
             )
