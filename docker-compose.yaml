@@ -8,7 +8,7 @@ services:
 
     env_file:
       - ./.env
-      
+    init: true
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
       - CACHE_ROOT_DIR=${CACHE_ROOT_DIR}
@@ -21,7 +21,7 @@ services:
 
     healthcheck:
       test: ["CMD-SHELL", "python healthcheck.py > /proc/1/fd/1 2>&1 || exit 1"]
-      interval: 30s    # Как часто проверять
+      interval: 30m    # Как часто проверять
       timeout: 8s      # Сколько ждать ответа от скрипта
       retries: 3       # Количество неудачных попыток до статуса "unhealthy"
       start_period: 1s # Сколько секунд дать боту на запуск перед первой проверкой
