@@ -29,14 +29,14 @@ async def get_list(message: Message):
         return await status_msg.edit_text("404 🤷")
 
     builder = InlineKeyboardBuilder()
-    text = "**Найденные варианты:**\n\n"
+    text = "Найденные варианты:\n\n"
 
     for idx, video in enumerate(search_result, start=1):
         v_id = video["video_id"]
         title = video["title"]
         duration = video["duration"]
         artist = video["artist"]
-        text += f"#{idx}. {artist} - {title} \\[{duration}]\n"
+        text += f"#{idx}. {artist} — {title} [{duration}]\n"
 
         builder.button(
             text=f"⬇️{idx}",
@@ -49,6 +49,4 @@ async def get_list(message: Message):
 
     await DM.enslave_bulk(search_result)
 
-    await status_msg.edit_text(
-        text, reply_markup=builder.as_markup(), parse_mode="Markdown"
-    )
+    await status_msg.edit_text(text, reply_markup=builder.as_markup(), parse_mode=None)
