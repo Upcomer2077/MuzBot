@@ -15,14 +15,19 @@
   "cSpell.words": [
     "bestaudio",
     "cooldown",
+    "delenv",
     "flac",
+    "getpid",
     "healthcheck",
     "kbps",
+    "lokilogger",
+    "multilogger",
     "muzbot",
     "outtmpl",
     "postprocessors",
     "preferredcodec",
     "preferredquality",
+    "stdlogger",
     "writethumbnail",
     "ytmusicapi"
   ]

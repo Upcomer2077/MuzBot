@@ -2,7 +2,7 @@ from datetime import datetime
 
 from peewee_aio import Manager
 
-from config import DATABASE_PATH, MAX_TRACK_DURATION_SECONDS
+from config import DATABASE_PATH, LOGGER, MAX_TRACK_DURATION_SECONDS
 from dungeon.dispatcher import DB_DISPATCHER
 from dungeon.models import TrackCache
 from type import YoutubeSearchResultDict
@@ -16,14 +16,19 @@ class DungeonMaster:
     async def open_dungeon(
         self,
     ):
-        async with self._db_dispatcher:
-            async with self._db_dispatcher.connection():
-                await TrackCache.create_table(safe=True)
-                await self._db_dispatcher.execute("PRAGMA journal_mode=WAL;")
-                await self._db_dispatcher.execute("PRAGMA synchronous=NORMAL;")
-                await self._db_dispatcher.execute("PRAGMA foreign_keys=ON;")
-                await self._db_dispatcher.execute("PRAGMA auto_vacuum = INCREMENTAL;")
-        await self._finalize()
+        try:
+            async with self._db_dispatcher:
+                async with self._db_dispatcher.connection():
+                    await TrackCache.create_table(safe=True)
+                    await self._db_dispatcher.execute("PRAGMA journal_mode=WAL;")
+                    await self._db_dispatcher.execute("PRAGMA synchronous=NORMAL;")
+                    await self._db_dispatcher.execute("PRAGMA foreign_keys=ON;")
+                    await self._db_dispatcher.execute(
+                        "PRAGMA auto_vacuum = INCREMENTAL;"
+                    )
+            await self._finalize()
+        except Exception as e:
+            LOGGER.critical(f"Caught error while opening the dungeon: {e}")
 
     async def close_dungeon(self):
         await self._finalize()
@@ -57,7 +62,7 @@ class DungeonMaster:
             return inserted_rows
 
         except Exception as e:
-            print(f"Ошибка при массовом сохранении треков: {e}")
+            LOGGER.error(f"Bulk saving error: {e}")
             return 0
 
     async def summon_slaves(self, video_ids: list[str]) -> dict[str, str]:
@@ -86,7 +91,7 @@ class DungeonMaster:
                 return track
             return None
         except Exception as e:
-            print(f"Ошибка при поиске трека: {e}")
+            LOGGER.error(f"Can't find track {video_id} in database: {e}")
             return None
 
     async def next_door(self, video_id: str) -> bool:
@@ -96,7 +101,7 @@ class DungeonMaster:
             deleted_count = await self._db_dispatcher.execute(query)
             return deleted_count > 0
         except Exception as e:
-            print(f"Ошибка при удалении трека: {e}")
+            LOGGER.error(f"Can't delete track {video_id}: {e}")
             return False
 
     async def fisting(
@@ -122,7 +127,7 @@ class DungeonMaster:
             return rows_updated != 0
 
         except Exception as e:
-            print(e)
+            LOGGER.error(f"Caught error while updating records: {e}")
             return False
 
     async def _get_slaves_count(self):
@@ -136,7 +141,7 @@ class DungeonMaster:
         try:
             await DB_DISPATCHER.execute(query)
         except Exception as e:
-            print(f"❌ Не удалось обновить базу данных при выключении: {e}")
+            LOGGER.error(f"❌ Не удалось обновить базу данных при выключении: {e}")
 
 
 DM = DungeonMaster(DATABASE_PATH, DB_DISPATCHER)

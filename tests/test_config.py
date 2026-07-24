@@ -105,3 +105,11 @@ class TestConfig:
         monkeypatch.setenv("CPU_COUNT", "f")
         with pytest.raises(ValueError):
             from config import CPU_COUNT  # noqa: F401
+
+    def test_loki_url(self, monkeypatch):
+        monkeypatch.setenv("LOKI_URL", "myEnv")
+        from config import LOKI_URL
+
+        assert LOKI_URL is not None
+        assert LOKI_URL == "myEnv"
+        assert type(LOKI_URL) is str

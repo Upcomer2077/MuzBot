@@ -6,7 +6,7 @@ from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
 
 from action_limiter import AL
-from config import MAX_TRACK_DURATION_SECONDS, YTM_REGEX, YTM_VID_REGEX
+from config import LOGGER, MAX_TRACK_DURATION_SECONDS, YTM_REGEX, YTM_VID_REGEX
 from dungeon import DM
 from helpers.finalize_download import finalize_download
 from helpers.prepare_audio_file_to_send import prepare_audio_file_to_send
@@ -31,9 +31,11 @@ async def force(message: Message, command: CommandObject):
 
     video_id = YTM_VID_REGEX.search(link)
     if not video_id:
+        LOGGER.warn(f"Video id not recognized: {link}")
         return message.answer("Не удалось распознать идентификатор видео")
     # ---------------------------------
     TTI = TempTrackStatusInfo()
+
     answer = await message.answer(f"{TTI.base_answer}")
     video_id = video_id.group(1)
     track = await DM.summon_one(video_id)
@@ -54,7 +56,10 @@ async def force(message: Message, command: CommandObject):
                 TTI.is_work_in_progress = track.is_work_in_progress
                 TTI.is_too_large = track.is_too_large
                 TTI.tg_file_id = track.telegram_file_id
-
+            if i == 9:
+                LOGGER.warn(
+                    f"Awaiting work_in_progress mutex took {54} seconds or more."
+                )
             break
 
     # ---------------
@@ -71,7 +76,10 @@ async def force(message: Message, command: CommandObject):
             )
             TTI.cache_sent_successfully = True
         except Exception as e:
-            print(e)
+            LOGGER.error(
+                f"Error sending cached audio. tg file id: {TTI.tg_file_id}: {e}"
+            )
+
         finally:
             await finalize_download(video_id, TTI)
 
@@ -91,7 +99,7 @@ async def force(message: Message, command: CommandObject):
 
         await DM.enslave_bulk([res])
 
-        if TTI.track_duration > MAX_TRACK_DURATION_SECONDS:
+        if TTI.track_duration and (TTI.track_duration > MAX_TRACK_DURATION_SECONDS):
             await DM.fisting(video_id, is_too_large=True)
             return answer.edit_text(
                 f"Длительность видео превышает {int(MAX_TRACK_DURATION_SECONDS / 60)} минут. Скачать не выйдет"
@@ -116,6 +124,7 @@ async def force(message: Message, command: CommandObject):
 
         await AL.send_action(message.chat.id)
         try:
+            LOGGER.info(f"Uploading audio {video_id}")
             TTI.sent_message = await answer_audio(
                 message,
                 audio_file=audio_file,
@@ -123,11 +132,10 @@ async def force(message: Message, command: CommandObject):
                 title=TTI.title,
                 artist=TTI.artist,
             )
+            LOGGER.info(f"Uploaded successfully {video_id}")
 
         except TelegramNetworkError as e:
-            print(e)
             if e.message.find("Request Entity Too Large") != -1:
-                print("Request Entity Too Large")
                 COLD.annihilate(video_id)
                 await DM.fisting(
                     video_id,
@@ -137,10 +145,12 @@ async def force(message: Message, command: CommandObject):
                 )
 
                 return answer.edit_text("Размер файла превышает 50М. Скачать не выйдет")
+            LOGGER.error(f"Network error: VID: {video_id}: {e}")
+
             return answer.edit_text("Ошибка сети. Повторите попытку")
 
         except Exception as e:
-            print(e)
+            LOGGER.error(f"Error sending audio. VID:{video_id}: {e}")
             return answer.edit_text(
                 "Что-то пошло не так при выгрузке трека... Повторите попытку"
             )

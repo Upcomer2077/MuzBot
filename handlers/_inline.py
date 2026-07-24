@@ -22,7 +22,7 @@ router = Router()
 @router.inline_query()
 async def inline(q: InlineQuery):
     if not q.query:
-        return
+        return q.answer([])
 
     query = prettify_incoming_query(q.query)
     search_result: list[YoutubeSearchResultDict] = await asyncio.shield(

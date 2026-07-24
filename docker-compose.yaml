@@ -20,10 +20,52 @@ services:
        - type: bind
          source: ./data
          target: /muzbot/data
-
+    networks:
+      - bot
+    # REMOVE IF YOU DON'T NEED LOKI 
+    depends_on:
+      loki:
+        condition: service_healthy
+        required: false
     healthcheck:
       test: ["CMD-SHELL", "python healthcheck.py > /proc/1/fd/1 2>&1 || exit 1"]
-      interval: 30m    # Как часто проверять
+      interval: 5m    # Как часто проверять
       timeout: 8s      # Сколько ждать ответа от скрипта
       retries: 3       # Количество неудачных попыток до статуса "unhealthy"
       start_period: 1s # Сколько секунд дать боту на запуск перед первой проверкой
+
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: loki_service
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - bot
+    healthcheck:
+      # Запрашиваем локальный эндпоинт готовности Loki с помощью утилиты wget (она встроена в образ Loki)
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3100/ready | grep -q 'ready' || exit 1"]
+      interval: 3s     # Проверяем каждые 3 секунды во время старта
+      timeout: 2s      # Таймаут на ответ
+      retries: 5       # Делаем до 5 попыток
+      start_period: 2s # Даем Loki 2 секунды на первичную инициализацию
+
+    profiles: [mon]
+
+  # Веб-панель Grafana для просмотра логов
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: grafana_service
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - bot
+    depends_on:
+      - loki
+    profiles: [mon]
+    
+networks:
+  bot:
+    driver: bridge

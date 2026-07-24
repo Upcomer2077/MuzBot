@@ -1,7 +1,7 @@
 import asyncio
 from typing import Callable
 
-from config import CPU_POOL
+from config import CPU_POOL, LOGGER
 from overlord import COLD
 
 
@@ -12,7 +12,10 @@ async def pull_data_from_cache(video_id: str, download: Callable[[str], bool]):
         return cache_data
 
     loop = asyncio.get_event_loop()
-    success = await loop.run_in_executor(CPU_POOL, download, video_id)
+    try:
+        success = await loop.run_in_executor(CPU_POOL, download, video_id)
+    except Exception as e:
+        LOGGER.warn(f"Error while running in executor!!! {e}")
     if not success:
         return False
 

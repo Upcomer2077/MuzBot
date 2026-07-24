@@ -7,6 +7,7 @@ from aiogram.types import CallbackQuery, Message
 import bot
 from action_limiter import AL
 from config import (
+    LOGGER,
     MAX_TRACK_DURATION_SECONDS,
     QUERY_DOWNLOAD_LIMIT_SECS,
     TRACKS_PER_LIMIT,
@@ -28,6 +29,7 @@ async def handle_download(callback: CallbackQuery):
     IS_FROM_INLINE_QUERY = callback.message is None
 
     if not callback.data:
+        LOGGER.critical("Callback data not found!!!")
         return callback.answer("Что-то пошло не так... Повторите попытку")
     await callback.answer()
 
@@ -37,11 +39,13 @@ async def handle_download(callback: CallbackQuery):
     idx = cbd.split(":")[2]
 
     if len(video_id) == 0:
+        LOGGER.error("Video_id param len is 0")
         return callback.answer(
             f"Что-то пошло не так при загрузке трека #{idx}... Повторите попытку"
         )
     # --------------
     TTI = TempTrackStatusInfo()
+
     message = callback.message or await bot.bot.send_message(
         callback.from_user.id,
         "||Это системное сообщение, оно исчезнет после загрузки||",
@@ -49,6 +53,7 @@ async def handle_download(callback: CallbackQuery):
     )
     answer = await message.answer(f"{TTI.base_answer}")
     track = await DM.summon_one(video_id)
+
     if track:
         TTI.fill_from(track)
 
@@ -68,7 +73,10 @@ async def handle_download(callback: CallbackQuery):
                 TTI.is_work_in_progress = track.is_work_in_progress
                 TTI.is_too_large = track.is_too_large
                 TTI.tg_file_id = track.telegram_file_id
-
+            if i == 9:
+                LOGGER.warn(
+                    f"Awaiting work_in_progress mutex took {54} seconds or more."
+                )
             break
 
     if TTI.is_too_large:
@@ -88,7 +96,9 @@ async def handle_download(callback: CallbackQuery):
             )
             TTI.cache_sent_successfully = True
         except Exception as e:
-            print(e)
+            LOGGER.error(
+                f"Error sending cached audio. tg file id: {TTI.tg_file_id}:{e}"
+            )
         finally:
             if IS_FROM_INLINE_QUERY and isinstance(message, Message):
                 await message.delete()
@@ -124,6 +134,7 @@ async def handle_download(callback: CallbackQuery):
         ) = prepare_audio_file_to_send(TTI.cache_data)
         await AL.send_action(message.chat.id)
         try:
+            LOGGER.info(f"Uploading audio {video_id}")
             TTI.sent_message = await answer_audio(
                 message,
                 audio_file=audio_file,
@@ -131,11 +142,10 @@ async def handle_download(callback: CallbackQuery):
                 title=TTI.title,
                 artist=TTI.artist,
             )
+            LOGGER.info(f"Uploaded successfully {video_id}")
 
         except TelegramNetworkError as e:
-            print(e)
             if e.message.find("Request Entity Too Large") != -1:
-                print("Request Entity Too Large")
                 COLD.annihilate(video_id)
                 await DM.fisting(
                     video_id,
@@ -145,10 +155,12 @@ async def handle_download(callback: CallbackQuery):
                 )
 
                 return answer.edit_text("Размер файла превышает 50М. Скачать не выйдет")
+            LOGGER.error(f"Network error: VID: {video_id}: {e}")
+
             return answer.edit_text("Ошибка сети. Повторите попытку")
 
         except Exception as e:
-            print(e)
+            LOGGER.error(f"Error sending audio. VID:{video_id}: {e}")
             return answer.edit_text(
                 f"Что-то пошло не так при выгрузке трека #{idx}... Повторите попытку"
             )

@@ -1,12 +1,16 @@
 from ytmusicapi import YTMusic
 
+from config import LOGGER
 from type import YoutubeSearchResultDict
 
 
 def search(search_query: str, limit: int = 10):
     yt = YTMusic()
 
-    search_results = yt.search(query=search_query, filter="songs", limit=limit)
+    try:
+        search_results = yt.search(query=search_query, filter="songs", limit=limit)
+    except Exception:
+        LOGGER.critical(f'Can\'t pull info from "{search_query}" query')
     video_ids: list[YoutubeSearchResultDict] = []
 
     for item in search_results[: 10 if limit > 10 else limit]:

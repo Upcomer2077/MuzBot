@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 import yt_dlp
 
+from config import LOGGER
 from helpers.get_ytm_video_link import get_ytm_video_link
 from type import YoutubeSearchResultDict
 
@@ -22,11 +23,12 @@ async def extract_info(video_id: str):
 
     def _extract():
         try:
+            LOGGER.info(f"Extracting info about video {video_id}")
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 return ydl.extract_info(url, download=False)
 
         except Exception as e:
-            print(f"Видео {video_id} недоступно или удалено: {e}")
+            LOGGER.error(f"Error while getting {video_id} info: {e}")
             return None
 
     item = await asyncio.shield(asyncio.to_thread(_extract))

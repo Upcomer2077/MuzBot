@@ -1,7 +1,7 @@
 import shutil
 from glob import glob
 
-from config import CACHE_ROOT_DIR
+from config import CACHE_ROOT_DIR, LOGGER
 from type import TrackDirContentDict
 
 
@@ -43,10 +43,10 @@ class CacheOverlord:
             shutil.rmtree(p)
             return True
         except FileNotFoundError:
-            print(f"Error: The folder {p} does not exist.")
+            LOGGER.error(f"Cache drop error: The folder {p} does not exist")
             return False
         except PermissionError:
-            print(f"Error: You do not have permission to delete {p}.")
+            LOGGER.error(f"Cache drop error: You do not have permission to delete {p}")
             return False
 
 

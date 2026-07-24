@@ -4,6 +4,8 @@ from concurrent.futures import ProcessPoolExecutor
 
 from dotenv import load_dotenv
 
+from _logger.multilogger import MultiLogger
+
 load_dotenv("./.env.dist")
 
 # REQUIRED
@@ -14,6 +16,7 @@ TRACKS_PER_LIMIT = max(int(os.environ["TRACKS_PER_LIMIT"]), 2)
 QUERY_DOWNLOAD_LIMIT_SECS = max(int(os.environ["QUERY_DOWNLOAD_LIMIT_SECS"]), 30)
 # -------------
 # OPTIONAL
+LOKI_URL = os.environ.get("LOKI_URL")
 CPU_COUNT = int(os.environ.get("CPU_COUNT", 0)) or os.cpu_count() or 1
 DB_NAME = os.environ.get("DB_NAME") or "db2"
 # --------------
@@ -27,3 +30,5 @@ YTM_REGEX = re.compile(
 YTM_VID_REGEX = re.compile(
     r"v=([a-zA-Z0-9_\-]{11})",
 )
+
+LOGGER = MultiLogger("LG1", LOKI_URL)

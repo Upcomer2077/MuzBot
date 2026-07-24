@@ -5,7 +5,7 @@ from aiogram import Bot
 from aiogram.enums import ChatAction
 
 import bot
-from config import QUERY_DOWNLOAD_LIMIT_SECS, TRACKS_PER_LIMIT
+from config import LOGGER, QUERY_DOWNLOAD_LIMIT_SECS, TRACKS_PER_LIMIT
 from type import UserQueryLimit
 
 
@@ -23,6 +23,7 @@ class LightLimiter:
         self._garbage_collector_tasks: list[asyncio.Task] = []
 
     async def start_gc(self):
+        LOGGER.info("Starting Limiter garbage cleaner")
         self._garbage_collector_tasks = [
             asyncio.create_task(self._garbage_collector()),
             asyncio.create_task(self._garbage_collector2()),
