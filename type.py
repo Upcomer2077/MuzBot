@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Required, TypedDict
 
+from aiogram.filters.callback_data import CallbackData
 from aiogram.types import Message
 
 if TYPE_CHECKING:
@@ -46,3 +47,8 @@ class TempTrackStatusInfo:
         self.is_too_large = track.is_too_large
         self.track_duration = track.track_duration
         self.is_work_in_progress = track.is_work_in_progress
+
+
+class DownloadCallback(CallbackData, prefix="dl"):
+    video_id: str
+    idx: str
