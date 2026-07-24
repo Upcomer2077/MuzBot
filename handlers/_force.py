@@ -75,7 +75,6 @@ async def force(message: Message, command: CommandObject):
         )
     if TTI.tg_file_id:
         try:
-            await answer.edit_text(f"{TTI.base_answer}Попадание в кэш! Отправляю...")
             await AL.send_action(message.chat.id)
             TTI.sent_message = await answer_audio_cached(
                 message, audio_file=TTI.tg_file_id

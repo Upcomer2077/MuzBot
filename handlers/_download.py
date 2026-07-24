@@ -17,6 +17,7 @@ from helpers.finalize_download import finalize_download
 from helpers.prepare_audio_file_to_send import prepare_audio_file_to_send
 from helpers.pull_data_from_cache import pull_data_from_cache
 from tools.download import download
+from tools.extract_info import extract_info
 from tools.send_audio import answer_audio, answer_audio_cached
 from type import DownloadCallback, TempTrackStatusInfo
 
@@ -49,6 +50,12 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
         await message.delete()
 
     track = await DM.summon_one(video_id)
+    if not track:
+        res = await extract_info(video_id)
+        if not res:
+            return message.answer("Не удалось найти информацию о видео")
+        await DM.enslave_bulk([res])
+        track = await DM.summon_one(video_id)
 
     if track:
         TTI.fill_from(track)
@@ -82,7 +89,6 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
 
     if TTI.tg_file_id:
         try:
-            await answer.edit_text(f"{TTI.base_answer}Попадание в кэш! Отправляю...")
             await AL.send_action(chat_id)
 
             TTI.sent_message = await answer_audio_cached(
