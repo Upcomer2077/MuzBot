@@ -16,7 +16,6 @@ from dungeon import DM
 from helpers.finalize_download import finalize_download
 from helpers.prepare_audio_file_to_send import prepare_audio_file_to_send
 from helpers.pull_data_from_cache import pull_data_from_cache
-from overlord import COLD
 from tools.download import download
 from tools.send_audio import answer_audio, answer_audio_cached
 from type import TempTrackStatusInfo
@@ -146,13 +145,8 @@ async def handle_download(callback: CallbackQuery):
 
         except TelegramNetworkError as e:
             if e.message.find("Request Entity Too Large") != -1:
-                COLD.annihilate(video_id)
-                await DM.fisting(
-                    video_id,
-                    None,
-                    True,
-                    is_work_in_progress=False,
-                )
+                TTI.is_too_large = True
+                await finalize_download(video_id, TTI)
 
                 return answer.edit_text("Размер файла превышает 50М. Скачать не выйдет")
             LOGGER.error(f"Network error: VID: {video_id}: {e}")

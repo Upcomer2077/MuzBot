@@ -6,12 +6,18 @@ from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
 
 from action_limiter import AL
-from config import LOGGER, MAX_TRACK_DURATION_SECONDS, YTM_REGEX, YTM_VID_REGEX
+from config import (
+    LOGGER,
+    MAX_TRACK_DURATION_SECONDS,
+    QUERY_DOWNLOAD_LIMIT_SECS,
+    TRACKS_PER_LIMIT,
+    YTM_REGEX,
+    YTM_VID_REGEX,
+)
 from dungeon import DM
 from helpers.finalize_download import finalize_download
 from helpers.prepare_audio_file_to_send import prepare_audio_file_to_send
 from helpers.pull_data_from_cache import pull_data_from_cache
-from overlord import COLD
 from tools.download import download
 from tools.extract_info import extract_info
 from tools.send_audio import answer_audio, answer_audio_cached
@@ -84,22 +90,29 @@ async def force(message: Message, command: CommandObject):
             await finalize_download(video_id, TTI)
 
     if not TTI.cache_sent_successfully:
-        await AL.send_action(message.chat.id)
+        if message.from_user and not AL.is_download_allowed(message.from_user.id):
+            await answer.edit_text(
+                f"Разрешено загружать не более {TRACKS_PER_LIMIT} треков за {QUERY_DOWNLOAD_LIMIT_SECS} сек"
+            )
+            await asyncio.sleep(5)
+            return answer.delete()
 
         res = await extract_info(video_id)
 
         if not res:
             return message.answer("Не удалось найти информацию о видео")
 
-        TTI.title, TTI.artist, TTI.track_duration = (
-            res["title"],
-            res["artist"],
-            res["duration_seconds"],
-        )
+        await AL.send_action(message.chat.id)
 
         await DM.enslave_bulk([res])
+        track = await DM.summon_one(video_id)
+        if not track:
+            LOGGER.error(f"Error while forcing track {video_id}")
+            return answer.edit_text("Ошибка при скачивании трека. Повторите попытку")
 
-        if TTI.track_duration and (TTI.track_duration > MAX_TRACK_DURATION_SECONDS):
+        TTI.fill_from(track)
+
+        if track.is_too_large:
             await DM.fisting(video_id, is_too_large=True)
             return answer.edit_text(
                 f"Длительность видео превышает {int(MAX_TRACK_DURATION_SECONDS / 60)} минут. Скачать не выйдет"
@@ -136,13 +149,8 @@ async def force(message: Message, command: CommandObject):
 
         except TelegramNetworkError as e:
             if e.message.find("Request Entity Too Large") != -1:
-                COLD.annihilate(video_id)
-                await DM.fisting(
-                    video_id,
-                    None,
-                    True,
-                    is_work_in_progress=False,
-                )
+                TTI.is_too_large = True
+                await finalize_download(video_id, TTI)
 
                 return answer.edit_text("Размер файла превышает 50М. Скачать не выйдет")
             LOGGER.error(f"Network error: VID: {video_id}: {e}")
