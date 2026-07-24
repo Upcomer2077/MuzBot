@@ -1,7 +1,10 @@
 from dataclasses import dataclass
-from typing import Required, TypedDict
+from typing import TYPE_CHECKING, Required, TypedDict
 
 from aiogram.types import Message
+
+if TYPE_CHECKING:
+    from dungeon.models import TrackCache
 
 
 class TrackDirContentDict(TypedDict):
@@ -30,8 +33,16 @@ class TempTrackStatusInfo:
     track_duration: int | None = None
     is_too_large: bool | None = None
     is_work_in_progress: bool | None = None
-
-    base_answer = "⏳ Обрабатываю запрос (это займет несколько секунд)...\n"
+    # -----
+    base_answer = "⏳ Обрабатываю запрос (это займет несколько секунд)\n"
     cache_data: TrackDirContentDict | bool = False
     cache_sent_successfully = False
     sent_message: Message | None = None
+
+    def fill_from(self, track: "TrackCache"):
+        self.title = track.title
+        self.artist = track.artist
+        self.tg_file_id = track.telegram_file_id
+        self.is_too_large = track.is_too_large
+        self.track_duration = track.track_duration
+        self.is_work_in_progress = track.is_work_in_progress

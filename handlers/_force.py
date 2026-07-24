@@ -39,12 +39,7 @@ async def force(message: Message, command: CommandObject):
     track = await DM.summon_one(video_id)
 
     if track:
-        TTI.title = track.title
-        TTI.artist = track.artist
-        TTI.tg_file_id = track.telegram_file_id
-        TTI.track_duration = track.track_duration
-        TTI.is_too_large = track.is_too_large
-        TTI.is_work_in_progress = track.is_work_in_progress
+        TTI.fill_from(track)
 
         # --------------
     if TTI.is_work_in_progress:

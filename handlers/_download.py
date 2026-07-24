@@ -50,12 +50,7 @@ async def handle_download(callback: CallbackQuery):
     answer = await message.answer(f"{TTI.base_answer}")
     track = await DM.summon_one(video_id)
     if track:
-        TTI.title = track.title
-        TTI.artist = track.artist
-        TTI.tg_file_id = track.telegram_file_id
-        TTI.is_too_large = track.is_too_large
-        TTI.track_duration = track.track_duration
-        TTI.is_work_in_progress = track.is_work_in_progress
+        TTI.fill_from(track)
 
     # --------------
     if TTI.is_work_in_progress:
