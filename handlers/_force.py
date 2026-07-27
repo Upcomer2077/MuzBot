@@ -19,6 +19,7 @@ from helpers.finalize_download import finalize_download
 from helpers.prepare_audio_file_to_send import prepare_audio_file_to_send
 from helpers.pull_data_from_cache import pull_data_from_cache
 from tools.extract_info import extract_info
+from tools.send_action import send_action
 from tools.send_audio import answer_audio, answer_audio_cached
 from type import TempTrackStatusInfo
 
@@ -44,6 +45,7 @@ async def force(message: Message, command: CommandObject):
     answer = await message.answer(f"{TTI.base_answer}")
     video_id = video_id.group(1)
     track = await DM.summon_one(video_id)
+    chat_id = message.chat.id
 
     if track:
         TTI.fill_from(track)
@@ -52,7 +54,8 @@ async def force(message: Message, command: CommandObject):
     if TTI.is_work_in_progress:
         for i in range(10):
             await asyncio.sleep(6)
-            await AL.send_action(message.chat.id)
+            if AL.is_allowed_send_action(chat_id):
+                await send_action(chat_id)
 
             track = await DM.summon_one(video_id)
             if track:
@@ -74,7 +77,9 @@ async def force(message: Message, command: CommandObject):
         )
     if TTI.tg_file_id:
         try:
-            await AL.send_action(message.chat.id)
+            if AL.is_allowed_send_action(chat_id):
+                await send_action(chat_id)
+
             TTI.sent_message = await answer_audio_cached(
                 message, audio_file=TTI.tg_file_id
             )
@@ -100,7 +105,8 @@ async def force(message: Message, command: CommandObject):
         if not res:
             return message.answer("Не удалось найти информацию о видео")
 
-        await AL.send_action(message.chat.id)
+        if AL.is_allowed_send_action(chat_id):
+            await send_action(chat_id)
 
         await DM.enslave_bulk([res])
         track = await DM.summon_one(video_id)
@@ -133,7 +139,9 @@ async def force(message: Message, command: CommandObject):
             thumb_file,
         ) = prepare_audio_file_to_send(TTI.cache_data)
 
-        await AL.send_action(message.chat.id)
+        if AL.is_allowed_send_action(chat_id):
+            await send_action(chat_id)
+
         try:
             LOGGER.info(f"Uploading audio {video_id}")
             TTI.sent_message = await answer_audio(

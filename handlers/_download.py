@@ -4,8 +4,8 @@ from aiogram import Router
 from aiogram.exceptions import TelegramNetworkError
 from aiogram.types import CallbackQuery, Message
 
-from _logger import LOGGER
 import bot
+from _logger import LOGGER
 from action_limiter import AL
 from config import (
     MAX_TRACK_DURATION_SECONDS,
@@ -17,6 +17,7 @@ from helpers.finalize_download import finalize_download
 from helpers.prepare_audio_file_to_send import prepare_audio_file_to_send
 from helpers.pull_data_from_cache import pull_data_from_cache
 from tools.extract_info import extract_info
+from tools.send_action import send_action
 from tools.send_audio import answer_audio, answer_audio_cached
 from type import DownloadCallback, TempTrackStatusInfo
 
@@ -66,7 +67,8 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
         )
         for i in range(10):
             await asyncio.sleep(6)
-            await AL.send_action(chat_id)
+            if AL.is_allowed_send_action(chat_id):
+                await send_action(chat_id)
 
             track = await DM.summon_one(video_id)
             if track:
@@ -88,7 +90,8 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
 
     if TTI.tg_file_id:
         try:
-            await AL.send_action(chat_id)
+            if AL.is_allowed_send_action(chat_id):
+                await send_action(chat_id)
 
             TTI.sent_message = await answer_audio_cached(
                 message, audio_file=TTI.tg_file_id
@@ -111,7 +114,8 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
 
         await answer.edit_text(f"{TTI.base_answer}В кэше пусто... Загружаю")
         await DM.fisting(video_id, is_work_in_progress=True)
-        await AL.send_action(chat_id)
+        if AL.is_allowed_send_action(chat_id):
+            await send_action(chat_id)
 
         TTI.cache_data = await pull_data_from_cache(video_id)
 
@@ -127,7 +131,8 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
             audio_file,
             thumb_file,
         ) = prepare_audio_file_to_send(TTI.cache_data)
-        await AL.send_action(chat_id)
+        if AL.is_allowed_send_action(chat_id):
+            await send_action(chat_id)
         try:
             LOGGER.info(f"Uploading audio {video_id}")
             TTI.sent_message = await answer_audio(

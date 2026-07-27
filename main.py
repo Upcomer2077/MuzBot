@@ -45,7 +45,7 @@ async def on_startup():
 @dp.shutdown()
 async def on_shutdown():
     await DM.close_dungeon()
-    await AL.close()
+    await AL.close_gc()
     CPU_POOL.shutdown(cancel_futures=True)
     LOGGER.info("Graceful shutdown. Bye!")
 
