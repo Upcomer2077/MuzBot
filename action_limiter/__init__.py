@@ -26,7 +26,6 @@ class LightLimiter:
         LOGGER.info("Starting Limiter garbage cleaner")
         self._garbage_collector_tasks = [
             asyncio.create_task(self._garbage_collector()),
-            asyncio.create_task(self._garbage_collector2()),
         ]
 
     async def send_action(
@@ -62,45 +61,37 @@ class LightLimiter:
             return False
         return True
 
-    async def _garbage_collector2(self):
-        try:
-            while True:
-                await asyncio.sleep(10)  # Спим 10 секунд
-                now = time.time()
-                if len(self._queries_bank) < 20:
-                    continue
-                expired_limits = [
-                    user_id
-                    for user_id, info in self._queries_bank.items()
-                    if now - info["ts"] > self._QUERIES_COOLDOWN_SECS
-                ]
-                for chat_id in expired_limits:
-                    self._queries_bank.pop(chat_id)
-        except asyncio.CancelledError, KeyboardInterrupt:
-            pass
+    async def close(self):
+        for t in self._garbage_collector_tasks:
+            t.cancel()
 
-    async def _garbage_collector(self) -> None:
+    async def _garbage_collector(self):
         try:
             while True:
                 await asyncio.sleep(10)  # Спим 10 секунд
                 now = time.time()
-                if len(self._actions_bank) < 20:
+
+                if (len(self._actions_bank) < 20) or (len(self._queries_bank) < 20):
                     continue
+
                 expired_chats = [
                     chat_id
                     for chat_id, last_time in self._actions_bank.items()
                     if now - last_time > self._ACTIONS_COOLDOWN
                 ]
+                expired_limits = [
+                    user_id
+                    for user_id, info in self._queries_bank.items()
+                    if now - info["ts"] > self._QUERIES_COOLDOWN_SECS
+                ]
 
                 # Удаляем их из памяти
                 for chat_id in expired_chats:
                     self._actions_bank.pop(chat_id)
+                for chat_id in expired_limits:
+                    self._queries_bank.pop(chat_id)
         except asyncio.CancelledError, KeyboardInterrupt:
             pass
-
-    async def close(self):
-        for t in self._garbage_collector_tasks:
-            t.cancel()
 
 
 AL = LightLimiter(bot.bot)
