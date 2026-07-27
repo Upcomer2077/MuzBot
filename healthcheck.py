@@ -8,7 +8,7 @@ from dungeon import DM
 from type import YoutubeSearchResultDict
 
 
-async def check_loki():
+async def _check_loki():
     LOGGER.info("---LOKI---")
     if LOKI_URL is None:
         LOGGER.info("LOKI_URL is None")
@@ -23,7 +23,7 @@ async def check_loki():
     return LOGGER.info("Loki check: pass")
 
 
-async def check_database():
+async def _check_database():
     LOGGER.info("---DATABASE---")
     LOGGER.info(f"DB_CONTAINER_PATH: {DATABASE_PATH}")
     await DM.open_dungeon()
@@ -51,11 +51,11 @@ async def check_database():
         raise Exception("Database I/O error")
 
 
-async def check():
+async def _check():
     try:
         LOGGER.info("-----HEALTH CHECK-----")
-        await check_database()
-        await check_loki()
+        await _check_database()
+        await _check_loki()
     except Exception as e:
         LOGGER.critical(f"{e}")
         sys.exit(1)
@@ -66,4 +66,4 @@ async def check():
 
 
 if __name__ == "__main__":
-    asyncio.run(check())
+    asyncio.run(_check())
