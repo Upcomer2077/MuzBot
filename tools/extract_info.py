@@ -1,5 +1,5 @@
 import asyncio
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import yt_dlp
 
@@ -11,45 +11,44 @@ if TYPE_CHECKING:
     from yt_dlp import _Params
 
 
-async def extract_info(video_id: str):
-    item = await asyncio.shield(asyncio.to_thread(_extract, video_id))
+async def extract_video_info(video_id: str) -> Optional[YoutubeSearchResultDict]:
+    VIDEO = await asyncio.shield(asyncio.to_thread(_extract, video_id))
 
-    if not item:
-        return None
+    if VIDEO:
+        title: str = VIDEO.get("title") or "Unknown"
+        artist = ", ".join(
+            [
+                artist
+                for artist in VIDEO.get("artists")
+                or [VIDEO.get("uploader") or "Unknown"]
+            ]
+        )
+        duration: str = VIDEO.get("duration_string", "0:00")
+        duration_seconds: int = int(VIDEO.get("duration", 0) or 0)
 
-    title: str = item.get("title") or "Unknown"
-    artist = ", ".join(
-        [
-            artist
-            for artist in item.get("artists") or [item.get("uploader") or "Unknown"]
-        ]
-    )
-    duration: str = item.get("duration_string", "0:00")
-    duration_seconds: int = int(item.get("duration", 0) or 0)
-
-    return YoutubeSearchResultDict(
-        title=title,
-        artist=artist,
-        video_id=video_id,
-        duration=duration,
-        duration_seconds=duration_seconds,
-    )
+        return YoutubeSearchResultDict(
+            title=title,
+            artist=artist,
+            video_id=video_id,
+            duration=duration,
+            duration_seconds=duration_seconds,
+        )
 
 
 def _extract(
     video_id: str,
 ):
-    ydl_opts: "_Params" = {
+    YDL_OPTS: "_Params" = {
         "extract_flat": True,  # Не зарываться в форматы, только метаданные
         "no_warnings": True,
         "quiet": True,
     }
-    url = get_ytm_video_link(video_id)
+    URL = get_ytm_video_link(video_id)
 
     try:
         LOGGER.info(f"Extracting info about video {video_id}")
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            return ydl.extract_info(url, download=False)
+        with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
+            return ydl.extract_info(URL, download=False)
 
     except Exception as e:
         LOGGER.error(f"Error while getting {video_id} info: {e}")

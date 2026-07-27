@@ -6,7 +6,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from dungeon import DM
 from helpers.prettify_incoming_query import prettify_incoming_query
-from tools.search import search
+from tools.search import search_in_ytm
 from type import YoutubeSearchResultDict
 
 router = Router()
@@ -22,7 +22,7 @@ async def get_list(message: Message):
         return None
     status_msg = await message.answer("🔍 Ищу варианты...")
     search_result: list[YoutubeSearchResultDict] = await asyncio.shield(
-        asyncio.to_thread(search, query.strip(), 9)
+        asyncio.to_thread(search_in_ytm, query.strip(), 9)
     )
 
     if len(search_result) == 0:

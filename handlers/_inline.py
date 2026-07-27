@@ -13,7 +13,7 @@ from aiogram.types import (
 
 from dungeon import DM
 from helpers.prettify_incoming_query import prettify_incoming_query
-from tools.search import search
+from tools.search import search_in_ytm
 from type import YoutubeSearchResultDict
 
 router = Router()
@@ -26,7 +26,7 @@ async def inline(q: InlineQuery):
 
     query = prettify_incoming_query(q.query)
     search_result: list[YoutubeSearchResultDict] = await asyncio.shield(
-        asyncio.to_thread(search, query.strip(), 9)
+        asyncio.to_thread(search_in_ytm, query.strip(), 9)
     )
 
     if len(search_result) == 0:

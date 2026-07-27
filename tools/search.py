@@ -4,16 +4,16 @@ from _logger import LOGGER
 from type import YoutubeSearchResultDict
 
 
-def search(search_query: str, limit: int = 10):
-    yt = YTMusic()
+def search_in_ytm(search_query: str, limit: int = 10):
+    YT = YTMusic()
 
     try:
-        search_results = yt.search(query=search_query, filter="songs", limit=limit)
+        SEARCH_RESULTS = YT.search(query=search_query, filter="songs", limit=limit)
     except Exception:
         LOGGER.critical(f'Can\'t pull info from "{search_query}" query')
     video_ids: list[YoutubeSearchResultDict] = []
 
-    for item in search_results[: 10 if limit > 10 else limit]:
+    for item in SEARCH_RESULTS[: 10 if limit > 10 else limit]:
         title: str = item.get("title") or "Unknown"
         artist = ", ".join([artist["name"] for artist in item.get("artists", [])])
         video_id: str | None = item.get("videoId") or None

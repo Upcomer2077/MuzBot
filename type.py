@@ -27,7 +27,7 @@ class UserQueryLimit(TypedDict):
 
 
 @dataclass
-class TempTrackStatusInfo:
+class TrackState:
     title = "UNKNOWN"
     artist = "unknown"
     tg_file_id: str | None = None
@@ -37,8 +37,8 @@ class TempTrackStatusInfo:
     # -----
     base_answer = "⏳ Обрабатываю запрос (это займет несколько секунд)\n"
     cache_data: TrackDirContentDict | bool = False
-    cache_sent_successfully = False
-    sent_message: Message | None = None
+    is_cache_sent_successfully = False
+    sent_audio: Message | None = None
 
     def fill_from(self, track: "TrackCache"):
         self.title = track.title

@@ -14,9 +14,9 @@ if TYPE_CHECKING:
 def download_from_ytm(video_id: str):
     try:
         # Replace with the YouTube URL of the music video/track
-        youtube_url = get_ytm_video_link(video_id)
+        YOUTUBE_URL = get_ytm_video_link(video_id)
 
-        ydl_opts: "_Params" = {
+        YDL_OPTS: "_Params" = {
             "format": "bestaudio/best",  # Select the best audio quality available
             "writethumbnail": True,
             "postprocessors": [
@@ -43,8 +43,8 @@ def download_from_ytm(video_id: str):
         LOGGER.info(f"Dl-PID for {video_id}: {os.getpid()}")
         LOGGER.info(f"Attempting to download video {video_id}")
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([youtube_url])
+        with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
+            ydl.download([YOUTUBE_URL])
 
         LOGGER.info(f"Downloaded successfully: {video_id}")
     except Exception as e:
