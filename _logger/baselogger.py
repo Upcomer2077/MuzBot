@@ -5,22 +5,31 @@ from _logger.ILogger import ILogger
 
 
 class BaseLogger(ILogger, ABC):
-    """Базовый абстрактный класс для логирования."""
+    """Abstract base class for custom loggers with predefined logging levels and handlers management."""
 
     def __init__(self, name: str, level: str = "INFO"):
+        """Initialize the logger instance, set the log level, and clear existing handlers.
+
+        Args:
+            name: The base name for the logger instance.
+            level: The logging level string (e.g., 'INFO', 'DEBUG'). Defaults to 'INFO'.
+        """
         self.name = name
         self._logger = logging.getLogger(f"{name}_{self.__class__.__name__}")
         self._logger.setLevel(level.upper())
-        # Инициализируем стандартный логгер Python
+
         if self._logger.hasHandlers():
             self._logger.handlers.clear()
 
-        # Вызываем абстрактный метод конфигурации
         self._configure_logger()
 
     @abstractmethod
     def _configure_logger(self) -> None:
-        """Метод для специфичной настройки хендлеров в дочерних классах."""
+        """Abstract method to implement specific logger configuration and handlers.
+
+        Raises:
+            NotImplementedError: If the subclass does not implement this method.
+        """
         pass
 
     def info(self, message: str) -> None:

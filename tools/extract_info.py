@@ -12,6 +12,14 @@ if TYPE_CHECKING:
 
 
 async def extract_video_info(video_id: str) -> Optional[YoutubeSearchResultDict]:
+    """Asynchronously extract and parse structured metadata for a specific YouTube Music video track.
+
+    Args:
+        video_id: Unique YouTube Music track video identifier.
+
+    Returns:
+        A structured dictionary with video metadata if successful, or None if extraction fails.
+    """
     VIDEO = await asyncio.shield(asyncio.to_thread(_extract, video_id))
 
     if VIDEO:
@@ -38,8 +46,16 @@ async def extract_video_info(video_id: str) -> Optional[YoutubeSearchResultDict]
 def _extract(
     video_id: str,
 ):
+    """Execute synchronous yt-dlp metadata extraction for a video without initiating a download.
+
+    Args:
+        video_id: Unique YouTube Music track video identifier.
+
+    Returns:
+        A dictionary containing raw track metadata, or None if an exception occurs.
+    """
     YDL_OPTS: "_Params" = {
-        "extract_flat": True,  # Не зарываться в форматы, только метаданные
+        "extract_flat": True,
         "no_warnings": True,
         "quiet": True,
     }

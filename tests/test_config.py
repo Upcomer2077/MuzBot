@@ -6,10 +6,8 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def cleanup_config():
-    # Удаляем модуль из кэша перед каждым тестом, если он там есть
     sys.modules.pop("config", None)
     yield
-    # Чистим кэш также после теста, чтобы не влиять на другие модули
     sys.modules.pop("config", None)
 
 

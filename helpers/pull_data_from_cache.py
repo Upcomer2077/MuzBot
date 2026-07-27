@@ -7,6 +7,14 @@ from tools.download import download_from_ytm
 
 
 async def pull_data_from_cache(video_id: str):
+    """Retrieve track media assets from disk cache or download them via an asynchronous thread pool if missing.
+
+    Args:
+        video_id: Unique YouTube Music track video identifier.
+
+    Returns:
+        A dictionary with audio and thumbnail paths if retrieved successfully, False otherwise.
+    """
     cache_data = False
     cache_data = COLD.demand_tribute(video_id)
     if cache_data:

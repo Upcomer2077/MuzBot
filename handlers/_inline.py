@@ -51,7 +51,6 @@ async def inline(q: InlineQuery):
                 title=f"{artist} — {title}",
                 description=f"⏱ Длительность: {duration}",
                 hide_url=True,
-                # Текст, который отправится в чат, когда пользователь кликнет на трек
                 input_message_content=InputTextMessageContent(
                     link_preview_options=LinkPreviewOptions(is_disabled=True),
                     message_text=f"{artist} — {title} [{duration}]",

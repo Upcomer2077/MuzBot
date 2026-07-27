@@ -29,10 +29,10 @@ services:
         required: false
     healthcheck:
       test: ["CMD-SHELL", "python healthcheck.py > /proc/1/fd/1 2>&1 || exit 1"]
-      interval: 5m    # Как часто проверять
-      timeout: 8s      # Сколько ждать ответа от скрипта
-      retries: 3       # Количество неудачных попыток до статуса "unhealthy"
-      start_period: 1s # Сколько секунд дать боту на запуск перед первой проверкой
+      interval: 5m    
+      timeout: 8s      
+      retries: 3       
+      start_period: 1s 
 
   loki:
     image: grafana/loki:3.0.0
@@ -43,16 +43,14 @@ services:
     networks:
       - bot
     healthcheck:
-      # Запрашиваем локальный эндпоинт готовности Loki с помощью утилиты wget (она встроена в образ Loki)
       test: ["CMD-SHELL", "wget -qO- http://localhost:3100/ready | grep -q 'ready' || exit 1"]
-      interval: 3s     # Проверяем каждые 3 секунды во время старта
-      timeout: 2s      # Таймаут на ответ
-      retries: 5       # Делаем до 5 попыток
-      start_period: 2s # Даем Loki 2 секунды на первичную инициализацию
+      interval: 3s     
+      timeout: 2s      
+      retries: 5       
+      start_period: 2s 
 
     profiles: [mon]
 
-  # Веб-панель Grafana для просмотра логов
   grafana:
     image: grafana/grafana:11.0.0
     container_name: grafana_service

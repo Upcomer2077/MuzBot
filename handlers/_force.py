@@ -11,12 +11,11 @@ from config import (
     MAX_TRACK_DURATION_SECONDS,
     QUERY_DOWNLOAD_LIMIT_SECS,
     TRACKS_PER_LIMIT,
-    YTM_REGEX,
-    YTM_VID_REGEX,
 )
 from helpers.download_utils import DU
 from helpers.finalize_download import finalize_download
 from helpers.prepare_audio_file_to_send import prepare_audio_file_to_send
+from helpers.regexes import YTM_REGEX, YTM_VID_REGEX
 from tools.send_action import send_action
 from type import TrackState
 

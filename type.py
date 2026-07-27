@@ -9,11 +9,15 @@ if TYPE_CHECKING:
 
 
 class TrackDirContentDict(TypedDict):
+    """Dictionary structure storing the exact local file paths of a cached track's audio and thumbnail components."""
+
     audio_path: str
     thumbnail_path: str | None
 
 
 class YoutubeSearchResultDict(TypedDict):
+    """Normalized data structure representing a track item pulled directly from YouTube Music search responses."""
+
     duration: str
     video_id: str
     title: str
@@ -22,12 +26,16 @@ class YoutubeSearchResultDict(TypedDict):
 
 
 class UserQueryLimit(TypedDict):
+    """Data blueprint for monitoring a single user's rate limits, tracking remaining downloads and request timestamps."""
+
     semaphore: Required[int]
     ts: Required[float]
 
 
 @dataclass
 class TrackState:
+    """State management object tracking download status flags, media metadata, and response messaging pipelines."""
+
     title = "UNKNOWN"
     artist = "unknown"
     tg_file_id: str | None = None
@@ -50,5 +58,7 @@ class TrackState:
 
 
 class DownloadCallback(CallbackData, prefix="dl"):
+    """Callback data schema defining expected inline keyboard button parameters for handling individual audio download requests."""
+
     video_id: str
     idx: str

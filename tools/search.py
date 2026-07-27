@@ -5,6 +5,15 @@ from type import YoutubeSearchResultDict
 
 
 def search_in_ytm(search_query: str, limit: int = 10):
+    """Search for song items using the YouTube Music API and normalize the returned metadata.
+
+    Args:
+        search_query: The search term or keywords specified by the user.
+        limit: Maximum number of search records to return. Defaults to 10.
+
+    Returns:
+        A list of structured dictionaries containing normalized song metadata and video identifiers.
+    """
     YT = YTMusic()
 
     try:

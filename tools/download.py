@@ -12,8 +12,15 @@ if TYPE_CHECKING:
 
 
 def download_from_ytm(video_id: str):
+    """Download audio tracks from YouTube Music and convert them into MP3 format along with thumbnails.
+
+    Args:
+        video_id: Unique YouTube Music track video identifier.
+
+    Returns:
+        True if the download and conversion complete successfully, False otherwise.
+    """
     try:
-        # Replace with the YouTube URL of the music video/track
         YOUTUBE_URL = get_ytm_video_link(video_id)
 
         YDL_OPTS: "_Params" = {
@@ -28,13 +35,13 @@ def download_from_ytm(video_id: str):
             ],
             "postprocessor_args": [
                 "-threads",
-                "2",  # Разрешаем использовать до 2 потоков на один процесс кодирования
-                "-vn",  # Вырезаем видео/картинки во время кодирования (обложку мы шлем отдельно)
-                "-sn",  # Отключаем субтитры
-                "-dn",  # Отключаем мусорные потоки данных
+                "2",
+                "-vn",
+                "-sn",
+                "-dn",
             ],
             "no_warnings": True,
-            "outtmpl": f"{CACHE_ROOT_DIR}/{video_id}/%(title)s.%(ext)s",  # Name the file based on the YouTube video title
+            "outtmpl": f"{CACHE_ROOT_DIR}/{video_id}/%(title)s.%(ext)s",
             "sleep_interval": 5,
             "max_sleep_interval": 15,
             "quiet": True,

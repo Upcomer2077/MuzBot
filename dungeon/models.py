@@ -8,6 +8,8 @@ from dungeon.dispatcher import DB_DISPATCHER
 
 @DB_DISPATCHER.register
 class TrackCache(AIOModel):
+    """Database model for caching downloaded YouTube Music tracks metadata and Telegram file references."""
+
     video_id = CharField(
         primary_key=True, max_length=20, constraints=[SQL("ON CONFLICT IGNORE")]
     )

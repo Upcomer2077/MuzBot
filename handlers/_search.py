@@ -14,19 +14,19 @@ router = Router()
 
 @router.message()
 async def get_list(message: Message):
-    query = message.text
-    if query is None:
+    QUERY = message.text
+    if QUERY is None:
         return None
-    clean_text = prettify_incoming_query(query)
+    clean_text = prettify_incoming_query(QUERY)
     if len(clean_text) == 0:
         return None
-    status_msg = await message.answer("🔍 Ищу варианты...")
+    STATUS_MESSAGE = await message.answer("🔍 Ищу варианты...")
     search_result: list[YoutubeSearchResultDict] = await asyncio.shield(
-        asyncio.to_thread(search_in_ytm, query.strip(), 9)
+        asyncio.to_thread(search_in_ytm, QUERY.strip(), 9)
     )
 
     if len(search_result) == 0:
-        return await status_msg.edit_text("404 🤷")
+        return STATUS_MESSAGE.edit_text("404 🤷")
 
     builder = InlineKeyboardBuilder()
     text = "Найденные варианты:\n\n"
@@ -49,4 +49,6 @@ async def get_list(message: Message):
 
     await DM.enslave_bulk(search_result)
 
-    await status_msg.edit_text(text, reply_markup=builder.as_markup(), parse_mode=None)
+    await STATUS_MESSAGE.edit_text(
+        text, reply_markup=builder.as_markup(), parse_mode=None
+    )

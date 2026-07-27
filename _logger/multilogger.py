@@ -4,9 +4,16 @@ from _logger.stdlogger import StdLogger
 
 
 class MultiLogger(ILogger):
+    """Composite logger that duplicates logs to standard output and optionally to Grafana Loki."""
+
     def __init__(self, name: str, loki_url: str | None = None):
+        """Initialize standard logger and conditionally set up Loki logging.
+
+        Args:
+            name: The name of the logger instance.
+            loki_url: The URL endpoint for Grafana Loki api. Defaults to None.
+        """
         self.name = name
-        # По умолчанию при старте активна ТОЛЬКО консоль (безопасный режим)
         self._loki_url = loki_url
         self.std_logger = StdLogger(name)
         self.loki_logger = None

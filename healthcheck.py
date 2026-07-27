@@ -18,7 +18,6 @@ async def _check_loki():
         ready_url = LOKI_URL.replace("/loki/api/v1/push", "/ready")
         response = await asyncio.to_thread(requests.get, ready_url, timeout=3)
         response.raise_for_status()
-        # Проверяем специфичный ответ от Loki (он должен ответить текстом 'ready')
         if not response.text.strip() == "ready":
             raise (Exception("Loki is not ready"))
     return LOGGER.info("Loki check: pass")

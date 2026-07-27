@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 
 
 class ILogger(ABC):
+    """Interface defining the standard logging methods contract."""
+
     @abstractmethod
     def info(self, message: str) -> None: ...
 
