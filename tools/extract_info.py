@@ -12,26 +12,7 @@ if TYPE_CHECKING:
 
 
 async def extract_info(video_id: str):
-
-    url = get_ytm_video_link(video_id)
-
-    ydl_opts: "_Params" = {
-        "extract_flat": True,  # Не зарываться в форматы, только метаданные
-        "no_warnings": True,
-        "quiet": True,
-    }
-
-    def _extract():
-        try:
-            LOGGER.info(f"Extracting info about video {video_id}")
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                return ydl.extract_info(url, download=False)
-
-        except Exception as e:
-            LOGGER.error(f"Error while getting {video_id} info: {e}")
-            return None
-
-    item = await asyncio.shield(asyncio.to_thread(_extract))
+    item = await asyncio.shield(asyncio.to_thread(_extract, video_id))
 
     if not item:
         return None
@@ -53,3 +34,23 @@ async def extract_info(video_id: str):
         duration=duration,
         duration_seconds=duration_seconds,
     )
+
+
+def _extract(
+    video_id: str,
+):
+    ydl_opts: "_Params" = {
+        "extract_flat": True,  # Не зарываться в форматы, только метаданные
+        "no_warnings": True,
+        "quiet": True,
+    }
+    url = get_ytm_video_link(video_id)
+
+    try:
+        LOGGER.info(f"Extracting info about video {video_id}")
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            return ydl.extract_info(url, download=False)
+
+    except Exception as e:
+        LOGGER.error(f"Error while getting {video_id} info: {e}")
+        return None
