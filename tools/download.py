@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from yt_dlp import _Params
 
 
-def download(video_id: str):
+def download_from_ytm(video_id: str):
     try:
         # Replace with the YouTube URL of the music video/track
         youtube_url = get_ytm_video_link(video_id)
@@ -41,8 +41,10 @@ def download(video_id: str):
         }
         LOGGER.info(f"Dl-PID for {video_id}: {os.getpid()}")
         LOGGER.info(f"Attempting to download video {video_id}")
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([youtube_url])
+
         LOGGER.info(f"Downloaded successfully: {video_id}")
     except Exception as e:
         LOGGER.error(f"Error while downloading video {e}")

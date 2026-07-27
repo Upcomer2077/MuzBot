@@ -18,7 +18,6 @@ from dungeon import DM
 from helpers.finalize_download import finalize_download
 from helpers.prepare_audio_file_to_send import prepare_audio_file_to_send
 from helpers.pull_data_from_cache import pull_data_from_cache
-from tools.download import download
 from tools.extract_info import extract_info
 from tools.send_audio import answer_audio, answer_audio_cached
 from type import TempTrackStatusInfo
@@ -119,7 +118,7 @@ async def force(message: Message, command: CommandObject):
 
         await answer.edit_text(f"{TTI.base_answer}В кэше пусто... Загружаю")
         await DM.fisting(video_id, is_work_in_progress=True)
-        TTI.cache_data = await pull_data_from_cache(video_id, download)
+        TTI.cache_data = await pull_data_from_cache(video_id)
 
         if not TTI.cache_data:
             await finalize_download(video_id, TTI)
