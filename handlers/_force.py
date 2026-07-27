@@ -5,9 +5,9 @@ from aiogram.exceptions import TelegramNetworkError
 from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
 
+from _logger import LOGGER
 from action_limiter import AL
 from config import (
-    LOGGER,
     MAX_TRACK_DURATION_SECONDS,
     QUERY_DOWNLOAD_LIMIT_SECS,
     TRACKS_PER_LIMIT,

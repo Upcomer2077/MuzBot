@@ -1,6 +1,6 @@
 from ytmusicapi import YTMusic
 
-from config import LOGGER
+from _logger import LOGGER
 from type import YoutubeSearchResultDict
 
 

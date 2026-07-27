@@ -2,7 +2,8 @@ from datetime import datetime
 
 from peewee_aio import Manager
 
-from config import DATABASE_PATH, LOGGER, MAX_TRACK_DURATION_SECONDS
+from _logger import LOGGER
+from config import DATABASE_PATH, MAX_TRACK_DURATION_SECONDS
 from dungeon.dispatcher import DB_DISPATCHER
 from dungeon.models import TrackCache
 from type import YoutubeSearchResultDict

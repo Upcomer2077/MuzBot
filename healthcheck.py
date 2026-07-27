@@ -3,7 +3,8 @@ import sys
 
 import requests
 
-from config import DATABASE_PATH, LOGGER, LOKI_URL
+from _logger import LOGGER
+from config import DATABASE_PATH, LOKI_URL
 from dungeon import DM
 from type import YoutubeSearchResultDict
 

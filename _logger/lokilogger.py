@@ -2,7 +2,7 @@ import os
 
 from loki_logger_handler.loki_logger_handler import LokiLoggerHandler
 
-from _logger import BaseLogger
+from _logger.baselogger import BaseLogger
 
 
 class LokiLogger(BaseLogger):

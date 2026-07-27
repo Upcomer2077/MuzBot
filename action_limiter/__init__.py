@@ -5,7 +5,8 @@ from aiogram import Bot
 from aiogram.enums import ChatAction
 
 import bot
-from config import LOGGER, QUERY_DOWNLOAD_LIMIT_SECS, TRACKS_PER_LIMIT
+from _logger import LOGGER
+from config import QUERY_DOWNLOAD_LIMIT_SECS, TRACKS_PER_LIMIT
 from type import UserQueryLimit
 
 

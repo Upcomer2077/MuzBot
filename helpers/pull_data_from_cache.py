@@ -1,6 +1,7 @@
 import asyncio
 
-from config import CPU_POOL, LOGGER
+from _logger import LOGGER
+from config import CPU_POOL
 from overlord import COLD
 from tools.download import download_from_ytm
 

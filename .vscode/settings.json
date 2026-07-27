@@ -13,6 +13,7 @@
   },
   "python.analysis.typeCheckingMode": "basic",
   "cSpell.words": [
+    "baselogger",
     "bestaudio",
     "cooldown",
     "delenv",

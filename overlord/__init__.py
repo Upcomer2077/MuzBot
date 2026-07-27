@@ -1,7 +1,8 @@
 import shutil
 from glob import glob
 
-from config import CACHE_ROOT_DIR, LOGGER
+from _logger import LOGGER
+from config import CACHE_ROOT_DIR
 from type import TrackDirContentDict
 
 

@@ -3,7 +3,8 @@ from typing import TYPE_CHECKING
 
 import yt_dlp
 
-from config import CACHE_ROOT_DIR, LOGGER
+from _logger import LOGGER
+from config import CACHE_ROOT_DIR
 from helpers.get_ytm_video_link import get_ytm_video_link
 
 if TYPE_CHECKING:

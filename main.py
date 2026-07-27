@@ -3,6 +3,7 @@ import asyncio
 from aiogram.exceptions import TelegramNotFound
 from aiogram.types import BotCommand, BotCommandScopeDefault
 
+from _logger import LOGGER
 from action_limiter import AL
 from bot import bot, dp
 from config import (
@@ -10,7 +11,6 @@ from config import (
     CPU_COUNT,
     CPU_POOL,
     DATABASE_PATH,
-    LOGGER,
     QUERY_DOWNLOAD_LIMIT_SECS,
     TRACKS_PER_LIMIT,
 )

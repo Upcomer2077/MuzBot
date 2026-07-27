@@ -2,7 +2,7 @@ from aiogram import BaseMiddleware
 from aiogram.exceptions import TelegramForbiddenError
 from aiogram.types import ErrorEvent
 
-from config import LOGGER
+from _logger import LOGGER
 
 
 class BlockedLogMiddleware(BaseMiddleware):

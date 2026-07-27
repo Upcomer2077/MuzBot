@@ -1,7 +1,8 @@
 import logging
 import sys
 
-from _logger import BaseLogger, ColoredFormatter
+from _logger.baselogger import BaseLogger
+from _logger.formatters.colored_formatter import ColoredFormatter
 
 
 class StdLogger(BaseLogger):

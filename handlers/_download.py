@@ -4,10 +4,10 @@ from aiogram import Router
 from aiogram.exceptions import TelegramNetworkError
 from aiogram.types import CallbackQuery, Message
 
+from _logger import LOGGER
 import bot
 from action_limiter import AL
 from config import (
-    LOGGER,
     MAX_TRACK_DURATION_SECONDS,
     QUERY_DOWNLOAD_LIMIT_SECS,
     TRACKS_PER_LIMIT,

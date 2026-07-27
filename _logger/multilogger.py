@@ -1,4 +1,4 @@
-from _logger import ILogger
+from _logger.ILogger import ILogger
 from _logger.lokilogger import LokiLogger
 from _logger.stdlogger import StdLogger
 

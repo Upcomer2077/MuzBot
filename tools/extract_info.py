@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 import yt_dlp
 
-from config import LOGGER
+from _logger import LOGGER
 from helpers.get_ytm_video_link import get_ytm_video_link
 from type import YoutubeSearchResultDict
 
