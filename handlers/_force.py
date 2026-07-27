@@ -12,10 +12,10 @@ from config import (
     QUERY_DOWNLOAD_LIMIT_SECS,
     TRACKS_PER_LIMIT,
 )
-from helpers.download_utils import DU
 from helpers.finalize_download import finalize_download
 from helpers.prepare_audio_file_to_send import prepare_audio_file_to_send
 from helpers.regexes import YTM_REGEX, YTM_VID_REGEX
+from helpers.utils import U
 from tools.send_action import send_action
 from type import TrackState
 
@@ -42,7 +42,7 @@ async def force(message: Message, command: CommandObject):
     VIDEO_ID = VIDEO_ID.group(1)
     CHAT_ID = message.chat.id
 
-    track = await DU.get_track(VIDEO_ID)
+    track = await U.get_track(VIDEO_ID)
     if not track:
         return ANSWER.edit_text("Не удалось найти информацию о видео")
 
@@ -58,7 +58,7 @@ async def force(message: Message, command: CommandObject):
             if AL.is_allowed_send_action(CHAT_ID):
                 await send_action(CHAT_ID)
 
-            track = await DU.get_track(VIDEO_ID, False)
+            track = await U.get_track(VIDEO_ID, False)
             if track:
                 if track.is_work_in_progress:
                     continue
@@ -77,7 +77,7 @@ async def force(message: Message, command: CommandObject):
         )
     if TS.tg_file_id:
         try:
-            TS.sent_audio, TS.is_cache_sent_successfully = await DU.send_cached_audio(
+            TS.sent_audio, TS.is_cache_sent_successfully = await U.send_cached_audio(
                 CHAT_ID, TS.tg_file_id, ANSWER
             )
         except Exception as e:
@@ -98,7 +98,7 @@ async def force(message: Message, command: CommandObject):
 
         await ANSWER.edit_text(f"{TS.base_answer}В кэше пусто... Загружаю")
 
-        TS.cache_data = await DU.handle_cache_pull(VIDEO_ID, CHAT_ID)
+        TS.cache_data = await U.handle_cache_pull(VIDEO_ID, CHAT_ID)
 
         if not TS.cache_data:
             await finalize_download(VIDEO_ID, TS)
@@ -115,7 +115,7 @@ async def force(message: Message, command: CommandObject):
 
         try:
             LOGGER.info(f"Uploading audio {VIDEO_ID}")
-            TS.sent_audio = await DU.send_new_audio(
+            TS.sent_audio = await U.send_new_audio(
                 message,
                 CHAT_ID,
                 audio_file,

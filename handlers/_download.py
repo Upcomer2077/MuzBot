@@ -11,9 +11,9 @@ from config import (
     QUERY_DOWNLOAD_LIMIT_SECS,
     TRACKS_PER_LIMIT,
 )
-from helpers.download_utils import DU
 from helpers.finalize_download import finalize_download
 from helpers.prepare_audio_file_to_send import prepare_audio_file_to_send
+from helpers.utils import U
 from tools.send_action import send_action
 from type import DownloadCallback, TrackState
 
@@ -35,7 +35,7 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
     # --------------
     TS = TrackState()
 
-    ANCHOR_MESSAGE = callback.message or await DU.send_anchor_message(
+    ANCHOR_MESSAGE = callback.message or await U.send_anchor_message(
         callback.from_user.id
     )
     ANSWER = await ANCHOR_MESSAGE.answer(f"{TS.base_answer}")
@@ -45,7 +45,7 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
     if IS_FROM_INLINE_QUERY and isinstance(ANCHOR_MESSAGE, Message):
         await ANCHOR_MESSAGE.delete()
 
-    track = await DU.get_track(VIDEO_ID)
+    track = await U.get_track(VIDEO_ID)
     if not track:
         return ANCHOR_MESSAGE.answer("Не удалось найти информацию о видео")
 
@@ -61,7 +61,7 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
             if AL.is_allowed_send_action(CHAT_ID):
                 await send_action(CHAT_ID)
 
-            track = await DU.get_track(VIDEO_ID, False)
+            track = await U.get_track(VIDEO_ID, False)
             if track:
                 if track.is_work_in_progress:
                     continue
@@ -78,7 +78,7 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
 
     if TS.tg_file_id:
         try:
-            TS.sent_audio, TS.is_cache_sent_successfully = await DU.send_cached_audio(
+            TS.sent_audio, TS.is_cache_sent_successfully = await U.send_cached_audio(
                 CHAT_ID, TS.tg_file_id, ANCHOR_MESSAGE
             )
         except Exception as e:
@@ -96,7 +96,7 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
 
         await ANSWER.edit_text(f"{TS.base_answer}В кэше пусто... Загружаю")
 
-        TS.cache_data = await DU.handle_cache_pull(VIDEO_ID, CHAT_ID)
+        TS.cache_data = await U.handle_cache_pull(VIDEO_ID, CHAT_ID)
 
         if not TS.cache_data:
             await finalize_download(VIDEO_ID, TS)
@@ -113,7 +113,7 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
 
         try:
             LOGGER.info(f"Uploading audio {VIDEO_ID}")
-            TS.sent_audio = await DU.send_new_audio(
+            TS.sent_audio = await U.send_new_audio(
                 ANCHOR_MESSAGE,
                 CHAT_ID,
                 audio_file,

@@ -89,7 +89,7 @@ class TestConfig:
             ("0", os.cpu_count() or 1),
             ("1", 1),
             ("50", 50),
-            ("-10", -10),
+            ("-10", os.cpu_count() or 1),
         ],
     )
     def test_cpu_count(self, monkeypatch, v, exp):
@@ -111,3 +111,24 @@ class TestConfig:
         assert LOKI_URL is not None
         assert LOKI_URL == "myEnv"
         assert type(LOKI_URL) is str
+
+    def test_loki_url_is_none(self, monkeypatch):
+        monkeypatch.setattr("dotenv.load_dotenv", lambda *_: None)
+        monkeypatch.delenv("LOKI_URL", raising=False)
+        from config import LOKI_URL  # noqa: F401
+
+        assert LOKI_URL is None
+
+    @pytest.mark.parametrize("v,exp", (("0", 30), ("1", 30), ("60", 60), ("-1", 30)))
+    def test_markup_disappearing(self, v, exp, monkeypatch):
+        monkeypatch.setenv("REPLY_DISAPPEAR_TIMEOUT", v)
+        from config import REPLY_DISAPPEAR_TIMEOUT
+
+        assert REPLY_DISAPPEAR_TIMEOUT is not None
+        assert REPLY_DISAPPEAR_TIMEOUT == exp
+        assert type(REPLY_DISAPPEAR_TIMEOUT) is int
+
+    def test_markup_disappearing_raises(self, monkeypatch):
+        monkeypatch.setenv("REPLY_DISAPPEAR_TIMEOUT", "String")
+        with pytest.raises(ValueError):
+            from config import REPLY_DISAPPEAR_TIMEOUT  # noqa: F401

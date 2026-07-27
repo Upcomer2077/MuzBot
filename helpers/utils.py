@@ -1,18 +1,21 @@
+import asyncio
 from typing import Literal, Optional
 
 from aiogram.types import FSInputFile, MaybeInaccessibleMessageUnion, Message
 
 import bot
 from action_limiter import AL
+from config import REPLY_DISAPPEAR_TIMEOUT
 from dungeon import DM
 from dungeon.models import TrackCache
+from GC import GC
 from helpers.pull_data_from_cache import pull_data_from_cache
 from tools.extract_info import extract_video_info
 from tools.send_action import send_action
 from tools.send_audio import answer_audio, answer_audio_cached
 
 
-class DU:
+class U:
     """Utility class providing static helper operations for track extraction, caching, and media transmissions."""
 
     @staticmethod
@@ -54,6 +57,11 @@ class DU:
             await send_action(chat_id)
 
         sent_audio = await answer_audio_cached(anchor, audio_file=tg_file_id)
+        t = asyncio.create_task(
+            U.delete_markup_after_delay(sent_audio, REPLY_DISAPPEAR_TIMEOUT)
+        )
+        GC.register_task(t)
+
         cache_sent_successfully = True
         return sent_audio, cache_sent_successfully
 
@@ -106,6 +114,10 @@ class DU:
             title=title,
             artist=artist,
         )
+        t = asyncio.create_task(
+            U.delete_markup_after_delay(sent_audio, REPLY_DISAPPEAR_TIMEOUT)
+        )
+        GC.register_task(t)
         return sent_audio
 
     @staticmethod
@@ -123,3 +135,11 @@ class DU:
             "||\\.||",
             parse_mode="MarkdownV2",
         )
+
+    @staticmethod
+    async def delete_markup_after_delay(msg: Message, delay: int = 60) -> None:
+        await asyncio.sleep(delay)
+        try:
+            await msg.edit_reply_markup(reply_markup=None)
+        except Exception:
+            pass  # Ignore errors if the message was already deleted by the user

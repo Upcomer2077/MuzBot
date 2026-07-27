@@ -1,4 +1,9 @@
-from aiogram.types import FSInputFile, MaybeInaccessibleMessageUnion
+from aiogram.types import (
+    FSInputFile,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    MaybeInaccessibleMessageUnion,
+)
 
 
 def answer_audio_cached(
@@ -17,6 +22,16 @@ def answer_audio_cached(
     """
     return message.answer_audio(
         audio=audio_file,
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="❌",
+                        callback_data="drop_m",
+                    )
+                ]
+            ]
+        ),
     )
 
 
@@ -45,4 +60,14 @@ def answer_audio(
         thumbnail=thumb_file,
         title=title,
         performer=artist,
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="❌",
+                        callback_data="drop_m",
+                    )
+                ]
+            ]
+        ),
     )

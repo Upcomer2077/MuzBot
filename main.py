@@ -15,6 +15,7 @@ from config import (
     TRACKS_PER_LIMIT,
 )
 from dungeon import DM
+from GC import GC
 from handlers import get_handlers_router
 
 commands = [
@@ -37,7 +38,8 @@ async def main():
 
 @dp.startup()
 async def on_startup():
-    await AL.start_gc()
+    AL.start_limiter()
+    await GC.start_gc()
     await DM.open_dungeon()
     LOGGER.info("Bot has been started.")
 
@@ -45,7 +47,7 @@ async def on_startup():
 @dp.shutdown()
 async def on_shutdown():
     await DM.close_dungeon()
-    await AL.close_gc()
+    await GC.close_gc()
     CPU_POOL.shutdown(cancel_futures=True)
     LOGGER.info("Graceful shutdown. Bye!")
 

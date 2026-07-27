@@ -3,6 +3,7 @@ import time
 
 from _logger import LOGGER
 from config import QUERY_DOWNLOAD_LIMIT_SECS, TRACKS_PER_LIMIT
+from GC import GC
 from type import UserQueryLimit
 
 
@@ -19,7 +20,10 @@ class LightLimiter:
         self._QUERIES_COOLDOWN_SECS = QUERY_DOWNLOAD_LIMIT_SECS
         self._TRACKS_PER_LIMIT = TRACKS_PER_LIMIT
 
-        self._GARBAGE_COLLECTOR_TASKS: list[asyncio.Task] = []
+    def start_limiter(self):
+        LOGGER.info("Starting to register limiter GC task")
+        GC.register_task(asyncio.create_task(self._garbage_collector()))
+        LOGGER.info("DONE")
 
     def is_allowed_send_action(
         self,
@@ -64,20 +68,6 @@ class LightLimiter:
         if new_semaphore < 0:
             return False
         return True
-
-    # ---- GARBAGE CLEANER
-    async def start_gc(self):
-        """Start the background asynchronous garbage collector task for cleanups."""
-        LOGGER.info("Starting Limiter garbage cleaner")
-        self._GARBAGE_COLLECTOR_TASKS = [
-            asyncio.create_task(self._garbage_collector()),
-        ]
-
-    async def close_gc(self):
-        """Cancel and stop all active background garbage collector tasks safely."""
-        LOGGER.info("Stopping Limiter garbage cleaner")
-        for t in self._GARBAGE_COLLECTOR_TASKS:
-            t.cancel()
 
     async def _garbage_collector(self):
         """Periodically remove expired records from memory banks to prevent memory leaks."""

@@ -1,0 +1,31 @@
+import asyncio
+
+from _logger import LOGGER
+
+
+class GarbageCleaner:
+    """Registry manager for tracking and safely canceling active asynchronous background garbage collection tasks."""
+
+    def __init__(self):
+        self._GARBAGE_COLLECTOR_TASKS: set[asyncio.Task] = set()
+
+        # ---- GARBAGE CLEANER
+
+    async def start_gc(self):
+        """Start the background asynchronous garbage collector task for cleanups."""
+        LOGGER.info("Starting custom GC")
+
+    def register_task(self, t: asyncio.Task):
+        """Register a background task to prevent garbage collection and auto-remove it upon completion.
+
+        Args:
+            t: The active asyncio Task instance to be tracked.
+        """
+        self._GARBAGE_COLLECTOR_TASKS.add(t)
+        t.add_done_callback(self._GARBAGE_COLLECTOR_TASKS.discard)
+
+    async def close_gc(self):
+        """Cancel and stop all active background garbage collector tasks safely."""
+        LOGGER.info("Stopping custom GC")
+        for t in self._GARBAGE_COLLECTOR_TASKS:
+            t.cancel()

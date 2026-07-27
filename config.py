@@ -14,8 +14,9 @@ QUERY_DOWNLOAD_LIMIT_SECS = max(int(os.environ["QUERY_DOWNLOAD_LIMIT_SECS"]), 30
 # -------------
 # OPTIONAL
 LOKI_URL = os.environ.get("LOKI_URL")
-CPU_COUNT = int(os.environ.get("CPU_COUNT", 0)) or os.cpu_count() or 1
+CPU_COUNT = max(int(os.environ.get("CPU_COUNT", 0)), 0) or os.cpu_count() or 1
 DB_NAME = os.environ.get("DB_NAME") or "db2"
+REPLY_DISAPPEAR_TIMEOUT = max(int(os.environ.get("REPLY_DISAPPEAR_TIMEOUT", 0)), 30)
 # --------------
 DATABASE_PATH = f"{os.getcwd()}/data/{DB_NAME}.db"
 CACHE_ROOT_DIR = "./.cache"
