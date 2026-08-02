@@ -44,7 +44,12 @@ async def inline(q: InlineQuery):
 
         if not v_id:
             continue
-        tg_audio_id = entities.get(v_id)
+        entity = entities.get(v_id)
+
+        tg_audio_id = (
+            entity.telegram_file_id if entity and entity.telegram_file_id else None
+        )
+
         card = (
             InlineQueryResultArticle(
                 id=v_id,

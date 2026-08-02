@@ -64,7 +64,9 @@ class CacheOverlord:
 
         if audio_path is None:
             return None
-        return TrackDirContentDict(audio_path=audio_path, thumbnail_path=thumbnail_path)
+        return TrackDirContentDict(
+            audio_path=audio_path, thumbnail_path=thumbnail_path, _video_id=video_id
+        )
 
     def annihilate(self, video_id: str) -> bool:
         """Permanently erase a specific track directory cache structure from disk storage blocks.

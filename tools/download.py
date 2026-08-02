@@ -1,4 +1,5 @@
 import os
+import time
 from typing import TYPE_CHECKING
 
 import yt_dlp
@@ -20,42 +21,44 @@ def download_from_ytm(video_id: str):
     Returns:
         True if the download and conversion complete successfully, False otherwise.
     """
-    try:
-        YOUTUBE_URL = get_ytm_video_link(video_id)
+    YOUTUBE_URL = get_ytm_video_link(video_id)
 
-        YDL_OPTS: "_Params" = {
-            "format": "bestaudio/best",  # Select the best audio quality available
-            "writethumbnail": True,
-            "postprocessors": [
-                {
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "mp3",  # Convert to MP3
-                    "preferredquality": "192",  # Audio bitrate (192 kbps)
-                },
-            ],
-            "postprocessor_args": [
-                "-threads",
-                "2",
-                "-vn",
-                "-sn",
-                "-dn",
-            ],
-            "no_warnings": True,
-            "outtmpl": f"{CACHE_ROOT_DIR}/{video_id}/%(title)s.%(ext)s",
-            "sleep_interval": 5,
-            "max_sleep_interval": 15,
-            "quiet": True,
-            "retries": 3,
-        }
-        LOGGER.info(f"Dl-PID for {video_id}: {os.getpid()}")
-        LOGGER.info(f"Attempting to download video {video_id}")
+    YDL_OPTS: "_Params" = {
+        "format": "bestaudio/best",  # Select the best audio quality available
+        "writethumbnail": True,
+        "postprocessors": [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",  # Convert to MP3
+                "preferredquality": "192",  # Audio bitrate (192 kbps)
+            },
+        ],
+        "postprocessor_args": [
+            "-threads",
+            "2",
+            "-vn",
+            "-sn",
+            "-dn",
+        ],
+        "no_warnings": True,
+        "outtmpl": f"{CACHE_ROOT_DIR}/{video_id}/%(title)s.%(ext)s",
+        "sleep_interval": 5,
+        "max_sleep_interval": 15,
+        "quiet": True,
+        "retries": 3,
+    }
+    LOGGER.info(f"Dl-PID for {video_id}: {os.getpid()}")
+    LOGGER.info(f"Attempting to download video {video_id}")
+    for i in range(3):
+        try:
+            with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
+                ydl.download([YOUTUBE_URL])
 
-        with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
-            ydl.download([YOUTUBE_URL])
-
-        LOGGER.info(f"Downloaded successfully: {video_id}")
-    except Exception as e:
-        LOGGER.error(f"Error while downloading video {e}")
-        return False
-
-    return True
+            LOGGER.info(f"Downloaded successfully: {video_id}")
+            return True
+        except Exception as e:
+            LOGGER.error(f"Error while downloading video. Attempt: {i + 1}. {e}")
+            time.sleep(1)
+            continue
+    LOGGER.warn(f"Download {video_id} failed!")
+    return False

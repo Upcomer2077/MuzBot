@@ -96,7 +96,8 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
 
         await ANSWER.edit_text(f"{TS.base_answer}В кэше пусто... Загружаю")
 
-        TS.cache_data = await U.handle_cache_pull(VIDEO_ID, CHAT_ID)
+        (_, data) = await U.handle_cache_pull(VIDEO_ID, CHAT_ID)
+        TS.cache_data = data
 
         if not TS.cache_data:
             await finalize_download(VIDEO_ID, TS)

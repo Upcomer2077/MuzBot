@@ -86,7 +86,7 @@ class DungeonMaster:
             LOGGER.error(f"Bulk saving error: {e}")
             return 0
 
-    async def summon_slaves(self, video_ids: list[str]) -> dict[str, str]:
+    async def summon_slaves(self, video_ids: list[str]) -> dict[str, TrackCache]:
         """Fetch cached Telegram file identifiers mapping them to their corresponding video identifiers.
 
         Args:
@@ -95,18 +95,14 @@ class DungeonMaster:
         Returns:
             A dictionary mapping matching video IDs to available Telegram file IDs.
         """
-        query = (
-            TrackCache.select(TrackCache.video_id, TrackCache.telegram_file_id)
-            .where(TrackCache.video_id.in_(video_ids))
-            .dicts()
-        )
+        query = TrackCache.select().where(TrackCache.video_id.in_(video_ids))
 
-        rows: list[dict[str, str | None]] = await query
+        rows = await query
 
-        res: dict[str, str] = {}
+        res: dict[str, TrackCache] = {}
         for i in rows:
-            if i["video_id"] and i["telegram_file_id"]:
-                res[i["video_id"]] = i["telegram_file_id"]
+            if i.video_id:
+                res[i.video_id] = i
         return res
 
     async def summon_one(self, video_id: str):
@@ -149,7 +145,7 @@ class DungeonMaster:
 
     async def fisting(
         self,
-        video_id: str,
+        video_id: str | list[str],
         telegram_file_id: str | None = None,
         is_too_large: bool | None = None,
         is_work_in_progress: bool | None = None,
@@ -174,7 +170,9 @@ class DungeonMaster:
         filtered_update_data = {k: v for k, v in update_data.items() if v is not None}
         try:
             query = TrackCache.update(filtered_update_data).where(
-                TrackCache.video_id == video_id
+                TrackCache.video_id.in_(video_id)
+                if isinstance(video_id, list)
+                else TrackCache.video_id == video_id
             )
 
             rows_updated: int = await self._db_dispatcher.execute(query)

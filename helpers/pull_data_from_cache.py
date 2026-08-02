@@ -15,10 +15,10 @@ async def pull_data_from_cache(video_id: str):
     Returns:
         A dictionary with audio and thumbnail paths if retrieved successfully, False otherwise.
     """
-    cache_data = False
+    cache_data = (video_id, None)
     cache_data = COLD.demand_tribute(video_id)
     if cache_data:
-        return cache_data
+        return (video_id, cache_data)
 
     loop = asyncio.get_event_loop()
     try:
@@ -26,6 +26,6 @@ async def pull_data_from_cache(video_id: str):
     except Exception as e:
         LOGGER.warn(f"Error while running in executor!!! {e}")
     if not success:
-        return False
+        return (video_id, None)
 
-    return COLD.demand_tribute(video_id) or False
+    return (video_id, COLD.demand_tribute(video_id))

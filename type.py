@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 class TrackDirContentDict(TypedDict):
     """Dictionary structure storing the exact local file paths of a cached track's audio and thumbnail components."""
 
+    _video_id: str
     audio_path: str
     thumbnail_path: str | None
 
@@ -36,25 +37,29 @@ class UserQueryLimit(TypedDict):
 class TrackState:
     """State management object tracking download status flags, media metadata, and response messaging pipelines."""
 
-    title = "UNKNOWN"
-    artist = "unknown"
+    video_id: str | None = None
+    title: str = "UNKNOWN"
+    artist: str = "unknown"
     tg_file_id: str | None = None
     track_duration: int | None = None
     is_too_large: bool | None = None
     is_work_in_progress: bool | None = None
     # -----
     base_answer = "⏳ Обрабатываю запрос (это займет несколько секунд)\n"
-    cache_data: TrackDirContentDict | bool = False
+    cache_data: TrackDirContentDict | None = None
     is_cache_sent_successfully = False
     sent_audio: Message | None = None
 
     def fill_from(self, track: "TrackCache"):
+        self.video_id = track.video_id
         self.title = track.title
         self.artist = track.artist
         self.tg_file_id = track.telegram_file_id
         self.is_too_large = track.is_too_large
         self.track_duration = track.track_duration
         self.is_work_in_progress = track.is_work_in_progress
+
+        return self
 
 
 class DownloadCallback(CallbackData, prefix="dl"):

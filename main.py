@@ -11,6 +11,7 @@ from config import (
     CPU_COUNT,
     CPU_POOL,
     DATABASE_PATH,
+    EXPERIMENTAL,
     QUERY_DOWNLOAD_LIMIT_SECS,
     TRACKS_PER_LIMIT,
 )
@@ -59,6 +60,7 @@ if __name__ == "__main__":
     LOGGER.info(f"QUERY_DOWNLOAD_LIMIT_SECS: {QUERY_DOWNLOAD_LIMIT_SECS}")
     LOGGER.info(f"CACHE_ROOT_DIR: {CACHE_ROOT_DIR}")
     LOGGER.info(f"CPU_COUNT: {CPU_COUNT}")
+    LOGGER.info(f"EXPERIMENTAL: {EXPERIMENTAL}")
     try:
         asyncio.run(main())
     except TelegramNotFound:

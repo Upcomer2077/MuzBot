@@ -18,6 +18,7 @@
     "cooldown",
     "delenv",
     "flac",
+    "fsize",
     "getpid",
     "healthcheck",
     "kbps",

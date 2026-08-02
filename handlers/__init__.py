@@ -1,8 +1,9 @@
 from aiogram import Router
 
+from config import EXPERIMENTAL
 from handlers import _inline
 
-from . import _download, _drop_message, _force, _help, _search, _start
+from . import _download, _drop_message, _force, _help, _playlist, _search, _start
 
 
 def get_handlers_router():
@@ -19,6 +20,7 @@ def get_handlers_router():
         _help.router,
         _force.router,
         _inline.router,
+        *([_playlist.router] if EXPERIMENTAL else []),
         # MUST BE THE LAST
         _search.router,
     )

@@ -17,6 +17,8 @@ class LightLimiter:
         self._ACTIONS_COOLDOWN = 10
 
         self._QUERIES_BANK: dict[int, UserQueryLimit] = {}
+        # TODO: make it work
+        self._PLAYLIST_COOLDOWN_SECS = 60
         self._QUERIES_COOLDOWN_SECS = QUERY_DOWNLOAD_LIMIT_SECS
         self._TRACKS_PER_LIMIT = TRACKS_PER_LIMIT
 
