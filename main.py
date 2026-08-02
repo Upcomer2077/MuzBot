@@ -26,6 +26,11 @@ commands = [
         command="force",
         description="⚡ Скачать трек напрямую по ссылке из youtube.music.com",
     ),
+    *(
+        [BotCommand(command="playlist", description="Скачать плейлист")]
+        if EXPERIMENTAL
+        else []
+    ),
 ]
 
 
