@@ -14,6 +14,10 @@ At first create file `.env` in project's root folder or just add envs into your 
 
 Then create a `data/` folder and a `docker-compose.yaml`  file. Here is an example with deploying `grafana/loki` log system:
 
+### ⚠️ EXPERIMENTAL
+
+Some features in `alpha` and `beta` versions are marked as **experimental** and won't launch without explicit configuration in `.env` or system vars.
+
 ```yaml
 services:
   bot:
@@ -30,6 +34,7 @@ services:
       - TRACKS_PER_LIMIT=${TRACKS_PER_LIMIT}
       - QUERY_DOWNLOAD_LIMIT_SECS=${QUERY_DOWNLOAD_LIMIT_SECS}
       - CPU_COUNT=${CPU_COUNT}
+      - EXPERIMENTAL=${EXPERIMENTAL}
 
     volumes:
        - type: bind
