@@ -5,15 +5,9 @@ from aiogram.types import BotCommand, BotCommandScopeDefault
 
 from _logger import LOGGER
 from action_limiter import AL
+from backup import B_SHED
 from bot import bot, dp
-from config import (
-    CACHE_ROOT_DIR,
-    CPU_COUNT,
-    CPU_POOL,
-    DATABASE_PATH,
-    QUERY_DOWNLOAD_LIMIT_SECS,
-    TRACKS_PER_LIMIT,
-)
+from config import _SHOW_ON_STARTUP, BACKUP_EVERY_N_DAYS, CPU_POOL
 from dungeon import DM
 from GC import GC
 from handlers import get_handlers_router
@@ -38,6 +32,7 @@ async def main():
 
 @dp.startup()
 async def on_startup():
+    B_SHED.start(BACKUP_EVERY_N_DAYS)
     AL.start_limiter()
     await GC.start_gc()
     await DM.open_dungeon()
@@ -49,16 +44,14 @@ async def on_shutdown():
     await DM.close_dungeon()
     await GC.close_gc()
     CPU_POOL.shutdown(cancel_futures=True)
+    B_SHED.stop()
     LOGGER.info("Graceful shutdown. Bye!")
 
 
 if __name__ == "__main__":
     LOGGER.info("Attempting to start bot...")
-    LOGGER.info(f"DATABASE_CONTAINER_PATH: {DATABASE_PATH}")
-    LOGGER.info(f"TRACKS_PER_LIMIT: {TRACKS_PER_LIMIT}")
-    LOGGER.info(f"QUERY_DOWNLOAD_LIMIT_SECS: {QUERY_DOWNLOAD_LIMIT_SECS}")
-    LOGGER.info(f"CACHE_ROOT_DIR: {CACHE_ROOT_DIR}")
-    LOGGER.info(f"CPU_COUNT: {CPU_COUNT}")
+    for k, v in _SHOW_ON_STARTUP.items():
+        LOGGER.info(f"{k}: {v}")
     try:
         asyncio.run(main())
     except TelegramNotFound:

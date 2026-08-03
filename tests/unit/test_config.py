@@ -132,3 +132,51 @@ class TestConfig:
         monkeypatch.setenv("REPLY_DISAPPEAR_TIMEOUT", "String")
         with pytest.raises(ValueError):
             from config import REPLY_DISAPPEAR_TIMEOUT  # noqa: F401
+
+    def test_channel_id(self, monkeypatch):
+        monkeypatch.setenv("CHANNEL_STORAGE_ID", "-137")
+        from config import CHANNEL_STORAGE_ID
+
+        assert CHANNEL_STORAGE_ID is not None
+        assert type(CHANNEL_STORAGE_ID) is int
+        assert CHANNEL_STORAGE_ID == -137
+
+    def test_channel_id_raises(self, monkeypatch):
+        monkeypatch.setattr("dotenv.load_dotenv", lambda *_: None)
+        monkeypatch.delenv("CHANNEL_STORAGE_ID", raising=False)
+        with pytest.raises(KeyError):
+            from config import CHANNEL_STORAGE_ID  # noqa: F401
+
+    def test_channel_id_raises2(self, monkeypatch):
+        monkeypatch.setenv("CHANNEL_STORAGE_ID", "str")
+        with pytest.raises(ValueError):
+            from config import CHANNEL_STORAGE_ID  # noqa: F401
+
+    @pytest.mark.parametrize(
+        "v,exp",
+        [
+            ("0", 1),
+            ("1", 1),
+            ("50", 50),
+            ("-10", 1),
+        ],
+    )
+    def test_backup_interval(self, monkeypatch, v, exp):
+        monkeypatch.setenv("BACKUP_EVERY_N_DAYS", v)
+        from config import BACKUP_EVERY_N_DAYS
+
+        assert BACKUP_EVERY_N_DAYS is not None
+        assert type(BACKUP_EVERY_N_DAYS) is int
+        assert BACKUP_EVERY_N_DAYS == exp
+
+    def test_backup_interval_raises(self, monkeypatch):
+        monkeypatch.setenv("BACKUP_EVERY_N_DAYS", "str")
+        with pytest.raises((ValueError, TypeError)):
+            from config import CHANNEL_STORAGE_ID  # noqa: F401
+
+    def test_backup_interval_default(self, monkeypatch):
+        monkeypatch.setattr("dotenv.load_dotenv", lambda *_: None)
+        monkeypatch.delenv("BACKUP_EVERY_N_DAYS", raising=False)
+        from config import BACKUP_EVERY_N_DAYS
+
+        assert BACKUP_EVERY_N_DAYS == 2
