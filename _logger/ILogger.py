@@ -12,3 +12,9 @@ class ILogger(ABC):
 
     @abstractmethod
     def error(self, message: str) -> None: ...
+
+    @abstractmethod
+    def debug(self, message: str) -> None: ...
+
+    @abstractmethod
+    def critical(self, message: str) -> None: ...

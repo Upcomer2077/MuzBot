@@ -7,7 +7,7 @@ from _logger.ILogger import ILogger
 class BaseLogger(ILogger, ABC):
     """Abstract base class for custom loggers with predefined logging levels and handlers management."""
 
-    def __init__(self, name: str, level: str = "INFO"):
+    def __init__(self, name: str, level: str = "DEBUG"):
         """Initialize the logger instance, set the log level, and clear existing handlers.
 
         Args:
@@ -43,3 +43,6 @@ class BaseLogger(ILogger, ABC):
 
     def critical(self, message: str) -> None:
         self._logger.critical(message)
+
+    def debug(self, message: str) -> None:
+        self._logger.debug(message)

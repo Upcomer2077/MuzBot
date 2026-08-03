@@ -1,3 +1,5 @@
+from typing import Literal
+
 from _logger.ILogger import ILogger
 from _logger.lokilogger import LokiLogger
 from _logger.stdlogger import StdLogger
@@ -6,7 +8,12 @@ from _logger.stdlogger import StdLogger
 class MultiLogger(ILogger):
     """Composite logger that duplicates logs to standard output and optionally to Grafana Loki."""
 
-    def __init__(self, name: str, loki_url: str | None = None):
+    def __init__(
+        self,
+        name: str,
+        loki_url: str | None = None,
+        level: Literal["INFO"] | Literal["DEBUG"] = "INFO",
+    ):
         """Initialize standard logger and conditionally set up Loki logging.
 
         Args:
@@ -15,14 +22,14 @@ class MultiLogger(ILogger):
         """
         self.name = name
         self._loki_url = loki_url
-        self.std_logger = StdLogger(name)
+        self.std_logger = StdLogger(name, level)
         self.loki_logger = None
 
         if self._loki_url:
-            self._activate_loki(self._loki_url)
+            self._activate_loki(self._loki_url, level)
 
-    def _activate_loki(self, url: str):
-        self.loki_logger = LokiLogger(self.name, url)
+    def _activate_loki(self, url: str, level: str):
+        self.loki_logger = LokiLogger(self.name, url, level)
 
     def info(self, message: str):
         self.std_logger.info(message)
@@ -43,3 +50,8 @@ class MultiLogger(ILogger):
         self.std_logger.critical(message)
         if self.loki_logger:
             self.loki_logger.critical(message)
+
+    def debug(self, message: str):
+        self.std_logger.debug(message)
+        if self.loki_logger:
+            self.loki_logger.debug(message)
