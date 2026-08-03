@@ -13,6 +13,8 @@
   },
   "python.analysis.typeCheckingMode": "basic",
   "cSpell.words": [
+    "apscheduler",
+    "arcname",
     "baselogger",
     "bestaudio",
     "cooldown",
@@ -29,6 +31,8 @@
     "postprocessors",
     "preferredcodec",
     "preferredquality",
+    "pytest",
+    "pythonpath",
     "stdlogger",
     "writethumbnail",
     "ytmusicapi"

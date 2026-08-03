@@ -35,6 +35,7 @@ services:
       - QUERY_DOWNLOAD_LIMIT_SECS=${QUERY_DOWNLOAD_LIMIT_SECS}
       - CPU_COUNT=${CPU_COUNT}
       - EXPERIMENTAL=${EXPERIMENTAL}
+      - BACKUP_EVERY_N_DAYS=${BACKUP_EVERY_N_DAYS}
 
     volumes:
        - type: bind

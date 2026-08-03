@@ -2,9 +2,11 @@ import asyncio
 import sys
 
 import requests
+from aiogram.enums import ChatMemberStatus
 
+import bot
 from _logger import LOGGER
-from config import DATABASE_PATH, LOKI_URL
+from config import CHANNEL_STORAGE_ID, DATABASE_PATH, LOKI_URL
 from dungeon import DM
 from type import YoutubeSearchResultDict
 
@@ -51,11 +53,24 @@ async def _check_database():
         raise Exception("Database I/O error")
 
 
+async def _check_channel():
+    me = await bot.bot.get_me()
+
+    member = await bot.bot.get_chat_member(chat_id=CHANNEL_STORAGE_ID, user_id=me.id)
+
+    if member.status != ChatMemberStatus.ADMINISTRATOR:
+        raise Exception(f"Bot is not administrator i {CHANNEL_STORAGE_ID} channel")
+
+    if not member.can_post_messages:
+        raise Exception(f"Bot can't post messages in {CHANNEL_STORAGE_ID} channel")
+
+
 async def _check():
     try:
         LOGGER.info("-----HEALTH CHECK-----")
         await _check_database()
         await _check_loki()
+        await _check_channel()
     except Exception as e:
         LOGGER.critical(f"{e}")
         sys.exit(1)
