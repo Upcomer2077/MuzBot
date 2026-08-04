@@ -18,6 +18,7 @@
     "baselogger",
     "bestaudio",
     "cooldown",
+    "cooldowns",
     "delenv",
     "flac",
     "fsize",

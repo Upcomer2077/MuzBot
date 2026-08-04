@@ -67,3 +67,15 @@ class DownloadCallback(CallbackData, prefix="dl"):
 
     video_id: str
     idx: str
+
+
+class PlaylistInfoDict(TypedDict):
+    id: str
+    title: str | None
+
+
+@dataclass(slots=True)
+class PlaylistTask:
+    user_id: int
+    playlist_id: str
+    videos: list[YoutubeSearchResultDict]

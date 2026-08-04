@@ -4,13 +4,15 @@ from typing import TYPE_CHECKING, Optional
 import yt_dlp
 from yt_dlp.utils import PagedList
 
-from type import YoutubeSearchResultDict
+from type import PlaylistInfoDict, YoutubeSearchResultDict
 
 if TYPE_CHECKING:
     from yt_dlp import _Params
 
 
-async def extract_playlist_info(link: str) -> Optional[list[YoutubeSearchResultDict]]:
+async def extract_playlist_info(
+    link: str,
+) -> Optional[tuple[PlaylistInfoDict, list[YoutubeSearchResultDict]]]:
     """Asynchronously extract and parse structured metadata for a specific YouTube Music video track.
 
     Args:
@@ -30,7 +32,6 @@ async def extract_playlist_info(link: str) -> Optional[list[YoutubeSearchResultD
         else PLAYLIST["entries"]
     )
     for track in info:
-        print(track.get("title"))
         videos.append(
             YoutubeSearchResultDict(
                 title=track.get("title") or "UNKNOWN",
@@ -42,7 +43,10 @@ async def extract_playlist_info(link: str) -> Optional[list[YoutubeSearchResultD
                 duration_seconds=track.get("duration") or 0,
             )
         )
-    return videos
+    return (
+        PlaylistInfoDict(title=PLAYLIST.get("title", None), id=PLAYLIST["id"]),
+        videos,
+    )
 
 
 def _extract(link: str, limit: int | None = None):

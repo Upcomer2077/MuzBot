@@ -11,6 +11,7 @@ from config import _SHOW_ON_STARTUP, BACKUP_EVERY_N_DAYS, CPU_POOL, EXPERIMENTAL
 from dungeon import DM
 from GC import GC
 from handlers import get_handlers_router
+from worker import playlist_worker_loop
 
 commands = [
     BotCommand(command="start", description="🚀 Запустить бота"),
@@ -35,8 +36,14 @@ async def main():
     await dp.start_polling(bot)
 
 
+playlist_q_task: asyncio.Task | None = None
+
+
 @dp.startup()
 async def on_startup():
+    global playlist_q_task
+    playlist_q_task = asyncio.create_task(playlist_worker_loop())
+
     B_SHED.start(BACKUP_EVERY_N_DAYS)
     AL.start_limiter()
     await GC.start_gc()
@@ -46,9 +53,11 @@ async def on_startup():
 
 @dp.shutdown()
 async def on_shutdown():
+    if playlist_q_task:
+        playlist_q_task.cancel()
     await DM.close_dungeon()
     await GC.close_gc()
-    CPU_POOL.shutdown(cancel_futures=True)
+    CPU_POOL.shutdown(cancel_futures=True, wait=not EXPERIMENTAL)
     B_SHED.stop()
     LOGGER.info("Graceful shutdown. Bye!")
 

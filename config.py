@@ -23,7 +23,7 @@ EXPERIMENTAL = bool(int(os.environ.get("EXPERIMENTAL", 0)))
 # --------------
 DATABASE_PATH = f"{os.getcwd()}/data/{DB_NAME}.db"
 CACHE_ROOT_DIR = "./.cache"
-CPU_POOL = ProcessPoolExecutor(max(CPU_COUNT - 1, 1), max_tasks_per_child=10)
+CPU_POOL = ProcessPoolExecutor(max(CPU_COUNT - 1, 1))
 MAX_TRACK_DURATION_SECONDS = 60 * 35
 
 _SHOW_ON_STARTUP: dict[str, str | int] = {
