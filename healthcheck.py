@@ -12,25 +12,25 @@ from type import YoutubeSearchResultDict
 
 
 async def _check_loki():
-    LOGGER.info("---LOKI---")
+    LOGGER.debug("---LOKI---")
     if LOKI_URL is None:
-        LOGGER.info("LOKI_URL is None")
+        LOGGER.debug("LOKI_URL is None")
     else:
-        LOGGER.info(f"LOKI_URL is {LOKI_URL}")
+        LOGGER.debug(f"LOKI_URL is {LOKI_URL}")
         ready_url = LOKI_URL.replace("/loki/api/v1/push", "/ready")
         response = await asyncio.to_thread(requests.get, ready_url, timeout=3)
         response.raise_for_status()
         if not response.text.strip() == "ready":
-            raise (Exception("Loki is not ready"))
-    return LOGGER.info("Loki check: pass")
+            raise (Exception("LOKI_URL is specified but LOKI not ready"))
+    return LOGGER.debug("Loki check: pass")
 
 
 async def _check_database():
-    LOGGER.info("---DATABASE---")
-    LOGGER.info(f"DB_CONTAINER_PATH: {DATABASE_PATH}")
+    LOGGER.debug("---DATABASE---")
+    LOGGER.debug(f"DB_CONTAINER_PATH: {DATABASE_PATH}")
     await DM.open_dungeon()
     res = await DM._get_slaves_count()
-    LOGGER.info(f"Slaves in dungeon count: {res}")
+    LOGGER.debug(f"Slaves in dungeon count: {res}")
 
     count_enslaved = await DM.enslave_bulk(
         [
@@ -45,12 +45,11 @@ async def _check_database():
     )
 
     if count_enslaved > 0:
-        LOGGER.info("Database check: passed")
+        LOGGER.debug("Database check: passed")
         await DM.next_door(video_id="0")
     else:
         await DM.next_door(video_id="0")
-        LOGGER.critical("Database check: failed. I/O error. Check your dungeon!")
-        raise Exception("Database I/O error")
+        raise Exception("Database check: failed. I/O error. Check your dungeon!")
 
 
 async def _check_channel():
@@ -67,7 +66,7 @@ async def _check_channel():
 
 async def _check():
     try:
-        LOGGER.info("-----HEALTH CHECK-----")
+        LOGGER.debug("-----HEALTH CHECK-----")
         await _check_database()
         await _check_loki()
         await _check_channel()
@@ -77,7 +76,7 @@ async def _check():
     finally:
         await DM.next_door(video_id="0")
         await DM.close_dungeon()
-        LOGGER.info("-----HEALTH CHECK END-----")
+        LOGGER.debug("-----HEALTH CHECK END-----")
 
 
 if __name__ == "__main__":
