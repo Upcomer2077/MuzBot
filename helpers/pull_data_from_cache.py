@@ -17,6 +17,7 @@ async def pull_data_from_cache(video_id: str):
     """
     cache_data = (video_id, None)
     cache_data = COLD.demand_tribute(video_id)
+    success = False
     if cache_data:
         return (video_id, cache_data)
 
