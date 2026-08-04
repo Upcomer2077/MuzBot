@@ -1,6 +1,14 @@
 from datetime import datetime
 
-from peewee import SQL, BooleanField, CharField, DateTimeField, IntegerField
+from peewee import (
+    SQL,
+    BooleanField,
+    CharField,
+    CompositeKey,
+    DateTimeField,
+    ForeignKeyField,
+    IntegerField,
+)
 from peewee_aio import AIOModel
 
 from dungeon.dispatcher import DB_DISPATCHER
@@ -23,3 +31,38 @@ class TrackCache(AIOModel):
 
     class Meta:
         table_name = "tracks"
+
+
+@DB_DISPATCHER.register
+class PlaylistCache(AIOModel):
+    """Database model for caching downloaded YouTube Music playlists metadata."""
+
+    playlist_id = CharField(
+        primary_key=True, max_length=255, constraints=[SQL("ON CONFLICT IGNORE")]
+    )
+    title = CharField(max_length=255, default="unknown")
+
+    class Meta:
+        table_name = "playlists"
+
+
+@DB_DISPATCHER.register
+class TrackPlaylist(AIOModel):
+    """Junction database model linking tracks and playlists (Many-to-Many relationship)."""
+
+    video_id = ForeignKeyField(
+        TrackCache,
+        backref="playlists",
+        on_delete="CASCADE",
+    )
+
+    playlist_id = ForeignKeyField(
+        PlaylistCache,
+        backref="tracks",
+        on_delete="CASCADE",
+    )
+    track_order = IntegerField(default=0)
+
+    class Meta:
+        table_name = "tracks_playlists"
+        primary_key = CompositeKey("video_id", "playlist_id")

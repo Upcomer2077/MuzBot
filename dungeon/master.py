@@ -4,8 +4,9 @@ from peewee_aio import Manager
 
 from _logger import LOGGER
 from config import MAX_TRACK_DURATION_SECONDS
-from dungeon.models import TrackCache
-from type import YoutubeSearchResultDict
+from dungeon.dispatcher import DB_DISPATCHER
+from dungeon.models import PlaylistCache, TrackCache, TrackPlaylist
+from type import PlaylistInfoDict, YoutubeSearchResultDict
 
 
 class DungeonMaster:
@@ -31,6 +32,8 @@ class DungeonMaster:
             async with self._db_dispatcher:
                 async with self._db_dispatcher.connection():
                     await TrackCache.create_table(safe=True)
+                    await PlaylistCache.create_table(safe=True)
+                    await TrackPlaylist.create_table(safe=True)
                     await self._db_dispatcher.execute("PRAGMA journal_mode=WAL;")
                     await self._db_dispatcher.execute("PRAGMA synchronous=NORMAL;")
                     await self._db_dispatcher.execute("PRAGMA foreign_keys=ON;")
@@ -189,6 +192,52 @@ class DungeonMaster:
             Total row count integer from the tracks table.
         """
         res = await TrackCache.select(TrackCache.video_id).count()
+        return res
+
+    async def add_playlist_and_tracks(
+        self, playlist_info: PlaylistInfoDict, tracks: list[YoutubeSearchResultDict]
+    ):
+        await self.enslave_bulk(tracks)
+        q1 = PlaylistCache.insert(
+            playlist_id=playlist_info["id"], title=playlist_info["title"]
+        )
+        _ = await DB_DISPATCHER.execute(q1)
+        relations_data = [
+            {
+                "video_id": v["video_id"],
+                "playlist_id": playlist_info["id"],
+                "track_order": idx,
+            }
+            for (idx, v) in enumerate(tracks)
+        ]
+        q2 = TrackPlaylist.insert_many(relations_data).on_conflict_ignore()
+        r: int = await DB_DISPATCHER.execute(q2)
+        return r
+
+    async def summon_slaves_from_playlist(
+        self, playlist_id: str
+    ) -> dict[str, TrackCache]:
+        """Fetch cached Telegram file identifiers mapping them to their corresponding video identifiers.
+
+        Args:
+            playlist_id: ytm playlist identifier to query.
+
+        Returns:
+            A dictionary mapping matching video IDs to available Telegram file IDs.
+        """
+        query = (
+            TrackCache.select()
+            .join(TrackPlaylist, on=(TrackCache.video_id == TrackPlaylist.video_id))
+            .where(TrackPlaylist.playlist_id == playlist_id)
+            .order_by(TrackPlaylist.track_order)
+        )
+
+        rows = await query
+
+        res: dict[str, TrackCache] = {}
+        for i in rows:
+            if i.video_id:
+                res[i.video_id] = i
         return res
 
     async def _finalize(self):
