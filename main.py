@@ -58,7 +58,7 @@ async def on_shutdown():
     await DM.close_dungeon()
     await GC.close_gc()
     CPU_POOL.shutdown(cancel_futures=True, wait=not EXPERIMENTAL)
-    B_SHED.stop()
+    await B_SHED.stop()
     LOGGER.info("Graceful shutdown. Bye!")
 
 

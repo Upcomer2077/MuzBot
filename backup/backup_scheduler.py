@@ -24,7 +24,8 @@ class BackupScheduler:
         self._scheduler.start()
         LOGGER.info("Scheduler has been started")
 
-    def stop(self):
+    async def stop(self):
+        await self._job()
         self._scheduler.shutdown()
         LOGGER.info("Scheduler has been stopped")
 
@@ -59,7 +60,8 @@ class BackupScheduler:
         Args:
             archive_path (str): File path of the backup archive to be sent.
         """
-        caption = f"📦 **Backup**\n📅 {datetime.now().strftime('%d.%m.%Y %H:%M')}"
+        bot_info = await bot.bot.get_me()
+        caption = f"📦 **#Backup** for @{bot_info.username or 'bot'}\n📅 {datetime.now().strftime('%d.%m.%Y %H:%M')}"
         document = FSInputFile(archive_path)
         try:
             await bot.bot.send_document(
