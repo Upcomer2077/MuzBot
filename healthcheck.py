@@ -53,15 +53,17 @@ async def _check_database():
 
 
 async def _check_channel():
-    me = await bot.bot.get_me()
+    async with bot.bot.context():
+        me = await bot.bot.get_me()
 
-    member = await bot.bot.get_chat_member(chat_id=CHANNEL_STORAGE_ID, user_id=me.id)
+        member = await bot.bot.get_chat_member(
+            chat_id=CHANNEL_STORAGE_ID, user_id=me.id
+        )
+        if member.status != ChatMemberStatus.ADMINISTRATOR:
+            raise Exception(f"Bot is not administrator i {CHANNEL_STORAGE_ID} channel")
 
-    if member.status != ChatMemberStatus.ADMINISTRATOR:
-        raise Exception(f"Bot is not administrator i {CHANNEL_STORAGE_ID} channel")
-
-    if not member.can_post_messages:
-        raise Exception(f"Bot can't post messages in {CHANNEL_STORAGE_ID} channel")
+        if not member.can_post_messages:
+            raise Exception(f"Bot can't post messages in {CHANNEL_STORAGE_ID} channel")
 
 
 async def _check():
