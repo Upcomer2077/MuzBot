@@ -7,11 +7,11 @@ from _logger import LOGGER
 from action_limiter import AL
 from backup import B_SHED
 from bot import bot, dp
-from config import _SHOW_ON_STARTUP, BACKUP_EVERY_N_DAYS, CPU_POOL, EXPERIMENTAL
+from config import BACKUP_EVERY_N_DAYS, CPU_POOL, EXPERIMENTAL, SHOW_ON_STARTUP
 from dungeon import DM
 from GC import GC
 from handlers import get_handlers_router
-from worker import playlist_worker_loop
+from worker.loop import playlist_worker_loop
 
 commands = [
     BotCommand(command="start", description="🚀 Запустить бота"),
@@ -20,11 +20,7 @@ commands = [
         command="force",
         description="⚡ Скачать трек напрямую по ссылке из youtube.music.com",
     ),
-    *(
-        [BotCommand(command="playlist", description="Скачать плейлист")]
-        if EXPERIMENTAL
-        else []
-    ),
+    BotCommand(command="playlist", description="⚡ Скачать плейлист по ссылке"),
 ]
 
 
@@ -64,7 +60,7 @@ async def on_shutdown():
 
 if __name__ == "__main__":
     LOGGER.info("Attempting to start bot...")
-    for k, v in _SHOW_ON_STARTUP.items():
+    for k, v in SHOW_ON_STARTUP.items():
         LOGGER.info(f"{k}: {v}")
     LOGGER.info(f"EXPERIMENTAL: {EXPERIMENTAL}")
 

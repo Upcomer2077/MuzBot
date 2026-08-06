@@ -21,17 +21,20 @@ DB_NAME = os.environ.get("DB_NAME") or "db2"
 REPLY_DISAPPEAR_TIMEOUT = max(int(os.environ.get("REPLY_DISAPPEAR_TIMEOUT", 0)), 30)
 EXPERIMENTAL = bool(int(os.environ.get("EXPERIMENTAL", 0)))
 DEBUG = bool(int(os.environ.get("DEBUG", 0)))
+PLAYLISTS_LIMIT = int(os.environ.get("PLAYLISTS_LIMIT", 1))
 # --------------
 DATABASE_PATH = f"{os.getcwd()}/data/{DB_NAME}.db"
 CACHE_ROOT_DIR = "./.cache"
 CPU_POOL = ProcessPoolExecutor(max(CPU_COUNT - 1, 1))
 MAX_TRACK_DURATION_SECONDS = 60 * 35
 
-_SHOW_ON_STARTUP: dict[str, str | int] = {
+SHOW_ON_STARTUP: dict[str, str | int] = {
     "CHANNEL_STORAGE_ID": CHANNEL_STORAGE_ID,
     "TRACKS_PER_LIMIT": TRACKS_PER_LIMIT,
     "QUERY_DOWNLOAD_LIMIT_SECS": QUERY_DOWNLOAD_LIMIT_SECS,
     "BACKUP_EVERY_N_DAYS": BACKUP_EVERY_N_DAYS,
     "CPU_COUNT": CPU_COUNT,
     "DATABASE_CONTAINER_PATH": DATABASE_PATH,
+    "PLAYLISTS_LIMIT": PLAYLISTS_LIMIT,
+    "DEBUG": DEBUG,
 }

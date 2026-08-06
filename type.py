@@ -69,13 +69,19 @@ class DownloadCallback(CallbackData, prefix="dl"):
     idx: str
 
 
+class DownloadPlaylistCallback(CallbackData, prefix="dlp"):
+    """Callback data schema defining expected inline keyboard button parameters for handling individual playlist download requests."""
+
+    playlist_id: str
+
+
 class PlaylistInfoDict(TypedDict):
     id: str
     title: str | None
+    artist: str | None
 
 
 @dataclass(slots=True)
 class PlaylistTask:
     user_id: int
     playlist_id: str
-    videos: list[YoutubeSearchResultDict]
