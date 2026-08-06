@@ -15,7 +15,7 @@ async def pull_data_from_cache(video_id: str):
     Returns:
         A dictionary with audio and thumbnail paths if retrieved successfully, False otherwise.
     """
-    cache_data = (video_id, None)
+    result = (video_id, None)
     cache_data = COLD.demand_tribute(video_id)
     success = False
     if cache_data:
@@ -28,5 +28,7 @@ async def pull_data_from_cache(video_id: str):
         LOGGER.warn(f"Error while running in executor!!! {e}")
     if not success:
         return (video_id, None)
-
-    return (video_id, COLD.demand_tribute(video_id))
+    cache_data = COLD.demand_tribute(video_id)
+    if cache_data:
+        result = (video_id, cache_data)
+    return result
