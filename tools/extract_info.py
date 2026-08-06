@@ -23,12 +23,12 @@ async def extract_video_info(video_id: str) -> Optional[YoutubeSearchResultDict]
     VIDEO = await asyncio.shield(asyncio.to_thread(_extract, video_id))
 
     if VIDEO:
-        title: str = VIDEO.get("title") or "Unknown"
+        title: str = VIDEO.get("title") or "UNKNOWN"
         artist = ", ".join(
             [
                 artist
                 for artist in VIDEO.get("artists")
-                or [VIDEO.get("uploader") or "Unknown"]
+                or [VIDEO.get("uploader") or "unknown"]
             ]
         )
         duration: str = VIDEO.get("duration_string", "0:00")
