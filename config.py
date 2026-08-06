@@ -21,7 +21,7 @@ DB_NAME = os.environ.get("DB_NAME") or "db2"
 REPLY_DISAPPEAR_TIMEOUT = max(int(os.environ.get("REPLY_DISAPPEAR_TIMEOUT", 0)), 30)
 EXPERIMENTAL = bool(int(os.environ.get("EXPERIMENTAL", 0)))
 DEBUG = bool(int(os.environ.get("DEBUG", 0)))
-PLAYLISTS_LIMIT = int(os.environ.get("PLAYLISTS_LIMIT", 1))
+PLAYLISTS_LIMIT = max(int(os.environ.get("PLAYLISTS_LIMIT", 1)), 1)
 # --------------
 DATABASE_PATH = f"{os.getcwd()}/data/{DB_NAME}.db"
 CACHE_ROOT_DIR = "./.cache"
