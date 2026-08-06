@@ -194,12 +194,17 @@ class DungeonMaster:
         res = await TrackCache.select(TrackCache.video_id).count()
         return res
 
+    async def get_playlist(self, pl_id: str):
+        return await PlaylistCache.get_or_none(PlaylistCache.playlist_id == pl_id)
+
     async def add_playlist_and_tracks(
         self, playlist_info: PlaylistInfoDict, tracks: list[YoutubeSearchResultDict]
     ):
         await self.enslave_bulk(tracks)
         q1 = PlaylistCache.insert(
-            playlist_id=playlist_info["id"], title=playlist_info["title"]
+            playlist_id=playlist_info["id"],
+            title=playlist_info["title"],
+            artist=playlist_info["artist"],
         )
         _ = await DB_DISPATCHER.execute(q1)
         relations_data = [
@@ -216,7 +221,7 @@ class DungeonMaster:
 
     async def summon_slaves_from_playlist(
         self, playlist_id: str
-    ) -> dict[str, TrackCache]:
+    ) -> dict[str, TrackCache] | None:
         """Fetch cached Telegram file identifiers mapping them to their corresponding video identifiers.
 
         Args:
@@ -235,6 +240,8 @@ class DungeonMaster:
         rows = await query
 
         res: dict[str, TrackCache] = {}
+        if not len(rows):
+            return None
         for i in rows:
             if i.video_id:
                 res[i.video_id] = i

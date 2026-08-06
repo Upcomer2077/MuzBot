@@ -40,7 +40,8 @@ class PlaylistCache(AIOModel):
     playlist_id = CharField(
         primary_key=True, max_length=255, constraints=[SQL("ON CONFLICT IGNORE")]
     )
-    title = CharField(max_length=255, default="unknown")
+    title = CharField(max_length=255, default="UNKNOWN")
+    artist = CharField(max_length=255, default="unknown")
 
     class Meta:
         table_name = "playlists"
