@@ -6,7 +6,7 @@ from aiogram.exceptions import TelegramNetworkError
 
 import bot
 from _logger import LOGGER
-from config import CHANNEL_STORAGE_ID, CPU_COUNT, CPU_POOL
+from config import CHANNEL_STORAGE_ID, CPU_POOL, WORKER_CORES_COUNT
 from dungeon import DM
 from helpers import prepare_audio_file_to_send
 from overlord import COLD
@@ -36,7 +36,7 @@ class WorkerPipe:
         self._active_downloads: dict[
             str, list[asyncio.Future[tuple[str, _DownloadResult]]]
         ] = {}
-        self._pool_semaphore = asyncio.Semaphore(max(1, CPU_COUNT - 1))
+        self._pool_semaphore = asyncio.Semaphore(WORKER_CORES_COUNT)
         self._worker_task: Optional[asyncio.Task] = None
 
     def start(self):

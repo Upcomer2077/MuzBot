@@ -12,13 +12,14 @@ At first create file `.env` in project's root folder or just add envs into your 
 
 **Caveat**: Bot won't fail to start if you haven't specified `LOKI_URL`. In other case it will be stopped with `critical` error if `loki` is unhealthy
 
-Then create a `data/` folder and a `docker-compose.yaml`  file. Here is an example with deploying `grafana/loki` log system:
+Then create a `data/` folder and a `docker-compose.yaml`  file. Here is an example with deploying `grafana/loki` log system.
 
 ### ⚠️ EXPERIMENTAL
 
 Some features in `alpha` and `beta` versions are marked as **experimental** and won't launch without explicit configuration in `.env` or system vars.
 
 ```yaml
+# Minimal configuration example
 services:
   bot:
     image: ghcr.io/upcomer2077/muzbot:latest
@@ -30,12 +31,7 @@ services:
     init: true
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
-      - DB_NAME=${DB_NAME}
-      - TRACKS_PER_LIMIT=${TRACKS_PER_LIMIT}
-      - QUERY_DOWNLOAD_LIMIT_SECS=${QUERY_DOWNLOAD_LIMIT_SECS}
-      - CPU_COUNT=${CPU_COUNT}
-      - EXPERIMENTAL=${EXPERIMENTAL}
-      - BACKUP_EVERY_N_DAYS=${BACKUP_EVERY_N_DAYS}
+      - CHANNEL_STORAGE_ID=${CHANNEL_STORAGE_ID}
 
     volumes:
        - type: bind
@@ -99,5 +95,7 @@ networks:
 - `Github Actions` - runs CI/CD pipelines
 
 Also bot uses a `Dual logging` pattern which means you are always able to see logs in your STD output.
+
+Additionally, the bot employs a custom `Reactor` pattern, meaning it pipes all inbound single and playlist download jobs into an isolated, event-driven queue powered by `asyncio.Future` and `ProcessPoolExecutor` to ensure strict multi-core load balancing without choking the main process.
 
 ## Good luck

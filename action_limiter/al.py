@@ -4,6 +4,7 @@ import time
 from _logger import LOGGER
 from config import (
     PLAYLIST_DOWNLOAD_COOLDOWN_SECS,
+    PLAYLISTS_LIMIT,
     QUERY_DOWNLOAD_LIMIT_SECS,
     TRACKS_PER_LIMIT,
 )
@@ -27,7 +28,7 @@ class LightLimiter:
 
         self._PLAYLIST_BANK: dict[int, UserQueryLimit] = {}
         self._PLAYLIST_COOLDOWN_SECS = PLAYLIST_DOWNLOAD_COOLDOWN_SECS
-        self._PLAYLIST_PER_LIMIT = 1
+        self._PLAYLIST_PER_LIMIT = PLAYLISTS_LIMIT
 
     def start_limiter(self):
         GC.register_task(asyncio.create_task(self._garbage_collector()))

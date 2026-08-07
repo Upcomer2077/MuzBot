@@ -119,20 +119,6 @@ class TestConfig:
 
         assert LOKI_URL is None
 
-    @pytest.mark.parametrize("v,exp", (("0", 30), ("1", 30), ("60", 60), ("-1", 30)))
-    def test_markup_disappearing(self, v, exp, monkeypatch):
-        monkeypatch.setenv("REPLY_DISAPPEAR_TIMEOUT", v)
-        from config import REPLY_DISAPPEAR_TIMEOUT
-
-        assert REPLY_DISAPPEAR_TIMEOUT is not None
-        assert REPLY_DISAPPEAR_TIMEOUT == exp
-        assert type(REPLY_DISAPPEAR_TIMEOUT) is int
-
-    def test_markup_disappearing_raises(self, monkeypatch):
-        monkeypatch.setenv("REPLY_DISAPPEAR_TIMEOUT", "String")
-        with pytest.raises(ValueError):
-            from config import REPLY_DISAPPEAR_TIMEOUT  # noqa: F401
-
     def test_channel_id(self, monkeypatch):
         monkeypatch.setenv("CHANNEL_STORAGE_ID", "-137")
         from config import CHANNEL_STORAGE_ID

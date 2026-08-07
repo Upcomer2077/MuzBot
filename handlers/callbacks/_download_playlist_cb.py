@@ -9,7 +9,7 @@ from aiogram.utils.media_group import MediaGroupBuilder, MediaType
 import bot
 from _logger import LOGGER
 from action_limiter import AL
-from config import PLAYLIST_DOWNLOAD_COOLDOWN_SECS
+from config import PLAYLIST_DOWNLOAD_COOLDOWN_SECS, PLAYLISTS_LIMIT
 from dungeon import DM
 from helpers.utils import U
 from tools.extract_playlist_info import extract_playlist_info
@@ -42,7 +42,7 @@ async def handle_playlist_download(
 
     if not AL.is_playlist_download_allowed(USER_ID):
         return ANSWER.edit_text(
-            f"Достигнут лимит скачивания плейлистов в {PLAYLIST_DOWNLOAD_COOLDOWN_SECS} секунд",
+            f"Достигнут лимит скачивания: {PLAYLISTS_LIMIT} плейлистов за {PLAYLIST_DOWNLOAD_COOLDOWN_SECS} секунд",
         )
 
     if AL.is_send_action_allowed(USER_ID):
