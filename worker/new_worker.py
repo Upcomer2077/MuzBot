@@ -125,7 +125,9 @@ class WorkerPipe:
 
     async def _worker_loop(self) -> NoReturn:
         """Main loop."""
-        LOGGER.info(f"⚙️ Worker loop has been started. Slots: {self._pool_semaphore}")
+        LOGGER.info(
+            f"⚙️ Worker loop has been started. Slots: {self._pool_semaphore._value}"
+        )
 
         while True:
             task = await self._queue.get()
