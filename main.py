@@ -12,7 +12,6 @@ from dungeon import DM
 from GC import GC
 from handlers import get_handlers_router
 from worker import TRACK_PIPELINE
-from worker.loop import playlist_worker_loop
 
 commands = [
     BotCommand(command="start", description="🚀 Запустить бота"),
@@ -33,13 +32,8 @@ async def main():
     await dp.start_polling(bot)
 
 
-playlist_q_task: asyncio.Task | None = None
-
-
 @dp.startup()
 async def on_startup():
-    global playlist_q_task
-    playlist_q_task = asyncio.create_task(playlist_worker_loop())
 
     B_SHED.start(BACKUP_EVERY_N_DAYS)
     AL.start_limiter()
@@ -51,8 +45,6 @@ async def on_startup():
 
 @dp.shutdown()
 async def on_shutdown():
-    if playlist_q_task:
-        playlist_q_task.cancel()
     TRACK_PIPELINE.stop()
     await DM.close_dungeon()
     await GC.close_gc()

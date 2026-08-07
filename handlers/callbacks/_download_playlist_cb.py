@@ -1,6 +1,5 @@
 import asyncio
 from collections.abc import Sequence
-from functools import reduce
 from typing import NamedTuple
 
 from aiogram import Router
@@ -10,7 +9,6 @@ from aiogram.utils.media_group import MediaGroupBuilder, MediaType
 import bot
 from _logger import LOGGER
 from dungeon import DM
-from helpers.cache_reducer import split_by_cache
 from helpers.get_ytm_video_link import get_ytm_playlist_link
 from tools.extract_playlist_info import extract_playlist_info
 from type import DownloadPlaylistCallback
@@ -56,12 +54,9 @@ async def handle_playlist_download(
                 USER_ID, "Неизвестная ошибка. Повторите попытку."
             )
 
-    r = reduce(split_by_cache, tracks_info.values(), {"cached": [], "missing": []})
-    non_cached_tracks = r["missing"]
-
     tasks = [
         TRACK_PIPELINE.submit(v.video_id, track_title=v.title, artist=v.artist)
-        for v in non_cached_tracks
+        for v in tracks_info.values()
         if v.telegram_file_id is None and not v.is_too_large
     ]
 

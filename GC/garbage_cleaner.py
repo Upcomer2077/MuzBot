@@ -9,8 +9,6 @@ class GarbageCleaner:
     def __init__(self):
         self._GARBAGE_COLLECTOR_TASKS: set[asyncio.Task] = set()
 
-        # ---- GARBAGE CLEANER
-
     async def start_gc(self):
         """Start the background asynchronous garbage collector task for cleanups."""
         LOGGER.info("Starting custom GC")

@@ -40,14 +40,12 @@ class DungeonMaster:
                     await self._db_dispatcher.execute(
                         "PRAGMA auto_vacuum = INCREMENTAL;"
                     )
-            await self._finalize()
         except Exception as e:
             LOGGER.critical(f"Caught error while opening the dungeon: {e}")
 
     async def close_dungeon(self):
         """Reset operational database states and disconnect safely from the storage engine."""
 
-        await self._finalize()
         await self._db_dispatcher.disconnect()
 
     async def enslave_bulk(self, tracks: list[YoutubeSearchResultDict]) -> int:
@@ -151,7 +149,6 @@ class DungeonMaster:
         video_id: str | list[str],
         telegram_file_id: str | None = None,
         is_too_large: bool | None = None,
-        is_work_in_progress: bool | None = None,
     ) -> bool:
         """Update attribute states, processing status flags, or Telegram properties on a specific track.
 
@@ -159,7 +156,6 @@ class DungeonMaster:
             video_id: Target YouTube track identifier.
             telegram_file_id: Unique Telegram cloud storage file reference. Defaults to None.
             is_too_large: Constraint flag indicating file size exceeded limits. Defaults to None.
-            is_work_in_progress: Download concurrency lock status flag. Defaults to None.
 
         Returns:
             True if any database records were modified, False otherwise.
@@ -168,7 +164,6 @@ class DungeonMaster:
         update_data = {
             TrackCache.telegram_file_id: telegram_file_id,
             TrackCache.is_too_large: is_too_large,
-            TrackCache.is_work_in_progress: is_work_in_progress,
         }
         filtered_update_data = {k: v for k, v in update_data.items() if v is not None}
         try:
@@ -246,13 +241,3 @@ class DungeonMaster:
             if i.video_id:
                 res[i.video_id] = i
         return res
-
-    async def _finalize(self):
-        """Reset temporary runtime processing flags globally across all tracks back to inactive states."""
-        query = TrackCache.update(is_work_in_progress=False).where(
-            TrackCache.is_work_in_progress == True  # noqa: E712
-        )
-        try:
-            await self._db_dispatcher.execute(query)
-        except Exception as e:
-            LOGGER.error(f"❌ Не удалось обновить базу данных при выключении: {e}")

@@ -26,7 +26,6 @@ class TrackCache(AIOModel):
     telegram_file_id = CharField(max_length=255, null=True)
     track_duration = IntegerField(default=0)
     is_too_large = BooleanField(default=False, null=True)
-    is_work_in_progress = BooleanField(default=False, null=True)
     created_at = DateTimeField(default=datetime.now, null=True)
 
     class Meta:
