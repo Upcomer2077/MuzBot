@@ -7,6 +7,7 @@ from aiogram.exceptions import TelegramNetworkError
 import bot
 from _logger import LOGGER
 from config import CHANNEL_STORAGE_ID, CPU_COUNT, CPU_POOL
+from dungeon import DM
 from helpers import prepare_audio_file_to_send
 from overlord import COLD
 from tools.download import download_from_ytm
@@ -80,13 +81,12 @@ class WorkerPipe:
                 success = await loop.run_in_executor(CPU_POOL, download_from_ytm, v_id)
                 cache = COLD.demand_tribute(v_id)
                 if success and cache:
-                    (
-                        file_id,
-                        is_too_large,
-                        is_error,
-                    ) = await self._send_non_cached_to_telegram(
+                    R = await self._send_non_cached_to_telegram(
                         cache, title=title, artist=artist
                     )
+                    is_too_large = R.is_too_large
+                    is_error = R.is_error
+                    file_id = R.file_id
                 else:
                     is_error = True
                 LOGGER.debug(f"Download task completed on {v_id}")
@@ -94,7 +94,10 @@ class WorkerPipe:
             except Exception as e:
                 is_error = True
                 LOGGER.error(f"💥Error in worker loop. Video {v_id}: {e}")
-
+        if not is_error:
+            await DM.fisting(
+                video_id=v_id, telegram_file_id=file_id, is_too_large=is_too_large
+            )
         COLD.annihilate(v_id)
 
         futures_to_wakeup = self._active_downloads.pop(v_id, [])
@@ -123,7 +126,7 @@ class WorkerPipe:
             LOGGER.debug(f"Send track {title} to channel")
 
         except TelegramNetworkError as e:
-            if e.message.find("Request Entity Too Large") != -1:
+            if str(e).find("Request Entity Too Large") != -1:
                 is_too_large = True
                 LOGGER.debug(f"Track {title} is too large")
 
@@ -132,7 +135,7 @@ class WorkerPipe:
         finally:
             if m and m.audio:
                 file_id = m.audio.file_id
-        return (file_id, is_too_large, is_error)
+        return _DownloadResult(file_id, is_too_large, is_error)
 
     async def _worker_loop(self) -> NoReturn:
         """Main loop."""
