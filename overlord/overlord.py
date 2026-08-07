@@ -48,6 +48,7 @@ class CacheOverlord:
         Returns:
             A structured dictionary containing verified file pathways, or None if the audio file is missing.
         """
+        LOGGER.debug(f"Getting directory content on {video_id}")
         content = self._get_dir_content(video_id)
 
         if content is None:
@@ -61,7 +62,7 @@ class CacheOverlord:
                 audio_path = file
             elif file.endswith((".jpg", ".jpeg", ".webp", ".png")):
                 thumbnail_path = file
-
+        LOGGER.debug(f"Got audio and thumbnail: {audio_path}, {thumbnail_path}")
         if audio_path is None:
             return None
         return TrackDirContentDict(
@@ -81,7 +82,9 @@ class CacheOverlord:
         if not self._lookup(video_id):
             return True
         try:
+            LOGGER.debug(f"Removing dir {video_id}")
             shutil.rmtree(p)
+            LOGGER.debug(f"Removed dir {video_id}")
             return True
         except FileNotFoundError:
             LOGGER.error(f"Cache drop error: The folder {p} does not exist")

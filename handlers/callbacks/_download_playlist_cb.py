@@ -9,7 +9,6 @@ from aiogram.utils.media_group import MediaGroupBuilder, MediaType
 import bot
 from _logger import LOGGER
 from dungeon import DM
-from helpers.get_ytm_video_link import get_ytm_playlist_link
 from tools.extract_playlist_info import extract_playlist_info
 from type import DownloadPlaylistCallback
 from worker import TRACK_PIPELINE
@@ -40,7 +39,7 @@ async def handle_playlist_download(
     tracks_info = await DM.summon_slaves_from_playlist(PLAYLIST_ID)
 
     if not tracks_info:
-        r = await extract_playlist_info(get_ytm_playlist_link(PLAYLIST_ID))
+        r = await extract_playlist_info(PLAYLIST_ID)
         if not r:
             return bot.bot.send_message(USER_ID, "404 🤷")
         (playlist_info, videos) = r

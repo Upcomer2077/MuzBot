@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, Optional
 import yt_dlp
 from yt_dlp.utils import PagedList
 
+from _logger import LOGGER
+from helpers.get_ytm_video_link import get_ytm_playlist_link
 from tools.extract_info import extract_video_info
 from type import PlaylistInfoDict, YoutubeSearchResultDict
 
@@ -12,7 +14,7 @@ if TYPE_CHECKING:
 
 
 async def extract_playlist_info(
-    link: str,
+    playlist_id: str,
 ) -> Optional[tuple[PlaylistInfoDict, list[YoutubeSearchResultDict]]]:
     """Asynchronously extract and parse structured metadata for a specific YouTube Music video track.
 
@@ -22,7 +24,13 @@ async def extract_playlist_info(
     Returns:
         A structured dictionary with video metadata if successful, or None if extraction fails.
     """
-    PLAYLIST = await asyncio.shield(asyncio.to_thread(_extract, link))
+    LOGGER.debug(f"Extracting info about playlist {playlist_id}")
+
+    PLAYLIST = await asyncio.shield(
+        asyncio.to_thread(_extract, get_ytm_playlist_link(playlist_id))
+    )
+    LOGGER.debug(f"Info about playlist {bool(PLAYLIST)}")
+
     if PLAYLIST is None or "entries" not in PLAYLIST:
         return None
     videos: list[YoutubeSearchResultDict] = []

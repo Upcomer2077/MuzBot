@@ -47,7 +47,7 @@ def download_from_ytm(video_id: str):
         "quiet": True,
         "retries": 3,
     }
-    LOGGER.info(f"Dl-PID for {video_id}: {os.getpid()}")
+    LOGGER.debug(f"Dl-PID for {video_id}: {os.getpid()}")
     LOGGER.info(f"Attempting to download video {video_id}")
     for i in range(3):
         try:
@@ -60,5 +60,5 @@ def download_from_ytm(video_id: str):
             LOGGER.error(f"Error while downloading video. Attempt: {i + 1}. {e}")
             time.sleep(1)
             continue
-    LOGGER.warn(f"Download {video_id} failed!")
+    LOGGER.warn(f"Download of video {video_id} failed!")
     return False

@@ -23,9 +23,8 @@ class LightLimiter:
         self._TRACKS_PER_LIMIT = TRACKS_PER_LIMIT
 
     def start_limiter(self):
-        LOGGER.info("Starting to register limiter GC task")
         GC.register_task(asyncio.create_task(self._garbage_collector()))
-        LOGGER.info("DONE")
+        LOGGER.debug("Action limiter started")
 
     def is_allowed_send_action(
         self,
@@ -80,7 +79,9 @@ class LightLimiter:
 
                 if (len(self._ACTIONS_BANK) < 20) or (len(self._QUERIES_BANK) < 20):
                     continue
-
+                LOGGER.debug(
+                    f"Collecting garbage. Actions bank({len(self._ACTIONS_BANK)}) | Queries bank:({len(self._QUERIES_BANK)})"
+                )
                 expired_chats = [
                     chat_id
                     for chat_id, last_time in self._ACTIONS_BANK.items()
@@ -96,6 +97,9 @@ class LightLimiter:
                     self._ACTIONS_BANK.pop(chat_id)
                 for chat_id in expired_limits:
                     self._QUERIES_BANK.pop(chat_id)
+                LOGGER.debug(
+                    f"Collecting garbage done. Actions bank({len(self._ACTIONS_BANK)}) | Queries bank:({len(self._QUERIES_BANK)})"
+                )
 
         except asyncio.CancelledError, KeyboardInterrupt:
             pass

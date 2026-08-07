@@ -20,14 +20,20 @@ class BackupScheduler:
         Args:
             every_n_days (int): Interval in days between consecutive backups.
         """
-        self._setup_job(every_n_days)
-        self._scheduler.start()
-        LOGGER.info("Scheduler has been started")
+        try:
+            self._setup_job(every_n_days)
+            self._scheduler.start()
+            LOGGER.debug("Backup scheduler has been started.")
+        except Exception as e:
+            LOGGER.error(f"Backup scheduler has NOT been started!!! {e}")
 
     async def stop(self):
-        await self._job()
-        self._scheduler.shutdown()
-        LOGGER.info("Scheduler has been stopped")
+        try:
+            await self._job()
+            self._scheduler.shutdown()
+            LOGGER.debug("Backup scheduler has been stopped")
+        except Exception as e:
+            LOGGER.error(f"Error while stopping backup scheduler! {e}")
 
     def _make_backup(self):
         """Create a compressed tar.xz archive of the database file.
@@ -37,7 +43,7 @@ class BackupScheduler:
         """
         backup_dir = f"{CACHE_ROOT_DIR}/backups"
         if not os.path.exists(DATABASE_PATH):
-            LOGGER.error(f"BACKUP: file {DATABASE_PATH} not found.")
+            LOGGER.critical(f"BACKUP: file {DATABASE_PATH} not found.")
             return (False, None)
 
         os.makedirs(backup_dir, exist_ok=True)
@@ -49,6 +55,7 @@ class BackupScheduler:
         try:
             with tarfile.open(archive_path, "w:xz") as tar:
                 tar.add(DATABASE_PATH, arcname=os.path.basename(DATABASE_PATH))
+            LOGGER.debug(f"Backup created: {archive_path}")
             return (True, archive_path)
         except Exception as e:
             LOGGER.error(f"Error while making backup tar: {e}")
@@ -71,6 +78,7 @@ class BackupScheduler:
                 parse_mode="Markdown",
                 disable_notification=True,
             )
+            LOGGER.info("Backup file was send to channel")
         except Exception as e:
             LOGGER.error(f"Backup send failed: {e}")
 

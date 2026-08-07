@@ -44,6 +44,7 @@ class WorkerPipe:
     def stop(self):
         if self._worker_task:
             self._worker_task.cancel()
+        LOGGER.debug("Worker loop stopped.")
 
     async def submit(self, video_id: str, *, track_title: str, artist: str):
         """Entry point. Puts task to worker loop
@@ -55,13 +56,12 @@ class WorkerPipe:
 
         """
         if video_id in self._active_downloads:
-            LOGGER.info(
-                f"🔗 Трек {video_id} уже скачивается. Добавляем в список ожидания..."
-            )
+            LOGGER.debug(f"🔗 Already downloading {video_id}. Queued...")
             fut: asyncio.Future[tuple[str, _DownloadResult]] = asyncio.Future()
             self._active_downloads[video_id].append(fut)
             return await fut
 
+        LOGGER.debug(f"Appending download task to worker queue: {video_id}")
         task = DownloadTask(video_id=video_id, track_title=track_title, artist=artist)
         self._active_downloads[video_id] = [task.future]
 
@@ -75,6 +75,7 @@ class WorkerPipe:
         file_id = None
         async with self._pool_semaphore:
             try:
+                LOGGER.debug(f"Starting worker task on {v_id}")
                 loop = asyncio.get_event_loop()
                 success = await loop.run_in_executor(CPU_POOL, download_from_ytm, v_id)
                 cache = COLD.demand_tribute(v_id)
@@ -88,6 +89,8 @@ class WorkerPipe:
                     )
                 else:
                     is_error = True
+                LOGGER.debug(f"Download task completed on {v_id}")
+
             except Exception as e:
                 is_error = True
                 LOGGER.error(f"💥Error in worker loop. Video {v_id}: {e}")
@@ -97,6 +100,7 @@ class WorkerPipe:
         futures_to_wakeup = self._active_downloads.pop(v_id, [])
         for fut in futures_to_wakeup:
             if not fut.done():
+                LOGGER.debug(f"Setting result to worker tasks on {v_id}")
                 fut.set_result((v_id, _DownloadResult(file_id, is_too_large, is_error)))
 
     async def _send_non_cached_to_telegram(
@@ -110,12 +114,18 @@ class WorkerPipe:
         file_id = None
         a, tn = prepare_audio_file_to_send.prepare_audio_file_to_send(cache)
         try:
+            LOGGER.debug(f"Sending track {title} to channel")
+
             m = await bot.bot.send_audio(
                 CHANNEL_STORAGE_ID, audio=a, thumbnail=tn, title=title, performer=artist
             )
+            LOGGER.debug(f"Send track {title} to channel")
+
         except TelegramNetworkError as e:
             if e.message.find("Request Entity Too Large") != -1:
                 is_too_large = True
+                LOGGER.debug(f"Track {title} is too large")
+
             LOGGER.error(f"Network error: {e}")
             is_error = True
         finally:
@@ -125,12 +135,13 @@ class WorkerPipe:
 
     async def _worker_loop(self) -> NoReturn:
         """Main loop."""
-        LOGGER.info(
+        LOGGER.debug(
             f"⚙️ Worker loop has been started. Slots: {self._pool_semaphore._value}"
         )
 
         while True:
             task = await self._queue.get()
+            LOGGER.debug(f"Got new task from worker queue: {task.video_id}")
 
             asyncio.create_task(
                 self._execute_download_task(

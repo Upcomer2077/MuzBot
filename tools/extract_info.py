@@ -20,7 +20,10 @@ async def extract_video_info(video_id: str) -> Optional[YoutubeSearchResultDict]
     Returns:
         A structured dictionary with video metadata if successful, or None if extraction fails.
     """
+    LOGGER.debug(f"Extracting info about {video_id}")
+
     VIDEO = await asyncio.shield(asyncio.to_thread(_extract, video_id))
+    LOGGER.debug(f"Has info about {video_id}: {bool(VIDEO)}")
 
     if VIDEO:
         title: str = VIDEO.get("title") or "UNKNOWN"

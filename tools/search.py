@@ -15,9 +15,11 @@ def search_in_ytm(search_query: str, limit: int = 10):
         A list of structured dictionaries containing normalized song metadata and video identifiers.
     """
     YT = YTMusic()
+    LOGGER.debug(f"Extracting info query: {search_query}")
 
     try:
         SEARCH_RESULTS = YT.search(query=search_query, filter="songs", limit=limit)
+        LOGGER.debug(f"Found info query: {bool(SEARCH_RESULTS)}")
     except Exception:
         LOGGER.critical(f'Can\'t pull info from "{search_query}" query')
     video_ids: list[YoutubeSearchResultDict] = []

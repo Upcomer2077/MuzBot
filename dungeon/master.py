@@ -40,13 +40,14 @@ class DungeonMaster:
                     await self._db_dispatcher.execute(
                         "PRAGMA auto_vacuum = INCREMENTAL;"
                     )
+            LOGGER.debug("Database pragma set. Connection success")
         except Exception as e:
             LOGGER.critical(f"Caught error while opening the dungeon: {e}")
 
     async def close_dungeon(self):
         """Reset operational database states and disconnect safely from the storage engine."""
-
         await self._db_dispatcher.disconnect()
+        LOGGER.debug("Database connection closed")
 
     async def enslave_bulk(self, tracks: list[YoutubeSearchResultDict]) -> int:
         """Insert multiple tracks into the cache database in a single batch query.
@@ -77,10 +78,11 @@ class DungeonMaster:
                         ),
                     }
                 )
-
+            LOGGER.debug(f"Inserting tracks (bulk). {len(tracks)}")
             query = TrackCache.insert_many(data_to_insert)
 
             inserted_rows: int = await self._db_dispatcher.execute(query)
+            LOGGER.debug(f"Inserting complete. Total: {inserted_rows}")
             return inserted_rows
 
         except Exception as e:
@@ -96,10 +98,11 @@ class DungeonMaster:
         Returns:
             A dictionary mapping matching video IDs to available Telegram file IDs.
         """
+        LOGGER.debug(f"Selecting slaves {video_ids}")
         query = TrackCache.select().where(TrackCache.video_id.in_(video_ids))
 
         rows = await query
-
+        LOGGER.debug(f"Selected slaves count: {len(rows)}")
         res: dict[str, TrackCache] = {}
         for i in rows:
             if i.video_id:
@@ -115,14 +118,20 @@ class DungeonMaster:
         Returns:
             The TrackCache model object instance if found, otherwise None.
         """
+        LOGGER.debug(f"Selecting one slave {video_id}")
+
         try:
             track = await TrackCache.get_or_none(TrackCache.video_id == video_id)
             if track:
                 track.last_used_at = datetime.now()
                 await track.save()
 
+                LOGGER.debug("Selected one slave")
                 return track
+
+            LOGGER.debug("Slave not found")
             return None
+
         except Exception as e:
             LOGGER.error(f"Can't find track {video_id} in database: {e}")
             return None
@@ -137,8 +146,10 @@ class DungeonMaster:
             True if the target row was deleted successfully, False if not found or failed.
         """
         try:
+            LOGGER.debug(f"Removing {video_id}")
             query = TrackCache.delete().where(TrackCache.video_id == video_id)
             deleted_count = await self._db_dispatcher.execute(query)
+            LOGGER.debug(f"Removed {video_id}")
             return deleted_count > 0
         except Exception as e:
             LOGGER.error(f"Can't delete track {video_id}: {e}")
@@ -160,7 +171,7 @@ class DungeonMaster:
         Returns:
             True if any database records were modified, False otherwise.
         """
-
+        LOGGER.debug(f"Updating records: {video_id}")
         update_data = {
             TrackCache.telegram_file_id: telegram_file_id,
             TrackCache.is_too_large: is_too_large,
@@ -174,6 +185,7 @@ class DungeonMaster:
             )
 
             rows_updated: int = await self._db_dispatcher.execute(query)
+            LOGGER.debug(f"Updated records count: {rows_updated}. ids: {video_id}")
             return rows_updated != 0
 
         except Exception as e:
@@ -190,18 +202,28 @@ class DungeonMaster:
         return res
 
     async def get_playlist(self, pl_id: str):
-        return await PlaylistCache.get_or_none(PlaylistCache.playlist_id == pl_id)
+        LOGGER.debug(f"Collecting info about playlist {pl_id}")
+        r = await PlaylistCache.get_or_none(PlaylistCache.playlist_id == pl_id)
+        LOGGER.debug(f"Collecting {pl_id} done")
+        return r
 
     async def add_playlist_and_tracks(
         self, playlist_info: PlaylistInfoDict, tracks: list[YoutubeSearchResultDict]
     ):
-        await self.enslave_bulk(tracks)
+        LOGGER.debug("Adding playlist and tracks")
+        LOGGER.debug("Enslaving tracks: ")
+        count = await self.enslave_bulk(tracks)
+        LOGGER.debug(f"Tracks enslaved: {count}")
+
         q1 = PlaylistCache.insert(
             playlist_id=playlist_info["id"],
             title=playlist_info["title"],
             artist=playlist_info["artist"],
         )
+        LOGGER.debug(f"Enslaving playlist info: {playlist_info['id']} ")
         _ = await DB_DISPATCHER.execute(q1)
+        LOGGER.debug(f"Enslaved playlist: {playlist_info['id']} ")
+
         relations_data = [
             {
                 "video_id": v["video_id"],
@@ -210,8 +232,11 @@ class DungeonMaster:
             }
             for (idx, v) in enumerate(tracks)
         ]
+        LOGGER.debug(f"Enslaving intermediate table: {len(relations_data)} ")
         q2 = TrackPlaylist.insert_many(relations_data).on_conflict_ignore()
         r: int = await DB_DISPATCHER.execute(q2)
+        LOGGER.debug(f"Enslaving intermediate table done: {r} ")
+
         return r
 
     async def summon_slaves_from_playlist(
@@ -225,14 +250,15 @@ class DungeonMaster:
         Returns:
             A dictionary mapping matching video IDs to available Telegram file IDs.
         """
+        LOGGER.debug(f"Getting slaves from playlist: {playlist_id} ")
         query = (
             TrackCache.select()
             .join(TrackPlaylist, on=(TrackCache.video_id == TrackPlaylist.video_id))
             .where(TrackPlaylist.playlist_id == playlist_id)
             .order_by(TrackPlaylist.track_order)
         )
-
         rows = await query
+        LOGGER.debug(f"Getting slaves from playlist done: {len(rows)} ")
 
         res: dict[str, TrackCache] = {}
         if not len(rows):
