@@ -1,15 +1,27 @@
 import asyncio
+from collections.abc import Sequence
+from functools import reduce
+from typing import NamedTuple
 
 from aiogram import Router
 from aiogram.types import CallbackQuery
+from aiogram.utils.media_group import MediaGroupBuilder, MediaType
 
 import bot
 from _logger import LOGGER
+from dungeon import DM
+from helpers.cache_reducer import split_by_cache
+from helpers.get_ytm_video_link import get_ytm_playlist_link
+from tools.extract_playlist_info import extract_playlist_info
 from type import DownloadPlaylistCallback
-from worker import PLAYLIST_QUEUE
+from worker import TRACK_PIPELINE
 
 router = Router()
-_mutex = asyncio.Semaphore(1)
+
+
+class _UnableToDownload(NamedTuple):
+    v_id: str
+    is_too_large: bool
 
 
 @router.callback_query(DownloadPlaylistCallback.filter())
@@ -27,21 +39,78 @@ async def handle_playlist_download(
             "Что-то пошло не так при загрузке плейлиста... Повторите попытку"
         )
     # =======DANGER ZONE=========
+    tracks_info = await DM.summon_slaves_from_playlist(PLAYLIST_ID)
 
-    await _mutex.acquire()
+    if not tracks_info:
+        r = await extract_playlist_info(get_ytm_playlist_link(PLAYLIST_ID))
+        if not r:
+            return bot.bot.send_message(USER_ID, "404 🤷")
+        (playlist_info, videos) = r
+        await DM.add_playlist_and_tracks(playlist_info, videos)
+        tracks_info = await DM.summon_slaves_from_playlist(PLAYLIST_ID)
+        if not tracks_info:
+            LOGGER.error(
+                f"Cannot extract info about playlist {PLAYLIST_ID} in playlist_cb"
+            )
+            return bot.bot.send_message(
+                USER_ID, "Неизвестная ошибка. Повторите попытку."
+            )
 
-    position_assigned = await PLAYLIST_QUEUE.enqueue(USER_ID, playlist_id=PLAYLIST_ID)
-    _mutex.release()
-    # ==========================
+    r = reduce(split_by_cache, tracks_info.values(), {"cached": [], "missing": []})
+    non_cached_tracks = r["missing"]
 
-    if not position_assigned:
-        m = await bot.bot.send_message(
-            USER_ID, "Достигнуто максимальное количество скачиваний за раз!"
+    tasks = [
+        TRACK_PIPELINE.submit(v.video_id, track_title=v.title, artist=v.artist)
+        for v in non_cached_tracks
+        if v.telegram_file_id is None and not v.is_too_large
+    ]
+
+    fresh_pulled = await asyncio.gather(*tasks)
+    unable_to_download: list[_UnableToDownload] = []
+    for t in fresh_pulled:
+        v_id, cache = t
+        file_id, is_too_large, is_error = cache
+        if not file_id or is_too_large or is_error:
+            unable_to_download.append(_UnableToDownload(v_id, is_too_large))
+            if is_too_large:
+                await DM.fisting(v_id, is_too_large=is_too_large)
+            continue
+        await DM.fisting(v_id, telegram_file_id=file_id)
+
+    mg_builder = MediaGroupBuilder()
+    media_group_cached: list[Sequence[MediaType]] = []
+    tracks_info = await DM.summon_slaves_from_playlist(PLAYLIST_ID)
+
+    if not tracks_info:
+        LOGGER.error(f"Can not find info about playlist {PLAYLIST_ID} in worker loop.")
+        return bot.bot.send_message(
+            USER_ID, "Не удалось скачать плейлист. Повторите попытку."
         )
-        await asyncio.sleep(5)
-        return m.delete()
-    m = await bot.bot.send_message(
-        USER_ID, f"Загружаю...\nВаша позиция в очереди: {position_assigned}"
-    )
-    await asyncio.sleep(120)
-    return m.delete()
+
+    group_count = 0
+    for t in tracks_info.values():
+        if t.is_too_large:
+            unable_to_download.append(_UnableToDownload(t.video_id, True))
+        if t.telegram_file_id:
+            mg_builder.add_audio(media=t.telegram_file_id)
+            group_count += 1
+        if group_count >= 10:
+            media_group_cached.append(mg_builder.build())
+            mg_builder = MediaGroupBuilder()
+            group_count = 0
+    else:
+        media_group_cached.append(mg_builder.build())
+
+    for t in media_group_cached:
+        if len(t):
+            await bot.bot.send_media_group(USER_ID, list(t), disable_notification=True)
+            await asyncio.sleep(1)
+
+    if len(unable_to_download):
+        text = "Не удалось отправить треки:\n"
+        for idx, u in enumerate(unable_to_download, 1):
+            track = tracks_info[u.v_id]
+            is_too_large_text = ": трек слишком большой, скачать не выйдет."
+            text += f"#{idx}. {track.artist} - {track.title}{is_too_large_text if u.is_too_large else ''}\n"
+
+        await bot.bot.send_message(USER_ID, f"{text}")

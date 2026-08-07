@@ -11,6 +11,7 @@ from config import BACKUP_EVERY_N_DAYS, CPU_POOL, EXPERIMENTAL, SHOW_ON_STARTUP
 from dungeon import DM
 from GC import GC
 from handlers import get_handlers_router
+from worker import TRACK_PIPELINE
 from worker.loop import playlist_worker_loop
 
 commands = [
@@ -44,6 +45,7 @@ async def on_startup():
     AL.start_limiter()
     await GC.start_gc()
     await DM.open_dungeon()
+    TRACK_PIPELINE.start()
     LOGGER.info("Bot has been started.")
 
 
@@ -51,6 +53,7 @@ async def on_startup():
 async def on_shutdown():
     if playlist_q_task:
         playlist_q_task.cancel()
+    TRACK_PIPELINE.stop()
     await DM.close_dungeon()
     await GC.close_gc()
     CPU_POOL.shutdown(cancel_futures=True, wait=not EXPERIMENTAL)
