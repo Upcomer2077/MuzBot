@@ -5,7 +5,6 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from _logger import LOGGER
 from dungeon import DM
-from helpers.get_ytm_video_link import get_ytm_playlist_link
 from helpers.regexes import YTM_PLIST_REGEX
 from tools.extract_playlist_info import extract_playlist_info
 
@@ -33,7 +32,7 @@ async def playlist(message: Message, command: CommandObject):
     slaves = await DM.summon_slaves_from_playlist(PLAYLIST_ID)
     playlist = await DM.get_playlist(PLAYLIST_ID)
     if not slaves or not playlist:
-        r = await extract_playlist_info(get_ytm_playlist_link(PLAYLIST_ID))
+        r = await extract_playlist_info(PLAYLIST_ID)
         if not r:
             return ANSWER.edit_text("404 🤷")
 
