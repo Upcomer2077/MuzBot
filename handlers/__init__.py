@@ -2,16 +2,8 @@ from aiogram import Router
 
 from handlers import _inline
 
-from . import (
-    _download_cb,
-    _download_playlist_cb,
-    _drop_message,
-    _force,
-    _help,
-    _playlist,
-    _search,
-    _start,
-)
+from . import _drop_message, _force, _help, _playlist, _search, _start
+from .callbacks import _download_cb, _download_playlist_cb
 
 
 def get_handlers_router():
