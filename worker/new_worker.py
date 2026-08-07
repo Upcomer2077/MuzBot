@@ -112,6 +112,7 @@ class WorkerPipe:
         is_too_large = False
         is_error = False
         file_id = None
+        m = None
         a, tn = prepare_audio_file_to_send.prepare_audio_file_to_send(cache)
         try:
             LOGGER.debug(f"Sending track {title} to channel")
@@ -129,7 +130,7 @@ class WorkerPipe:
             LOGGER.error(f"Network error: {e}")
             is_error = True
         finally:
-            if m.audio:
+            if m and m.audio:
                 file_id = m.audio.file_id
         return (file_id, is_too_large, is_error)
 
