@@ -1,23 +1,14 @@
-import asyncio
-
 from aiogram import Router
-from aiogram.exceptions import TelegramNetworkError
 from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
 
+import bot
 from _logger import LOGGER
-from action_limiter import AL
-from config import (
-    MAX_TRACK_DURATION_SECONDS,
-    QUERY_DOWNLOAD_LIMIT_SECS,
-    TRACKS_PER_LIMIT,
-)
-from helpers.finalize_download import finalize_download
-from helpers.prepare_audio_file_to_send import prepare_audio_file_to_send
+from config import MAX_TRACK_DURATION_SECONDS
+from dungeon import DM
 from helpers.regexes import YTM_REGEX, YTM_VID_REGEX
 from helpers.utils import U
-from tools.send_action import send_action
-from type import TrackState
+from worker import TRACK_PIPELINE
 
 router = Router()
 
@@ -36,9 +27,10 @@ async def force(message: Message, command: CommandObject):
         LOGGER.warn(f"Video id not recognized: {YTM_LINK}")
         return message.answer("Не удалось распознать идентификатор видео")
     # ---------------------------------
-    TS = TrackState()
 
-    ANSWER = await message.answer(f"{TS.base_answer}")
+    ANSWER = await message.answer(
+        "⏳ Обрабатываю запрос (это займет несколько секунд)\n"
+    )
     VIDEO_ID = VIDEO_ID.group(1)
     CHAT_ID = message.chat.id
 
@@ -46,103 +38,29 @@ async def force(message: Message, command: CommandObject):
     if not track:
         return ANSWER.edit_text("Не удалось найти информацию о видео")
 
-    TS.fill_from(track)
-
-    # --------------
-    if TS.is_work_in_progress:
-        await ANSWER.edit_text(
-            f"{TS.base_answer}Кто-то уже скачивает этот трек... Подождем"
+    if not track.telegram_file_id:
+        _, cache = await TRACK_PIPELINE.submit(
+            VIDEO_ID, track_title=track.title, artist=track.artist
         )
-        for i in range(10):
-            await asyncio.sleep(6)
-            if AL.is_allowed_send_action(CHAT_ID):
-                await send_action(CHAT_ID)
+        if cache.file_id or cache.is_too_large:
+            await DM.fisting(
+                VIDEO_ID,
+                telegram_file_id=cache.file_id,
+                is_too_large=cache.is_too_large,
+            )
+            track = await U.get_track(VIDEO_ID, extract_info_from_ytm=False)
+            if not (track and track.telegram_file_id):
+                return ANSWER.answer("Не удалось найти информацию о видео")
 
-            track = await U.get_track(VIDEO_ID, False)
-            if track:
-                if track.is_work_in_progress:
-                    continue
-                TS.fill_from(track)
+        else:
+            return ANSWER.edit_text(
+                f"Произошла ошибка при скачивании трека {track.artist} - {track.title}"
+            )
 
-            if i == 9:
-                LOGGER.warn(
-                    f"Awaiting work_in_progress mutex took {54} seconds or more."
-                )
-            break
-
-    # ---------------
-    if TS.is_too_large:
+    if track.is_too_large:
         return ANSWER.edit_text(
             f"Превышен лимит в {int(MAX_TRACK_DURATION_SECONDS / 60)} минут или вес больше 50МБ. Скачать не выйдет"
         )
-    if TS.tg_file_id:
-        try:
-            TS.sent_audio, TS.is_cache_sent_successfully = await U.send_cached_audio(
-                CHAT_ID, TS.tg_file_id, ANSWER
-            )
-        except Exception as e:
-            LOGGER.error(
-                f"Error sending cached audio. tg file id: {TS.tg_file_id}: {e}"
-            )
 
-        finally:
-            await finalize_download(VIDEO_ID, TS)
-
-    if not TS.is_cache_sent_successfully:
-        if message.from_user and not AL.is_download_allowed(message.from_user.id):
-            await ANSWER.edit_text(
-                f"Разрешено загружать не более {TRACKS_PER_LIMIT} треков за {QUERY_DOWNLOAD_LIMIT_SECS} сек"
-            )
-            await asyncio.sleep(5)
-            return ANSWER.delete()
-
-        await ANSWER.edit_text(f"{TS.base_answer}В кэше пусто... Загружаю")
-
-        (_, data) = await U.handle_cache_pull(VIDEO_ID, CHAT_ID)
-        TS.cache_data = data
-
-        if not TS.cache_data:
-            await finalize_download(VIDEO_ID, TS)
-            return ANSWER.edit_text(
-                "Что-то пошло не так при скачивании трека... Повторите попытку"
-            )
-
-        await ANSWER.edit_text(f"{TS.base_answer}Загрузил. Отправляю...")
-
-        (
-            audio_file,
-            thumb_file,
-        ) = prepare_audio_file_to_send(TS.cache_data)
-
-        try:
-            LOGGER.info(f"Uploading audio {VIDEO_ID}")
-            TS.sent_audio = await U.send_new_audio(
-                message,
-                CHAT_ID,
-                audio_file,
-                thumb_file,
-                TS.title,
-                TS.artist,
-            )
-            LOGGER.info(f"Uploaded successfully {VIDEO_ID}")
-
-        except TelegramNetworkError as e:
-            if e.message.find("Request Entity Too Large") != -1:
-                TS.is_too_large = True
-                await finalize_download(VIDEO_ID, TS)
-
-                return ANSWER.edit_text("Размер файла превышает 50М. Скачать не выйдет")
-            LOGGER.error(f"Network error: VID: {VIDEO_ID}: {e}")
-
-            return ANSWER.edit_text("Ошибка сети. Повторите попытку")
-
-        except Exception as e:
-            LOGGER.error(f"Error sending audio. VID:{VIDEO_ID}: {e}")
-            return ANSWER.edit_text(
-                "Что-то пошло не так при выгрузке трека... Повторите попытку"
-            )
-
-        finally:
-            await finalize_download(VIDEO_ID, TS)
-
-    await ANSWER.delete()
+    await bot.bot.send_audio(CHAT_ID, track.telegram_file_id)
+    return ANSWER.delete()
