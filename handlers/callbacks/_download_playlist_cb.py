@@ -28,21 +28,21 @@ class _UnableToDownload(NamedTuple):
 async def handle_playlist_download(
     callback: CallbackQuery, callback_data: DownloadPlaylistCallback
 ):
-    await callback.answer("Загружаю... Это займет время.")
+    await callback.answer()
 
     USER_ID = callback.from_user.id
     PLAYLIST_ID = callback_data.playlist_id
+    ANSWER = await bot.bot.send_message(USER_ID, "Загружаю... Это займет время.")
 
     if len(PLAYLIST_ID) == 0:
         LOGGER.error("Video_id param len is 0. Check callback data")
-        return callback.answer(
+        return ANSWER.edit_text(
             "Что-то пошло не так при загрузке плейлиста... Повторите попытку"
         )
 
     if not AL.is_playlist_download_allowed(USER_ID):
         # TODO
-        return await bot.bot.send_message(
-            USER_ID,
+        return ANSWER.edit_text(
             f"Достигнут лимит скачивания плейлистов в {PLAYLIST_DOWNLOAD_COOLDOWN_SECS} секунд",
         )
 
@@ -54,7 +54,7 @@ async def handle_playlist_download(
     if not tracks_info:
         r = await extract_playlist_info(PLAYLIST_ID)
         if not r:
-            return bot.bot.send_message(USER_ID, "404 🤷")
+            return ANSWER.edit_text("404 🤷")
         (playlist_info, videos) = r
         await DM.add_playlist_and_tracks(playlist_info, videos)
         tracks_info = await DM.summon_slaves_from_playlist(PLAYLIST_ID)
@@ -62,9 +62,7 @@ async def handle_playlist_download(
             LOGGER.error(
                 f"Cannot extract info about playlist {PLAYLIST_ID} in playlist_cb"
             )
-            return bot.bot.send_message(
-                USER_ID, "Неизвестная ошибка. Повторите попытку."
-            )
+            return ANSWER.edit_text("Неизвестная ошибка. Повторите попытку.")
 
     tasks = [
         TRACK_PIPELINE.submit(v.video_id, track_title=v.title, artist=v.artist)
@@ -87,9 +85,7 @@ async def handle_playlist_download(
 
     if not tracks_info:
         LOGGER.error(f"Can not find info about playlist {PLAYLIST_ID} in worker loop.")
-        return bot.bot.send_message(
-            USER_ID, "Не удалось скачать плейлист. Повторите попытку."
-        )
+        return ANSWER.edit_text("Не удалось скачать плейлист. Повторите попытку.")
 
     group_count = 0
     for t in tracks_info.values():
@@ -118,3 +114,5 @@ async def handle_playlist_download(
             text += f"#{idx}. {track.artist} - {track.title}{is_too_large_text if u.is_too_large else ''}\n"
 
         await bot.bot.send_message(USER_ID, f"{text}")
+
+    await ANSWER.delete()
