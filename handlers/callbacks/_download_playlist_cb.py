@@ -66,10 +66,7 @@ async def handle_playlist_download(
         file_id, is_too_large, is_error = cache
         if not file_id or is_too_large or is_error:
             unable_to_download.append(_UnableToDownload(v_id, is_too_large))
-            if is_too_large:
-                await DM.fisting(v_id, is_too_large=is_too_large)
             continue
-        await DM.fisting(v_id, telegram_file_id=file_id)
 
     mg_builder = MediaGroupBuilder()
     media_group_cached: list[Sequence[MediaType]] = []

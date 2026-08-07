@@ -4,7 +4,6 @@ from aiogram.types import CallbackQuery, Message
 import bot
 from _logger import LOGGER
 from config import MAX_TRACK_DURATION_SECONDS
-from dungeon import DM
 from helpers.utils import U
 from type import DownloadCallback
 from worker import TRACK_PIPELINE
@@ -42,16 +41,20 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
     if not track:
         return ANCHOR_MESSAGE.answer("Не удалось найти информацию о видео")
 
+    if track.is_too_large:
+        return ANSWER.edit_text(
+            f"Превышен лимит в {int(MAX_TRACK_DURATION_SECONDS / 60)} минут или вес больше 50МБ. Скачать не выйдет"
+        )
+
     if not track.telegram_file_id:
         _, cache = await TRACK_PIPELINE.submit(
             VIDEO_ID, track_title=track.title, artist=track.artist
         )
         if cache.file_id or cache.is_too_large:
-            await DM.fisting(
-                VIDEO_ID,
-                telegram_file_id=cache.file_id,
-                is_too_large=cache.is_too_large,
-            )
+            if cache.is_too_large:
+                return ANSWER.edit_text(
+                    f"Превышен лимит в {int(MAX_TRACK_DURATION_SECONDS / 60)} минут или вес больше 50МБ. Скачать не выйдет"
+                )
             track = await U.get_track(VIDEO_ID, extract_info_from_ytm=False)
             if not (track and track.telegram_file_id):
                 return ANCHOR_MESSAGE.answer("Не удалось найти информацию о видео")
@@ -60,11 +63,6 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
             return ANSWER.edit_text(
                 f"Произошла ошибка при скачивании трека {track.artist} - {track.title}"
             )
-
-    if track.is_too_large:
-        return ANSWER.edit_text(
-            f"Превышен лимит в {int(MAX_TRACK_DURATION_SECONDS / 60)} минут или вес больше 50МБ. Скачать не выйдет"
-        )
 
     await bot.bot.send_audio(CHAT_ID, track.telegram_file_id)
     return ANSWER.delete()
