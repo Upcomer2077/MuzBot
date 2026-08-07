@@ -65,6 +65,7 @@ class U:
             action=action,
         )
 
+    # TODO: remove?
     @staticmethod
     async def delete_markup_after_delay(msg: Message, delay: int = 60) -> None:
         await asyncio.sleep(delay)

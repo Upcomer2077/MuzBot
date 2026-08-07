@@ -41,7 +41,6 @@ async def handle_playlist_download(
         )
 
     if not AL.is_playlist_download_allowed(USER_ID):
-        # TODO
         return ANSWER.edit_text(
             f"Достигнут лимит скачивания плейлистов в {PLAYLIST_DOWNLOAD_COOLDOWN_SECS} секунд",
         )
