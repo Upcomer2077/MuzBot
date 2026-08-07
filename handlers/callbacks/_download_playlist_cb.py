@@ -8,7 +8,10 @@ from aiogram.utils.media_group import MediaGroupBuilder, MediaType
 
 import bot
 from _logger import LOGGER
+from action_limiter import AL
+from config import PLAYLIST_DOWNLOAD_COOLDOWN_SECS
 from dungeon import DM
+from helpers.utils import U
 from tools.extract_playlist_info import extract_playlist_info
 from type import DownloadPlaylistCallback
 from worker import TRACK_PIPELINE
@@ -35,7 +38,17 @@ async def handle_playlist_download(
         return callback.answer(
             "Что-то пошло не так при загрузке плейлиста... Повторите попытку"
         )
-    # =======DANGER ZONE=========
+
+    if not AL.is_playlist_download_allowed(USER_ID):
+        # TODO
+        return await bot.bot.send_message(
+            USER_ID,
+            f"Достигнут лимит скачивания плейлистов в {PLAYLIST_DOWNLOAD_COOLDOWN_SECS} секунд",
+        )
+
+    if AL.is_send_action_allowed(USER_ID):
+        await U.send_action(USER_ID)
+
     tracks_info = await DM.summon_slaves_from_playlist(PLAYLIST_ID)
 
     if not tracks_info:

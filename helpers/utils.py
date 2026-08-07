@@ -1,6 +1,7 @@
 import asyncio
 from typing import Optional
 
+from aiogram.enums import ChatAction
 from aiogram.types import Message
 
 import bot
@@ -47,6 +48,21 @@ class U:
             chat_id,
             "||\\.||",
             parse_mode="MarkdownV2",
+        )
+
+    @staticmethod
+    async def send_action(
+        chat_id: int, action: ChatAction = ChatAction.UPLOAD_DOCUMENT
+    ):
+        """Asynchronously send a specific chat status action to a Telegram user.
+
+        Args:
+            chat_id: Unique identifier for the target Telegram chat.
+            action: The type of Telegram ChatAction activity to display. Defaults to ChatAction.UPLOAD_DOCUMENT.
+        """
+        await bot.bot.send_chat_action(
+            chat_id=chat_id,
+            action=action,
         )
 
     @staticmethod

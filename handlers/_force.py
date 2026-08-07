@@ -4,7 +4,12 @@ from aiogram.types import Message
 
 import bot
 from _logger import LOGGER
-from config import MAX_TRACK_DURATION_SECONDS
+from action_limiter import AL
+from config import (
+    MAX_TRACK_DURATION_SECONDS,
+    QUERY_DOWNLOAD_LIMIT_SECS,
+    TRACKS_PER_LIMIT,
+)
 from helpers.regexes import YTM_REGEX, YTM_VID_REGEX
 from helpers.utils import U
 from worker import TRACK_PIPELINE
@@ -41,6 +46,14 @@ async def force(message: Message, command: CommandObject):
         return ANSWER.edit_text(
             f"Превышен лимит в {int(MAX_TRACK_DURATION_SECONDS / 60)} минут или вес больше 50МБ. Скачать не выйдет"
         )
+
+    if not AL.is_track_download_allowed(CHAT_ID):
+        await ANSWER.edit_text(
+            f"Разрешено загружать не более {TRACKS_PER_LIMIT} треков за {QUERY_DOWNLOAD_LIMIT_SECS} сек"
+        )
+
+    if AL.is_send_action_allowed(CHAT_ID):
+        await U.send_action(CHAT_ID)
 
     if not track.telegram_file_id:
         _, cache = await TRACK_PIPELINE.submit(

@@ -2,7 +2,11 @@ import asyncio
 import time
 
 from _logger import LOGGER
-from config import QUERY_DOWNLOAD_LIMIT_SECS, TRACKS_PER_LIMIT
+from config import (
+    PLAYLIST_DOWNLOAD_COOLDOWN_SECS,
+    QUERY_DOWNLOAD_LIMIT_SECS,
+    TRACKS_PER_LIMIT,
+)
 from GC import GC
 from type import UserQueryLimit
 
@@ -13,41 +17,58 @@ class LightLimiter:
     def __init__(
         self,
     ):
-        self._ACTIONS_BANK: dict[int, float] = {}
-        self._ACTIONS_COOLDOWN = 10
+        self._ACTIONS_BANK: dict[int, UserQueryLimit] = {}
+        self._ACTIONS_COOLDOWN_SECS = 10
+        self._ACTION_PER_LIMIT = 1
 
         self._QUERIES_BANK: dict[int, UserQueryLimit] = {}
-        # TODO: make it work
-        self._PLAYLIST_COOLDOWN_SECS = 60
         self._QUERIES_COOLDOWN_SECS = QUERY_DOWNLOAD_LIMIT_SECS
         self._TRACKS_PER_LIMIT = TRACKS_PER_LIMIT
+
+        self._PLAYLIST_BANK: dict[int, UserQueryLimit] = {}
+        self._PLAYLIST_COOLDOWN_SECS = PLAYLIST_DOWNLOAD_COOLDOWN_SECS
+        self._PLAYLIST_PER_LIMIT = 1
 
     def start_limiter(self):
         GC.register_task(asyncio.create_task(self._garbage_collector()))
         LOGGER.debug("Action limiter started")
 
-    def is_allowed_send_action(
+    def is_send_action_allowed(
         self,
         chat_id: int,
     ):
-        """Determine if a Telegram chat status update action can be sent based on cooldown.
+        return self._is_allowed(
+            chat_id,
+            bank=self._ACTIONS_BANK,
+            cooldown=self._ACTIONS_COOLDOWN_SECS,
+            per_limit=self._ACTION_PER_LIMIT,
+        )
 
-        Args:
-            chat_id: Unique identifier for the Telegram chat.
+    def is_playlist_download_allowed(self, user_id: int):
+        return self._is_allowed(
+            user_id,
+            bank=self._PLAYLIST_BANK,
+            cooldown=self._PLAYLIST_COOLDOWN_SECS,
+            per_limit=self._PLAYLIST_PER_LIMIT,
+        )
 
-        Returns:
-            True if the required cooldown interval has passed, False otherwise.
-        """
-        now = time.time()
-        last_sent = self._ACTIONS_BANK.get(chat_id, 0.0)
+    def is_track_download_allowed(self, user_id: int):
+        return self._is_allowed(
+            user_id,
+            bank=self._QUERIES_BANK,
+            cooldown=self._QUERIES_COOLDOWN_SECS,
+            per_limit=self._TRACKS_PER_LIMIT,
+        )
 
-        if now - last_sent >= self._ACTIONS_COOLDOWN:
-            self._ACTIONS_BANK[chat_id] = now
-            return True
-        return False
-
-    def is_download_allowed(self, user_id: int):
-        """Check if a user is within their track download limit for the current time window.
+    def _is_allowed(
+        self,
+        user_id: int,
+        *,
+        bank: dict[int, UserQueryLimit],
+        cooldown: int,
+        per_limit: int,
+    ):
+        """Check if a user is within their download limit for the current time window.
 
         Args:
             user_id: Unique identifier for the Telegram user.
@@ -56,16 +77,17 @@ class LightLimiter:
             True if the download is permitted, False if the limit is exceeded.
         """
         NOW = time.time()
-        user = self._QUERIES_BANK.get(user_id)
-        if not user or ((NOW - user.get("ts")) > self._QUERIES_COOLDOWN_SECS):
-            self._QUERIES_BANK[user_id] = {
+
+        user = bank.get(user_id)
+        if not user or ((NOW - user.get("ts")) > cooldown):
+            bank[user_id] = {
                 "ts": NOW,
-                "semaphore": self._TRACKS_PER_LIMIT - 1,
+                "semaphore": per_limit - 1,
             }
             return True
 
         new_semaphore = user.get("semaphore") - 1
-        self._QUERIES_BANK[user_id].update(semaphore=new_semaphore)
+        bank[user_id].update(semaphore=new_semaphore)
         if new_semaphore < 0:
             return False
         return True
@@ -76,30 +98,28 @@ class LightLimiter:
             while True:
                 await asyncio.sleep(10)
                 now = time.time()
-
-                if (len(self._ACTIONS_BANK) < 20) or (len(self._QUERIES_BANK) < 20):
+                total_garbage_len = (
+                    len(self._ACTIONS_BANK)
+                    + len(self._QUERIES_BANK)
+                    + len(self._PLAYLIST_BANK)
+                )
+                if (total_garbage_len) < 30:
                     continue
-                LOGGER.debug(
-                    f"Collecting garbage. Actions bank({len(self._ACTIONS_BANK)}) | Queries bank:({len(self._QUERIES_BANK)})"
-                )
-                expired_chats = [
-                    chat_id
-                    for chat_id, last_time in self._ACTIONS_BANK.items()
-                    if now - last_time > self._ACTIONS_COOLDOWN
-                ]
-                expired_limits = [
-                    user_id
-                    for user_id, info in self._QUERIES_BANK.items()
-                    if now - info["ts"] > self._QUERIES_COOLDOWN_SECS
-                ]
 
-                for chat_id in expired_chats:
-                    self._ACTIONS_BANK.pop(chat_id)
-                for chat_id in expired_limits:
-                    self._QUERIES_BANK.pop(chat_id)
-                LOGGER.debug(
-                    f"Collecting garbage done. Actions bank({len(self._ACTIONS_BANK)}) | Queries bank:({len(self._QUERIES_BANK)})"
-                )
+                LOGGER.debug(f"Collecting garbage. Total bank: {total_garbage_len}")
+                total_removed = 0
+                for item in [
+                    (self._ACTIONS_COOLDOWN_SECS, self._ACTIONS_BANK),
+                    (self._QUERIES_COOLDOWN_SECS, self._QUERIES_BANK),
+                    (self._PLAYLIST_COOLDOWN_SECS, self._PLAYLIST_BANK),
+                ]:
+                    cooldown, bank = item
+                    for key, info in bank.copy().items():
+                        if now - info["ts"] > cooldown:
+                            bank.pop(key)
+                            total_removed += 1
+
+                LOGGER.debug(f"Collecting garbage done. Removed: {total_removed}")
 
         except asyncio.CancelledError, KeyboardInterrupt:
             pass
