@@ -12,7 +12,7 @@ class MultiLogger(ILogger):
         self,
         name: str,
         loki_url: str | None = None,
-        level: Literal["INFO"] | Literal["DEBUG"] = "INFO",
+        level: Literal["INFO", "DEBUG"] = "INFO",
     ):
         """Initialize standard logger and conditionally set up Loki logging.
 
@@ -41,10 +41,10 @@ class MultiLogger(ILogger):
         if self.loki_logger:
             self.loki_logger.error(message)
 
-    def warn(self, message: str):
-        self.std_logger.warn(message)
+    def warning(self, message: str):
+        self.std_logger.warning(message)
         if self.loki_logger:
-            self.loki_logger.warn(message)
+            self.loki_logger.warning(message)
 
     def critical(self, message: str):
         self.std_logger.critical(message)

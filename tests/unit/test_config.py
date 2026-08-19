@@ -188,7 +188,7 @@ class TestConfig:
     def test_loki_url_is_none(self, monkeypatch):
         monkeypatch.setattr("dotenv.load_dotenv", lambda *_: None)
         monkeypatch.delenv("LOKI_URL", raising=False)
-        from config import LOKI_URL  # noqa: F401
+        from config import LOKI_URL
 
         assert LOKI_URL is None
 

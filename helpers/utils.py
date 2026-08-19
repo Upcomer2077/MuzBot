@@ -1,5 +1,4 @@
 import asyncio
-from typing import Optional
 
 from aiogram.enums import ChatAction
 from aiogram.types import Message
@@ -16,7 +15,7 @@ class U:
     @staticmethod
     async def get_track(
         video_id: str, extract_info_from_ytm: bool = True
-    ) -> Optional[TrackCache]:
+    ) -> TrackCache | None:
         """Fetch a track from the database cache, optionally querying YouTube Music if missing.
 
         Args:
@@ -72,4 +71,4 @@ class U:
         try:
             await msg.edit_reply_markup(reply_markup=None)
         except Exception:
-            pass  # Ignore errors if the message was already deleted by the user
+            return  # Ignore errors if the message was already deleted by the user

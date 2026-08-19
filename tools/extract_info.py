@@ -1,5 +1,5 @@
 import asyncio
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import yt_dlp
 
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from yt_dlp import _Params
 
 
-async def extract_video_info(video_id: str) -> Optional[YoutubeSearchResultDict]:
+async def extract_video_info(video_id: str) -> YoutubeSearchResultDict | None:
     """Asynchronously extract and parse structured metadata for a specific YouTube Music video track.
 
     Args:
@@ -57,7 +57,7 @@ def _extract(
     Returns:
         A dictionary containing raw track metadata, or None if an exception occurs.
     """
-    YDL_OPTS: "_Params" = {
+    YDL_OPTS: _Params = {
         "extract_flat": True,
         "no_warnings": True,
         "quiet": True,

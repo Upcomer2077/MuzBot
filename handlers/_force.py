@@ -28,7 +28,7 @@ async def force(message: Message, command: CommandObject):
 
     VIDEO_ID = YTM_VID_REGEX.search(YTM_LINK)
     if not VIDEO_ID:
-        LOGGER.warn(f"Video id not recognized: {YTM_LINK}")
+        LOGGER.warning(f"Video id not recognized: {YTM_LINK}")
         return message.answer("Не удалось распознать идентификатор видео")
     # ---------------------------------
 

@@ -1,13 +1,14 @@
 import os
 import tarfile
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from aiogram.types import FSInputFile
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 import bot
 from _logger import LOGGER
-from config import CACHE_ROOT_DIR, CHANNEL_STORAGE_ID, DATABASE_PATH
+from config import CACHE_ROOT_DIR, CHANNEL_STORAGE_ID, DATABASE_PATH, TZ
 
 
 class BackupScheduler:
@@ -48,7 +49,7 @@ class BackupScheduler:
 
         os.makedirs(backup_dir, exist_ok=True)
 
-        date_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        date_str = datetime.now(ZoneInfo(TZ)).strftime("%Y-%m-%d_%H-%M-%S")
         archive_name = f"{date_str}_backup.tar.xz"
         archive_path = os.path.join(backup_dir, archive_name)
 
@@ -68,7 +69,7 @@ class BackupScheduler:
             archive_path (str): File path of the backup archive to be sent.
         """
         bot_info = await bot.bot.get_me()
-        caption = f"📦 **#Backup** for @{bot_info.username or 'bot'}\n📅 {datetime.now().strftime('%d.%m.%Y %H:%M')}"
+        caption = f"📦 **#Backup** for @{bot_info.username or 'bot'}\n📅 {datetime.now(ZoneInfo(TZ)).strftime('%d.%m.%Y %H:%M')}"
         document = FSInputFile(archive_path)
         try:
             await bot.bot.send_document(

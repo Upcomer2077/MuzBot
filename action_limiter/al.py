@@ -89,9 +89,7 @@ class LightLimiter:
 
         new_semaphore = user.get("semaphore") - 1
         bank[user_id].update(semaphore=new_semaphore)
-        if new_semaphore < 0:
-            return False
-        return True
+        return not new_semaphore < 0
 
     async def _garbage_collector(self):
         """Periodically remove expired records from memory banks to prevent memory leaks."""

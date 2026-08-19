@@ -30,12 +30,11 @@ class BaseLogger(ILogger, ABC):
         Raises:
             NotImplementedError: If the subclass does not implement this method.
         """
-        pass
 
     def info(self, message: str) -> None:
         self._logger.info(message)
 
-    def warn(self, message: str) -> None:
+    def warning(self, message: str) -> None:
         self._logger.warning(message)
 
     def error(self, message: str) -> None:

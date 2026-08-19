@@ -23,7 +23,7 @@ def download_from_ytm(video_id: str):
     """
     YOUTUBE_URL = get_ytm_video_link(video_id)
 
-    YDL_OPTS: "_Params" = {
+    YDL_OPTS: _Params = {
         "format": "bestaudio/best",  # Select the best audio quality available
         "writethumbnail": True,
         "extractor_args": {
@@ -63,5 +63,5 @@ def download_from_ytm(video_id: str):
             LOGGER.error(f"Error while downloading video. Attempt: {i + 1}. {e}")
             time.sleep(1)
             continue
-    LOGGER.warn(f"Download of video {video_id} failed!")
+    LOGGER.warning(f"Download of video {video_id} failed!")
     return False

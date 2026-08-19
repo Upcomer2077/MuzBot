@@ -10,5 +10,5 @@ class BlockedLogMiddleware(BaseMiddleware):
         if isinstance(event.exception, TelegramForbiddenError):
             return LOGGER.info("Bot blocked by user. Error handled well")
         if isinstance(event.exception, TelegramNetworkError):
-            return LOGGER.warn("Request timeout.")
+            return LOGGER.warning("Request timeout.")
         return await handler(event, data)

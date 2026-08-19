@@ -97,8 +97,7 @@ async def handle_playlist_download(
             media_group_cached.append(mg_builder.build())
             mg_builder = MediaGroupBuilder()
             group_count = 0
-    else:
-        media_group_cached.append(mg_builder.build())
+    media_group_cached.append(mg_builder.build())
 
     for t in media_group_cached:
         if len(t):

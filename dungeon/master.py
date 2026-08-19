@@ -1,9 +1,10 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from peewee_aio import Manager
 
 from _logger import LOGGER
-from config import MAX_TRACK_DURATION_SECONDS
+from config import MAX_TRACK_DURATION_SECONDS, TZ
 from dungeon.dispatcher import DB_DISPATCHER
 from dungeon.models import PlaylistCache, TrackCache, TrackPlaylist
 from type import PlaylistInfoDict, YoutubeSearchResultDict
@@ -29,17 +30,14 @@ class DungeonMaster:
         """Open database connection, initialize tables, set PRAGMA optimizations, and reset temporary states."""
 
         try:
-            async with self._db_dispatcher:
-                async with self._db_dispatcher.connection():
-                    await TrackCache.create_table(safe=True)
-                    await PlaylistCache.create_table(safe=True)
-                    await TrackPlaylist.create_table(safe=True)
-                    await self._db_dispatcher.execute("PRAGMA journal_mode=WAL;")
-                    await self._db_dispatcher.execute("PRAGMA synchronous=NORMAL;")
-                    await self._db_dispatcher.execute("PRAGMA foreign_keys=ON;")
-                    await self._db_dispatcher.execute(
-                        "PRAGMA auto_vacuum = INCREMENTAL;"
-                    )
+            async with self._db_dispatcher, self._db_dispatcher.connection():
+                await TrackCache.create_table(safe=True)
+                await PlaylistCache.create_table(safe=True)
+                await TrackPlaylist.create_table(safe=True)
+                await self._db_dispatcher.execute("PRAGMA journal_mode=WAL;")
+                await self._db_dispatcher.execute("PRAGMA synchronous=NORMAL;")
+                await self._db_dispatcher.execute("PRAGMA foreign_keys=ON;")
+                await self._db_dispatcher.execute("PRAGMA auto_vacuum = INCREMENTAL;")
             LOGGER.debug("Database pragma set. Connection success")
         except Exception as e:
             LOGGER.critical(f"Caught error while opening the dungeon: {e}")
@@ -123,7 +121,7 @@ class DungeonMaster:
         try:
             track = await TrackCache.get_or_none(TrackCache.video_id == video_id)
             if track:
-                track.last_used_at = datetime.now()
+                track.last_used_at = datetime.now(ZoneInfo(TZ))
                 await track.save()
 
                 LOGGER.debug("Selected one slave")

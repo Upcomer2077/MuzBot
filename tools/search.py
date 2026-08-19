@@ -24,7 +24,7 @@ def search_in_ytm(search_query: str, limit: int = 10):
         LOGGER.critical(f'Can\'t pull info from "{search_query}" query')
     video_ids: list[YoutubeSearchResultDict] = []
 
-    for item in SEARCH_RESULTS[: 10 if limit > 10 else limit]:
+    for item in SEARCH_RESULTS[: min(limit, 10)]:
         title: str = item.get("title") or "Unknown"
         artist = ", ".join([artist["name"] for artist in item.get("artists", [])])
         video_id: str | None = item.get("videoId") or None

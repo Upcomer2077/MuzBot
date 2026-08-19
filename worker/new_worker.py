@@ -1,6 +1,6 @@
 import asyncio
 from dataclasses import dataclass, field
-from typing import NamedTuple, NoReturn, Optional
+from typing import NamedTuple, NoReturn
 
 from aiogram.exceptions import TelegramNetworkError
 
@@ -25,7 +25,7 @@ class DownloadTask:
 
 
 class _DownloadResult(NamedTuple):
-    file_id: Optional[str]
+    file_id: str | None
     is_too_large: bool
     is_error: bool
 
@@ -37,7 +37,7 @@ class WorkerPipe:
             str, list[asyncio.Future[tuple[str, _DownloadResult]]]
         ] = {}
         self._pool_semaphore = asyncio.Semaphore(WORKER_CORES_COUNT)
-        self._worker_task: Optional[asyncio.Task] = None
+        self._worker_task: asyncio.Task | None = None
 
     def start(self):
         self._worker_task = asyncio.create_task(self._worker_loop())
