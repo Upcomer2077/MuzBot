@@ -26,6 +26,9 @@ def download_from_ytm(video_id: str):
     YDL_OPTS: "_Params" = {
         "format": "bestaudio/best",  # Select the best audio quality available
         "writethumbnail": True,
+        "extractor_args": {
+            "youtube": {"player_client": ["web_embedded", "web", "tv", "android"]}
+        },
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
