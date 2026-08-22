@@ -2,12 +2,20 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from peewee_aio import Manager
+from peewee_aio.model import AIOModelSelect
 
 from _logger import LOGGER
 from config import MAX_TRACK_DURATION_SECONDS, TZ
 from dungeon.dispatcher import DB_DISPATCHER
-from dungeon.models import PlaylistCache, TrackCache, TrackPlaylist
-from type import PlaylistInfoDict, YoutubeSearchResultDict
+from dungeon.models import (
+    PlaylistCache,
+    Subscriptions,
+    TgUsers,
+    TrackCache,
+    TrackPlaylist,
+    YTPerformers,
+)
+from schemas.dicts import PlaylistInfoDict, YoutubeSearchResultDict
 
 
 class DungeonMaster:
@@ -34,6 +42,9 @@ class DungeonMaster:
                 await TrackCache.create_table(safe=True)
                 await PlaylistCache.create_table(safe=True)
                 await TrackPlaylist.create_table(safe=True)
+                await YTPerformers.create_table(safe=True)
+                await TgUsers.create_table(safe=True)
+                await Subscriptions.create_table(safe=True)
                 await self._db_dispatcher.execute("PRAGMA journal_mode=WAL;")
                 await self._db_dispatcher.execute("PRAGMA synchronous=NORMAL;")
                 await self._db_dispatcher.execute("PRAGMA foreign_keys=ON;")
@@ -265,3 +276,57 @@ class DungeonMaster:
             if i.video_id:
                 res[i.video_id] = i
         return res
+
+    async def set_performer_last_release(
+        self,
+        performer_id: str,
+        *,
+        performer_name: str,
+        last_album_id: str | None,
+        last_single_id: str | None,
+    ):
+        query = YTPerformers.insert(
+            id=performer_id,
+            name=performer_name,
+            last_single_id=last_single_id,
+            last_album_id=last_album_id,
+        )
+
+        await DB_DISPATCHER.execute(query)
+
+    async def subscribe_to_performer(self, user_id: int, performer_id: str):
+        query = TgUsers.insert(id=user_id)
+        await DB_DISPATCHER.execute(query)
+
+        query = Subscriptions.insert(
+            tg_user_id=user_id, performer_id=performer_id
+        ).on_conflict("IGNORE")
+
+        r = await DB_DISPATCHER.execute(query)
+
+        return r
+
+    async def get_performer_info(self, performer_id: str):
+        return await YTPerformers.get_or_none(id=performer_id)
+
+    async def drop_sub(self, performer_id: str, user_id: int):
+        query = Subscriptions.delete().where(
+            (Subscriptions.tg_user_id == user_id)
+            & (Subscriptions.performer_id == performer_id)
+        )
+
+        await DB_DISPATCHER.execute(query)
+
+    async def get_artists_by_name(self, user_id: int, s_query: str):
+        like_pattern = f"{s_query}%"
+        query: AIOModelSelect[YTPerformers] = (
+            YTPerformers.select(YTPerformers.id, YTPerformers.name)
+            .join(Subscriptions, on=(Subscriptions.performer_id == YTPerformers.id))
+            .where(
+                (Subscriptions.tg_user_id == user_id)
+                & (YTPerformers.name.ilike(like_pattern))
+            )
+        )
+
+        r = await query
+        return list(r)

@@ -66,3 +66,50 @@ class TrackPlaylist(AIOModel):
     class Meta:
         table_name = "tracks_playlists"
         primary_key = CompositeKey("video_id", "playlist_id")
+
+
+# ============
+
+
+@DB_DISPATCHER.register
+class TgUsers(AIOModel):
+    id = IntegerField(
+        primary_key=True, constraints=[SQL("ON CONFLICT IGNORE")], null=False
+    )
+
+    class Meta:
+        table_name = "telegram_users"
+
+
+@DB_DISPATCHER.register
+class YTPerformers(AIOModel):
+    id = CharField(
+        primary_key=True, max_length=255, constraints=[SQL("ON CONFLICT IGNORE")]
+    )
+    name = CharField(null=False)
+    last_single_id = CharField(null=True)
+    last_album_id = CharField(null=True)
+
+    class Meta:
+        table_name = "yt_performers"
+
+
+@DB_DISPATCHER.register
+class Subscriptions(AIOModel):
+    """Junction database model linking performers and users (Many-to-Many relationship)."""
+
+    tg_user_id = ForeignKeyField(
+        TgUsers,
+        backref="yt_performers",
+        on_delete="CASCADE",
+    )
+
+    performer_id = ForeignKeyField(
+        YTPerformers,
+        backref="telegram_users",
+        on_delete="CASCADE",
+    )
+
+    class Meta:
+        table_name = "subscriptions"
+        primary_key = CompositeKey("performer_id", "tg_user_id")
