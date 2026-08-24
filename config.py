@@ -1,4 +1,5 @@
 import os
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 
@@ -38,7 +39,7 @@ EXPERIMENTAL = bool(int(os.environ.get("EXPERIMENTAL", "0")))
 """Toggles experimental features (alpha and beta versions)"""
 DEBUG = bool(int(os.environ.get("DEBUG", default="0")))
 """Toggles logs level and some dev features"""
-TZ = os.environ.get("TZ", "Europe/Minsk")
+TZ = ZoneInfo(os.environ.get("TZ", "Europe/Minsk"))
 # ---------------------------------------------------------------
 
 WORKER_CORES_COUNT = max(1, CPU_COUNT - 1)
