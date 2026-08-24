@@ -117,24 +117,42 @@ class WorkerPipe:
         file_id = None
         m = None
         a, tn = prepare_audio_file_to_send.prepare_audio_file_to_send(cache)
-        try:
-            LOGGER.debug(f"Sending track {title} to channel")
+        for attempt in range(1, 4):
+            try:
+                LOGGER.debug(f"Sending track {title} to channel")
 
-            m = await bot.bot.send_audio(
-                CHANNEL_STORAGE_ID, audio=a, thumbnail=tn, title=title, performer=artist
-            )
-            LOGGER.debug(f"Send track {title} to channel")
+                m = await bot.bot.send_audio(
+                    CHANNEL_STORAGE_ID,
+                    audio=a,
+                    thumbnail=tn,
+                    title=title,
+                    performer=artist,
+                    request_timeout=300,
+                )
+                LOGGER.debug(f"Send track {title} to channel")
+                break
 
-        except TelegramNetworkError as e:
-            if str(e).find("Request Entity Too Large") != -1:
-                is_too_large = True
-                LOGGER.debug(f"Track {title} is too large")
+            except TelegramNetworkError as e:
+                if str(e).find("Request Entity Too Large") != -1:
+                    is_too_large = True
+                    is_error = True
 
-            LOGGER.error(f"Network error: {e}")
-            is_error = True
-        finally:
-            if m and m.audio:
-                file_id = m.audio.file_id
+                    LOGGER.debug(f"Track {title} is too large")
+                    break
+                LOGGER.error(f"Network error: {e}")
+                LOGGER.warning(
+                    f"Sending track to channel failed on attempt {attempt}/3 (timeout after 5 min). {'Retrying in 3 seconds' if attempt < 3 else ''}"
+                )
+                if attempt == 3:
+                    LOGGER.warning("Check your internet speed")
+                    is_error = True
+                    break
+
+                await asyncio.sleep(3)
+                continue
+
+        if m and m.audio:
+            file_id = m.audio.file_id
         return _DownloadResult(file_id, is_too_large, is_error)
 
     async def _worker_loop(self) -> NoReturn:
