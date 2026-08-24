@@ -1,6 +1,6 @@
 from aiogram.types import FSInputFile
 
-from type import TrackDirContentDict
+from schemas.dicts.dir import TrackDirContentDict
 
 
 def prepare_audio_file_to_send(cache_data: TrackDirContentDict):

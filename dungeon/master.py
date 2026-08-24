@@ -7,7 +7,7 @@ from _logger import LOGGER
 from config import MAX_PLAYLIST_TRACKS_REQUEST, MAX_TRACK_DURATION_SECONDS, TZ
 from dungeon.dispatcher import DB_DISPATCHER
 from dungeon.models import PlaylistCache, TrackCache, TrackPlaylist
-from type import PlaylistInfoDict, YoutubeSearchResultDict
+from schemas.dicts import PlaylistInfoDict, YoutubeSearchResultDict
 
 
 class DungeonMaster:

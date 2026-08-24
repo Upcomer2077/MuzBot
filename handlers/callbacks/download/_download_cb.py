@@ -10,8 +10,8 @@ from config import (
     TRACKS_PER_LIMIT,
 )
 from helpers.utils import U
+from schemas.callbacks import DownloadCallback
 from schemas.enums.priorities import DownloadTaskPriorities
-from type import DownloadCallback
 from worker import TRACK_PIPELINE
 
 router = Router()

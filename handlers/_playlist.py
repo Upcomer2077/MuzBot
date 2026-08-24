@@ -7,6 +7,7 @@ from _logger import LOGGER
 from config import MAX_PLAYLIST_TRACKS_REQUEST, PLAYLIST_MAX_TRACKS
 from dungeon import DM
 from helpers.regexes import YTM_MIX_PLIST_REGEX, YTM_PLIST_REGEX, YTM_USER_PLIST_REGEX
+from schemas.callbacks import DownloadPlaylistCallback, DropCallback
 from tools.extract_playlist_info import extract_playlist_info
 
 router = Router()
@@ -77,10 +78,10 @@ async def playlist(message: Message, command: CommandObject):
 
     builder.button(
         text="⬇️",
-        callback_data=f"dlp:{playlist.playlist_id}",
+        callback_data=DownloadPlaylistCallback(playlist_id=playlist.playlist_id),
     ).button(
         text="❌",
-        callback_data="drop_m",
+        callback_data=DropCallback(),
     ).adjust(2, repeat=True)
 
     return ANSWER.edit_text(text, reply_markup=builder.as_markup(), parse_mode=None)

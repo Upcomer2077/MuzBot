@@ -2,8 +2,8 @@ import asyncio
 import random
 
 from _logger import LOGGER
+from schemas.dicts import YoutubeSearchResultDict
 from tools.YTMusic_client import YT
-from type import YoutubeSearchResultDict
 
 
 async def extract_video_info(video_id: str) -> YoutubeSearchResultDict | None:

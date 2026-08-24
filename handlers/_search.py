@@ -4,8 +4,9 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from dungeon import DM
 from helpers.prettify_incoming_query import prettify_incoming_query
+from schemas.callbacks import DownloadCallback, DropCallback
+from schemas.dicts import YoutubeSearchResultDict
 from tools.search import search_in_ytm
-from type import YoutubeSearchResultDict
 
 router = Router()
 
@@ -36,11 +37,11 @@ async def get_list(message: Message):
 
         builder.button(
             text=f"⬇️{idx}",
-            callback_data=f"dl:{v_id}:{idx}",
+            callback_data=DownloadCallback(video_id=v_id, idx=str(idx)),
         )
     builder.button(
         text="❌",
-        callback_data="drop_m",
+        callback_data=DropCallback(),
     ).adjust(3, repeat=True)
 
     await DM.enslave_bulk(search_result)
