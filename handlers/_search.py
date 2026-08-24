@@ -5,9 +5,9 @@ from aiogram.types import Message
 from dungeon import DM
 from helpers.prettify_incoming_query import prettify_incoming_query
 from helpers.utils import U
+from schemas.dicts import YoutubeSearchResultDict
 from schemas.states.search import SearchStates
 from tools.search import search_in_ytm
-from type import YoutubeSearchResultDict
 
 router = Router()
 

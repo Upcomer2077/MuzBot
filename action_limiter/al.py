@@ -9,7 +9,7 @@ from config import (
     TRACKS_PER_LIMIT,
 )
 from GC import GC
-from type import UserQueryLimit
+from schemas.dicts import UserQueryLimitDict
 
 
 class LightLimiter:
@@ -18,15 +18,15 @@ class LightLimiter:
     def __init__(
         self,
     ):
-        self._ACTIONS_BANK: dict[int, UserQueryLimit] = {}
+        self._ACTIONS_BANK: dict[int, UserQueryLimitDict] = {}
         self._ACTIONS_COOLDOWN_SECS = 10
         self._ACTION_PER_LIMIT = 1
 
-        self._QUERIES_BANK: dict[int, UserQueryLimit] = {}
+        self._QUERIES_BANK: dict[int, UserQueryLimitDict] = {}
         self._QUERIES_COOLDOWN_SECS = QUERY_DOWNLOAD_LIMIT_SECS
         self._TRACKS_PER_LIMIT = TRACKS_PER_LIMIT
 
-        self._PLAYLIST_BANK: dict[int, UserQueryLimit] = {}
+        self._PLAYLIST_BANK: dict[int, UserQueryLimitDict] = {}
         self._PLAYLIST_COOLDOWN_SECS = PLAYLIST_DOWNLOAD_COOLDOWN_SECS
         self._PLAYLIST_PER_LIMIT = PLAYLISTS_LIMIT
 
@@ -65,7 +65,7 @@ class LightLimiter:
         self,
         user_id: int,
         *,
-        bank: dict[int, UserQueryLimit],
+        bank: dict[int, UserQueryLimitDict],
         cooldown: int,
         per_limit: int,
     ):

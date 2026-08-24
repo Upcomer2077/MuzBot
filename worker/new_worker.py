@@ -11,10 +11,10 @@ from config import CHANNEL_STORAGE_ID, CPU_COUNT, WORKER_CORES_COUNT
 from dungeon import DM
 from helpers import prepare_audio_file_to_send
 from overlord import COLD
+from schemas.dicts.dir import TrackDirContentDict
 from schemas.enums.priorities import DownloadTaskPriorities
 from schemas.tuples.worker import DownloadResult
 from tools.download import download_from_ytm
-from type import TrackDirContentDict
 
 F = asyncio.Future[tuple[str, DownloadResult]]
 

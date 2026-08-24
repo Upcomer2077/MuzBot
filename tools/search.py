@@ -2,8 +2,8 @@ import asyncio
 from typing import cast
 
 from _logger import LOGGER
+from schemas.dicts import YoutubeSearchResultDict
 from tools.YTMusic_client import YT
-from type import YoutubeSearchResultDict
 
 
 async def search_in_ytm(

@@ -4,7 +4,7 @@ import shutil
 from glob import glob
 
 from _logger import LOGGER
-from type import TrackDirContentDict
+from schemas.dicts.dir import TrackDirContentDict
 
 
 class CacheOverlord:

@@ -12,9 +12,9 @@ from action_limiter import AL
 from config import PLAYLIST_DOWNLOAD_COOLDOWN_SECS, PLAYLIST_MAX_TRACKS, PLAYLISTS_LIMIT
 from dungeon import DM
 from helpers.utils import U
+from schemas.callbacks import DownloadPlaylistCallback
 from schemas.enums.priorities import DownloadTaskPriorities
 from tools.extract_playlist_info import extract_playlist_info
-from type import DownloadPlaylistCallback
 from worker import TRACK_PIPELINE
 
 router = Router()
