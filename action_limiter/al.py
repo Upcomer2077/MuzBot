@@ -8,7 +8,6 @@ from config import (
     QUERY_DOWNLOAD_LIMIT_SECS,
     TRACKS_PER_LIMIT,
 )
-from GC import GC
 from schemas.dicts import UserQueryLimitDict
 
 
@@ -29,10 +28,6 @@ class LightLimiter:
         self._PLAYLIST_BANK: dict[int, UserQueryLimitDict] = {}
         self._PLAYLIST_COOLDOWN_SECS = PLAYLIST_DOWNLOAD_COOLDOWN_SECS
         self._PLAYLIST_PER_LIMIT = PLAYLISTS_LIMIT
-
-    def start_limiter(self):
-        GC.register_task(asyncio.create_task(self._garbage_collector()))
-        LOGGER.debug("Action limiter started")
 
     def is_send_action_allowed(
         self,
@@ -91,34 +86,32 @@ class LightLimiter:
         bank[user_id].update(semaphore=new_semaphore)
         return not new_semaphore < 0
 
-    async def _garbage_collector(self):
-        """Periodically remove expired records from memory banks to prevent memory leaks."""
+    def garbage_collector(self):
+        """Remove expired records from memory banks to prevent memory leaks. Should be called periodically"""
         try:
-            while True:
-                await asyncio.sleep(10)
-                now = time.time()
-                total_garbage_len = (
-                    len(self._ACTIONS_BANK)
-                    + len(self._QUERIES_BANK)
-                    + len(self._PLAYLIST_BANK)
-                )
-                if (total_garbage_len) < 30:
-                    continue
+            now = time.time()
+            total_garbage_len = (
+                len(self._ACTIONS_BANK)
+                + len(self._QUERIES_BANK)
+                + len(self._PLAYLIST_BANK)
+            )
+            if (total_garbage_len) < 30:
+                return
 
-                LOGGER.debug(f"Collecting garbage. Total bank: {total_garbage_len}")
-                total_removed = 0
-                for item in [
-                    (self._ACTIONS_COOLDOWN_SECS, self._ACTIONS_BANK),
-                    (self._QUERIES_COOLDOWN_SECS, self._QUERIES_BANK),
-                    (self._PLAYLIST_COOLDOWN_SECS, self._PLAYLIST_BANK),
-                ]:
-                    cooldown, bank = item
-                    for key, info in bank.copy().items():
-                        if now - info["ts"] > cooldown:
-                            bank.pop(key)
-                            total_removed += 1
+            LOGGER.debug(f"Collecting garbage. Total bank: {total_garbage_len}")
+            total_removed = 0
+            for item in [
+                (self._ACTIONS_COOLDOWN_SECS, self._ACTIONS_BANK),
+                (self._QUERIES_COOLDOWN_SECS, self._QUERIES_BANK),
+                (self._PLAYLIST_COOLDOWN_SECS, self._PLAYLIST_BANK),
+            ]:
+                cooldown, bank = item
+                for key, info in bank.copy().items():
+                    if now - info["ts"] > cooldown:
+                        bank.pop(key)
+                        total_removed += 1
 
-                LOGGER.debug(f"Collecting garbage done. Removed: {total_removed}")
+            LOGGER.debug(f"Collecting garbage done. Removed: {total_removed}")
 
         except asyncio.CancelledError, KeyboardInterrupt:
             pass
