@@ -6,8 +6,8 @@ from yt_dlp.utils import PagedList
 
 from _logger import LOGGER
 from helpers.get_ytm_video_link import get_ytm_playlist_link
+from schemas.dicts import PlaylistInfoDict, YoutubeSearchResultDict
 from tools.extract_info import extract_video_info
-from type import PlaylistInfoDict, YoutubeSearchResultDict
 
 if TYPE_CHECKING:
     from yt_dlp import _Params

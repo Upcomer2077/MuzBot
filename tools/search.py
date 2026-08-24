@@ -1,7 +1,7 @@
 from ytmusicapi import YTMusic
 
 from _logger import LOGGER
-from type import YoutubeSearchResultDict
+from schemas.dicts import YoutubeSearchResultDict
 
 
 def search_in_ytm(search_query: str, limit: int = 10):

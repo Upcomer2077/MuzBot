@@ -8,7 +8,7 @@ import bot
 from _logger import LOGGER
 from config import CHANNEL_STORAGE_ID, DATABASE_PATH, LOKI_URL
 from dungeon import DM
-from type import YoutubeSearchResultDict
+from schemas.dicts import YoutubeSearchResultDict
 
 
 async def _check_loki():

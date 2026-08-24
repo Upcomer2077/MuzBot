@@ -13,8 +13,8 @@ from aiogram.types import (
 
 from dungeon import DM
 from helpers.prettify_incoming_query import prettify_incoming_query
+from schemas.dicts import YoutubeSearchResultDict
 from tools.search import search_in_ytm
-from type import YoutubeSearchResultDict
 
 router = Router()
 

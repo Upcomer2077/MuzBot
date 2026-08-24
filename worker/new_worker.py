@@ -10,8 +10,8 @@ from config import CHANNEL_STORAGE_ID, CPU_POOL, WORKER_CORES_COUNT
 from dungeon import DM
 from helpers import prepare_audio_file_to_send
 from overlord import COLD
+from schemas.dicts.dir import TrackDirContentDict
 from tools.download import download_from_ytm
-from type import TrackDirContentDict
 
 
 @dataclass
