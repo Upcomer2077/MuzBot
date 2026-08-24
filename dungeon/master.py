@@ -1,5 +1,4 @@
 from datetime import datetime
-from zoneinfo import ZoneInfo
 
 from peewee_aio import Manager
 from peewee_aio.model import AIOModelSelect
@@ -132,7 +131,7 @@ class DungeonMaster:
         try:
             track = await TrackCache.get_or_none(TrackCache.video_id == video_id)
             if track:
-                track.last_used_at = datetime.now(ZoneInfo(TZ))
+                track.last_used_at = datetime.now(TZ)
                 await track.save()
 
                 LOGGER.debug("Selected one slave")
