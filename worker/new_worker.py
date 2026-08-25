@@ -80,7 +80,11 @@ class WorkerPipe:
                     success = await loop.run_in_executor(
                         CPU_POOL, download_from_ytm, v_id
                     )
+
                     cache = COLD.demand_tribute(v_id)
+                except asyncio.CancelledError, KeyboardInterrupt:
+                    success = False
+                    is_error = True
                 except Exception as e:
                     is_error = True
                     LOGGER.error(f"💥Error in worker loop. Video {v_id}: {e}")
