@@ -14,7 +14,7 @@ class TrackDirContentDict(TypedDict):
 class YoutubeSearchResultDict(TypedDict):
     """Normalized data structure representing a track item pulled directly from YouTube Music search responses."""
 
-    duration: str
+    duration: str | None
     video_id: str
     title: str
     artist: str
