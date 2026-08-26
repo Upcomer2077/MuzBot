@@ -94,7 +94,7 @@ class TestConfig:
         with pytest.raises(ValueError):
             from config import QUERY_DOWNLOAD_LIMIT_SECS  # noqa: F401
 
-        # endregion
+    # endregion
 
     # region PLAYLIST_DOWNLOAD_COOLDOWN_SECS
     @pytest.mark.parametrize(
@@ -118,7 +118,7 @@ class TestConfig:
         with pytest.raises(ValueError):
             from config import PLAYLIST_DOWNLOAD_COOLDOWN_SECS  # noqa: F401
 
-        # endregion
+    # endregion
 
     # region PLAYLISTS_LIMIT
     @pytest.mark.parametrize(
@@ -142,7 +142,31 @@ class TestConfig:
         with pytest.raises(ValueError):
             from config import PLAYLISTS_LIMIT  # noqa: F401
 
-        # endregion
+    # endregion
+
+    # region PLAYLIST_MAX_TRACKS
+    @pytest.mark.parametrize(
+        "v,exp",
+        [
+            ("0", 0),
+            ("1", 1),
+            ("50", 50),
+            ("-10", 0),
+        ],
+    )
+    def test_playlist_playlist_max_tracks(self, monkeypatch, v, exp):
+        monkeypatch.setenv("PLAYLIST_MAX_TRACKS", v)
+        from config import PLAYLIST_MAX_TRACKS
+
+        assert PLAYLIST_MAX_TRACKS is not None
+        assert PLAYLIST_MAX_TRACKS == exp
+
+    def test_playlist_playlist_max_tracks_raises(self, monkeypatch):
+        monkeypatch.setenv("PLAYLIST_MAX_TRACKS", "f")
+        with pytest.raises(ValueError):
+            from config import PLAYLIST_MAX_TRACKS  # noqa: F401
+
+    # endregion
 
     # region BACKUP_EVERY_N_DAYS
     @pytest.mark.parametrize(
