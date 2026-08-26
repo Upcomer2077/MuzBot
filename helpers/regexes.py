@@ -7,3 +7,5 @@ YTM_VID_REGEX = re.compile(
     r"v=([a-zA-Z0-9_\-]{11})",
 )
 YTM_PLIST_REGEX = re.compile(r"\bOLAK5uy_[A-Za-z0-9_-]{33}\b")
+YTM_USER_PLIST_REGEX = re.compile(r"\bPL[A-Za-z0-9_-]*\b")
+YTM_MIX_PLIST_REGEX = re.compile(r"\bRD[A-Za-z0-9_-]*\b")

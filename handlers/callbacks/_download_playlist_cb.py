@@ -9,7 +9,7 @@ from aiogram.utils.media_group import MediaGroupBuilder, MediaType
 import bot
 from _logger import LOGGER
 from action_limiter import AL
-from config import PLAYLIST_DOWNLOAD_COOLDOWN_SECS, PLAYLISTS_LIMIT
+from config import PLAYLIST_DOWNLOAD_COOLDOWN_SECS, PLAYLIST_MAX_TRACKS, PLAYLISTS_LIMIT
 from dungeon import DM
 from helpers.utils import U
 from tools.extract_playlist_info import extract_playlist_info
@@ -65,7 +65,7 @@ async def handle_playlist_download(
 
     tasks = [
         TRACK_PIPELINE.submit(v.video_id, track_title=v.title, artist=v.artist)
-        for v in tracks_info.values()
+        for v in list(tracks_info.values())[:PLAYLIST_MAX_TRACKS]
         if v.telegram_file_id is None and not v.is_too_large
     ]
 
@@ -104,12 +104,18 @@ async def handle_playlist_download(
             await bot.bot.send_media_group(USER_ID, list(t), disable_notification=True)
             await asyncio.sleep(1)
 
+    and_more = 0
     if len(unable_to_download):
         text = "Не удалось отправить треки:\n"
         for idx, u in enumerate(unable_to_download, 1):
             track = tracks_info[u.v_id]
             is_too_large_text = ": трек слишком большой, скачать не выйдет."
-            text += f"#{idx}. {track.artist} - {track.title}{is_too_large_text if u.is_too_large else ''}\n"
+            new_line = f"#{idx}. {track.artist} - {track.title}{is_too_large_text if u.is_too_large else ''}\n"
+            if len(text) + len(new_line) > 4000:
+                and_more += 1
+                continue
+            text += new_line
+        text += f"И ещё {and_more} треков" if and_more else ""
 
         await bot.bot.send_message(USER_ID, f"{text}")
 

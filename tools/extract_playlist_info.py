@@ -1,16 +1,10 @@
 import asyncio
-from typing import TYPE_CHECKING
-
-import yt_dlp
-from yt_dlp.utils import PagedList
+import random
 
 from _logger import LOGGER
-from helpers.get_ytm_video_link import get_ytm_playlist_link
-from tools.extract_info import extract_video_info
+from config import MAX_PLAYLIST_TRACKS_REQUEST
+from tools.YTMusic_client import YT
 from type import PlaylistInfoDict, YoutubeSearchResultDict
-
-if TYPE_CHECKING:
-    from yt_dlp import _Params
 
 
 async def extract_playlist_info(
@@ -40,9 +34,9 @@ async def extract_playlist_info(
     author: str | None = "unknown"
     if playlist_id.startswith("OLAK"):
         author = ", ".join([a["name"] for a in info[0].get("artists", [])])
-    )
-    # ====== ;( =======
-    artist = None
+    elif playlist_id.startswith(("PL", "RD")):
+        author = PLAYLIST.get("author", {}).get("name", None)
+
     for track in info:
         if not track.get("videoId"):
             continue
