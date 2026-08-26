@@ -216,7 +216,7 @@ class DungeonMaster:
         q1 = PlaylistCache.insert(
             playlist_id=playlist_info["id"],
             title=playlist_info["title"],
-            artist=playlist_info["artist"],
+            artist=playlist_info["author"],
         )
         LOGGER.debug(f"Enslaving playlist info: {playlist_info['id']} ")
         _ = await DB_DISPATCHER.execute(q1)

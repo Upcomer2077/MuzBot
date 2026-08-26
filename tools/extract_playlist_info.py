@@ -26,82 +26,58 @@ async def extract_playlist_info(
     """
     LOGGER.debug(f"Extracting info about playlist {playlist_id}")
 
-    PLAYLIST = await asyncio.shield(
-        asyncio.to_thread(_extract, get_ytm_playlist_link(playlist_id))
-    )
+    async with YT.playlist_lock:
+        await asyncio.sleep(random.uniform(1.0, 3.0))
+        PLAYLIST = await asyncio.to_thread(_extract, playlist_id)
+
     LOGGER.debug(f"Info about playlist {bool(PLAYLIST)}")
-
-    if PLAYLIST is None or "entries" not in PLAYLIST:
+    if PLAYLIST is None or "tracks" not in PLAYLIST:
         return None
-    videos: list[YoutubeSearchResultDict] = []
 
-    info = (
-        PLAYLIST["entries"].getpage(1)
-        if isinstance(PLAYLIST["entries"], PagedList)
-        else PLAYLIST["entries"]
+    videos: list[YoutubeSearchResultDict] = []
+    info: list = PLAYLIST["tracks"]
+
+    author: str | None = "unknown"
+    if playlist_id.startswith("OLAK"):
+        author = ", ".join([a["name"] for a in info[0].get("artists", [])])
     )
     # ====== ;( =======
     artist = None
     for track in info:
-        v = await extract_video_info(track.get("id"))
-        if (
-            not v
-            or v.get("artist").lower().find("release") != -1
-            or v.get("artist").lower().find("topic") != -1
-        ):
+        if not track.get("videoId"):
             continue
-        artist = v.get("artist")
+        _artists = ", ".join([a["name"] for a in track["artists"]])
 
-        break
-    # ================
-
-    for track in info:
-        _artist = artist
-        _a = track.get("uploader") or track.get("channel")
-        if _a and _a.lower().find("release") == -1:
-            _artist = _a
         videos.append(
             YoutubeSearchResultDict(
                 title=track.get("title") or "UNKNOWN",
-                artist=(_artist or "unknown").replace(" - Topic", ""),
-                video_id=track.get("id"),
-                duration="0",
-                duration_seconds=track.get("duration") or 0,
+                artist=_artists.replace(" - Topic", ""),
+                video_id=track.get("videoId"),
+                duration=track.get("duration"),
+                duration_seconds=track.get("duration_seconds") or 0,
             )
         )
-    playlist_title = PLAYLIST.get("title", None)
+    playlist_title: str | None = PLAYLIST.get("title", None)
     if playlist_title:
         playlist_title = playlist_title.replace("Album - ", "")
 
     return (
-        PlaylistInfoDict(title=playlist_title, id=PLAYLIST["id"], artist=artist),
+        PlaylistInfoDict(title=playlist_title, id=PLAYLIST["id"], author=author),
         videos,
     )
 
 
 def _extract(link: str):
-    """Execute synchronous yt-dlp metadata extraction for a video without initiating a download.
+    """Execute synchronous metadata extraction for a video without initiating a download.
 
     Args:
-        video_id: Unique YouTube Music track video identifier.
+        link: YouTube Music track video link.
 
     Returns:
         A dictionary containing raw track metadata, or None if an exception occurs.
     """
-    YDL_OPTS: _Params = {
-        "extract_flat": True,
-        "no_warnings": True,
-        # TODO: config?
-        "playlistend": 30,
-        "quiet": True,
-    }
-
     try:
-        with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
-            return ydl.extract_info(
-                link,
-                download=False,
-            )
+        return YT.get_playlist(link, limit=MAX_PLAYLIST_TRACKS_REQUEST)
 
     except Exception:
-        return None
+        return

@@ -1,5 +1,3 @@
-import asyncio
-
 from aiogram import Router
 from aiogram.types import Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -21,9 +19,7 @@ async def get_list(message: Message):
     if len(clean_text) == 0:
         return None
     STATUS_MESSAGE = await message.answer("🔍 Ищу варианты...")
-    search_result: list[YoutubeSearchResultDict] = await asyncio.shield(
-        asyncio.to_thread(search_in_ytm, QUERY.strip(), 9)
-    )
+    search_result: list[YoutubeSearchResultDict] = await search_in_ytm(QUERY, 9)
 
     if len(search_result) == 0:
         return STATUS_MESSAGE.edit_text("404 🤷")

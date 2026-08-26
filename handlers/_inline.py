@@ -1,5 +1,3 @@
-import asyncio
-
 from aiogram import Router
 from aiogram.types import (
     InlineKeyboardButton,
@@ -25,9 +23,7 @@ async def inline(q: InlineQuery):
         return q.answer([])
 
     query = prettify_incoming_query(q.query)
-    search_result: list[YoutubeSearchResultDict] = await asyncio.shield(
-        asyncio.to_thread(search_in_ytm, query.strip(), 9)
-    )
+    search_result: list[YoutubeSearchResultDict] = await search_in_ytm(query, 9)
 
     if len(search_result) == 0:
         return
@@ -54,7 +50,7 @@ async def inline(q: InlineQuery):
             InlineQueryResultArticle(
                 id=v_id,
                 title=f"{artist} — {title}",
-                description=f"⏱ Длительность: {duration}",
+                description=f"⏱: {duration}",
                 hide_url=True,
                 input_message_content=InputTextMessageContent(
                     link_preview_options=LinkPreviewOptions(is_disabled=True),

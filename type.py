@@ -44,4 +44,4 @@ class DownloadPlaylistCallback(CallbackData, prefix="dlp"):
 class PlaylistInfoDict(TypedDict):
     id: str
     title: str | None
-    artist: str | None
+    author: str | None

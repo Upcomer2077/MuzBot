@@ -1,10 +1,14 @@
-from ytmusicapi import YTMusic
+import asyncio
+from typing import cast
 
 from _logger import LOGGER
+from tools.YTMusic_client import YT
 from type import YoutubeSearchResultDict
 
 
-def search_in_ytm(search_query: str, limit: int = 10):
+async def search_in_ytm(
+    search_query: str, limit: int = 10
+) -> list[YoutubeSearchResultDict]:
     """Search for song items using the YouTube Music API and normalize the returned metadata.
 
     Args:
@@ -14,14 +18,18 @@ def search_in_ytm(search_query: str, limit: int = 10):
     Returns:
         A list of structured dictionaries containing normalized song metadata and video identifiers.
     """
-    YT = YTMusic()
+
     LOGGER.debug(f"Extracting info query: {search_query}")
 
     try:
-        SEARCH_RESULTS = YT.search(query=search_query, filter="songs", limit=limit)
+        async with YT.search_lock:
+            await asyncio.sleep(1)
+            SEARCH_RESULTS = await asyncio.to_thread(_extract, search_query, limit)
         LOGGER.debug(f"Found info query: {bool(SEARCH_RESULTS)}")
     except Exception:
         LOGGER.critical(f'Can\'t pull info from "{search_query}" query')
+        return cast(list[YoutubeSearchResultDict], [])
+
     video_ids: list[YoutubeSearchResultDict] = []
 
     for item in SEARCH_RESULTS[: min(limit, 10)]:
@@ -43,3 +51,7 @@ def search_in_ytm(search_query: str, limit: int = 10):
             )
 
     return video_ids
+
+
+def _extract(query: str, limit: int):
+    return YT.search(query=query, filter="songs", limit=limit)
