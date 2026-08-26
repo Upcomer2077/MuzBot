@@ -19,6 +19,9 @@ PLAYLIST_DOWNLOAD_COOLDOWN_SECS = max(
     int(os.environ.get("PLAYLIST_DOWNLOAD_COOLDOWN_SECS", "20")), 20
 )
 PLAYLISTS_LIMIT = max(int(os.environ.get("PLAYLISTS_LIMIT", "1")), 1)
+"""Playlist download request limit per user"""
+PLAYLIST_MAX_TRACKS = max(int(os.environ.get("PLAYLIST_MAX_TRACKS", "0")), 0)
+"""Limit of tracks in playlist that can be pulled on current machine"""
 
 BACKUP_EVERY_N_DAYS = max(int(os.getenv("BACKUP_EVERY_N_DAYS", "2")), 1)
 LOKI_URL = os.environ.get("LOKI_URL")
