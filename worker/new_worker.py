@@ -137,7 +137,7 @@ class WorkerPipe:
                     performer=artist,
                     request_timeout=300,
                 )
-                LOGGER.debug(f"Send track {title} to channel")
+                LOGGER.info(f"Send track {title} to channel")
                 break
 
             except TelegramNetworkError as e:
