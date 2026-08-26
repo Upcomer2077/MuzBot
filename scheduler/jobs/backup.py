@@ -52,6 +52,7 @@ async def _send_to_channel(archive_path):
             caption=caption,
             parse_mode="Markdown",
             disable_notification=True,
+            request_timeout=300,
         )
         LOGGER.info("Backup file was send to channel")
     except Exception as e:
