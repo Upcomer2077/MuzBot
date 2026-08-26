@@ -7,5 +7,5 @@ COMMANDS = [
         command="force",
         description="⚡ Скачать трек напрямую по ссылке из youtube.music.com",
     ),
-    BotCommand(command="playlist", description="⚡ Скачать плейлист по ссылке"),
+    BotCommand(command="plist", description="⚡ Скачать плейлист по ссылке"),
 ]

@@ -11,7 +11,7 @@ from tools.extract_playlist_info import extract_playlist_info
 router = Router()
 
 
-@router.message(Command("playlist"))
+@router.message(Command("plist"))
 async def playlist(message: Message, command: CommandObject):
     ANSWER = await message.answer("Ищу...")
     if not message.from_user:
