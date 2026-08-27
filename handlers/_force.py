@@ -12,6 +12,7 @@ from config import (
 )
 from helpers.regexes import YTM_REGEX, YTM_VID_REGEX
 from helpers.utils import U
+from schemas.enums.priorities import DownloadTaskPriorities
 from worker import TRACK_PIPELINE
 
 router = Router()
@@ -57,7 +58,10 @@ async def force(message: Message, command: CommandObject):
 
     if not track.telegram_file_id:
         _, cache = await TRACK_PIPELINE.submit(
-            VIDEO_ID, track_title=track.title, artist=track.artist
+            VIDEO_ID,
+            track_title=track.title,
+            artist=track.artist,
+            priority=DownloadTaskPriorities.SINGLE,
         )
         if cache.file_id or cache.is_too_large:
             if cache.is_too_large:

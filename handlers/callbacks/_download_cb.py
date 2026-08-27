@@ -10,6 +10,7 @@ from config import (
     TRACKS_PER_LIMIT,
 )
 from helpers.utils import U
+from schemas.enums.priorities import DownloadTaskPriorities
 from type import DownloadCallback
 from worker import TRACK_PIPELINE
 
@@ -61,7 +62,10 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
 
     if not track.telegram_file_id:
         _, cache = await TRACK_PIPELINE.submit(
-            VIDEO_ID, track_title=track.title, artist=track.artist
+            VIDEO_ID,
+            track_title=track.title,
+            artist=track.artist,
+            priority=DownloadTaskPriorities.SINGLE,
         )
         if cache.file_id or cache.is_too_large:
             if cache.is_too_large:

@@ -10,6 +10,7 @@ from config import CHANNEL_STORAGE_ID, CPU_POOL, WORKER_CORES_COUNT
 from dungeon import DM
 from helpers import prepare_audio_file_to_send
 from overlord import COLD
+from schemas.enums.priorities import DownloadTaskPriorities
 from schemas.tuples.worker import DownloadResult
 from tools.download import download_from_ytm
 from type import TrackDirContentDict
@@ -17,17 +18,19 @@ from type import TrackDirContentDict
 F = asyncio.Future[tuple[str, DownloadResult]]
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, order=True)
 class _DownloadTask:
-    video_id: str
-    track_title: str
-    artist: str
-    future: F = field(default_factory=asyncio.Future)
+    priority: float | DownloadTaskPriorities
+    video_id: str = field(compare=False)
+    track_title: str = field(compare=False)
+    artist: str = field(compare=False)
+    future: F = field(default_factory=asyncio.Future, compare=False)
 
 
 class WorkerPipe:
     def __init__(self):
-        self._queue: asyncio.Queue[_DownloadTask] = asyncio.Queue()
+        self._queue: asyncio.Queue[_DownloadTask] = asyncio.PriorityQueue()
+        self._q_shift = 0.0
         self._active_downloads: dict[str, list[F]] = {}
         self._pool_semaphore = asyncio.Semaphore(WORKER_CORES_COUNT)
         self._send_semaphore = asyncio.Semaphore(2)
@@ -42,7 +45,14 @@ class WorkerPipe:
             self._worker_task.cancel()
         LOGGER.debug("Worker loop stopped.")
 
-    async def submit(self, video_id: str, *, track_title: str, artist: str):
+    async def submit(
+        self,
+        video_id: str,
+        *,
+        track_title: str,
+        artist: str,
+        priority: DownloadTaskPriorities,
+    ):
         """Entry point. Puts task to worker loop
         Returns:
             tuple:
@@ -58,7 +68,13 @@ class WorkerPipe:
             return await fut
 
         LOGGER.debug(f"Appending download task to worker queue: {video_id}")
-        task = _DownloadTask(video_id=video_id, track_title=track_title, artist=artist)
+        task = _DownloadTask(
+            video_id=video_id,
+            track_title=track_title,
+            artist=artist,
+            priority=(priority + self._increase_shift()),
+        )
+
         self._active_downloads[video_id] = [task.future]
 
         await self._queue.put(task)
@@ -170,6 +186,8 @@ class WorkerPipe:
         )
 
         while True:
+            if self._queue.empty() and self._q_shift:
+                self._reset_shift()
             task = await self._queue.get()
             LOGGER.debug(f"Got new task from worker queue: {task.video_id}")
 
@@ -180,3 +198,11 @@ class WorkerPipe:
             )
 
             self._queue.task_done()
+
+    def _increase_shift(self):
+        """Increase priority micro shift to save FIFO order"""
+        self._q_shift += 0.01
+        return self._q_shift
+
+    def _reset_shift(self):
+        self._q_shift = 0.0

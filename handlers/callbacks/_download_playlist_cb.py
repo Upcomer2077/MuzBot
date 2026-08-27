@@ -12,6 +12,7 @@ from action_limiter import AL
 from config import PLAYLIST_DOWNLOAD_COOLDOWN_SECS, PLAYLIST_MAX_TRACKS, PLAYLISTS_LIMIT
 from dungeon import DM
 from helpers.utils import U
+from schemas.enums.priorities import DownloadTaskPriorities
 from tools.extract_playlist_info import extract_playlist_info
 from type import DownloadPlaylistCallback
 from worker import TRACK_PIPELINE
@@ -64,7 +65,12 @@ async def handle_playlist_download(
             return ANSWER.edit_text("Неизвестная ошибка. Повторите попытку.")
 
     tasks = [
-        TRACK_PIPELINE.submit(v.video_id, track_title=v.title, artist=v.artist)
+        TRACK_PIPELINE.submit(
+            v.video_id,
+            track_title=v.title,
+            artist=v.artist,
+            priority=DownloadTaskPriorities.ALBUM,
+        )
         for v in list(tracks_info.values())[:PLAYLIST_MAX_TRACKS]
         if v.telegram_file_id is None and not v.is_too_large
     ]
