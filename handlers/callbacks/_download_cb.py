@@ -53,7 +53,7 @@ async def handle_download(callback: CallbackQuery, callback_data: DownloadCallba
         )
 
     if not AL.is_track_download_allowed(CHAT_ID):
-        await ANSWER.edit_text(
+        return ANSWER.edit_text(
             f"Разрешено загружать не более {TRACKS_PER_LIMIT} треков за {QUERY_DOWNLOAD_LIMIT_SECS} сек"
         )
 
