@@ -32,7 +32,7 @@ async def extract_playlist_info(
     info: list = PLAYLIST["tracks"]
 
     author: str | None = "unknown"
-    if playlist_id.startswith("OLAK"):
+    if playlist_id.startswith("OLAK5uy_"):
         author = ", ".join([a["name"] for a in info[0].get("artists", [])])
     elif playlist_id.startswith(("PL", "RD")):
         author = PLAYLIST.get("author", {}).get("name", None)
