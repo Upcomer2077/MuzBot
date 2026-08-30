@@ -81,7 +81,7 @@ class Scheduler:
         id: str,
         *,
         trigger: Literal[JobTrigger.INTERVAL],
-        on_setup: Callable | None,
+        on_setup: Callable | None = None,
         **kwargs: Unpack[IntervalConfig],
     ) -> None: ...
 
@@ -92,7 +92,7 @@ class Scheduler:
         id: str,
         *,
         trigger: Literal[JobTrigger.CRON],
-        on_setup: Callable | None,
+        on_setup: Callable | None = None,
         **kwargs: Unpack[CronConfig],
     ) -> None: ...
     @overload
@@ -102,7 +102,7 @@ class Scheduler:
         id: str,
         *,
         trigger: Literal[JobTrigger.ONCE],
-        on_setup: Callable | None,
+        on_setup: Callable | None = None,
         **kwargs: Unpack[OneTimeConfig],
     ) -> None: ...
 
@@ -112,7 +112,7 @@ class Scheduler:
         id: str,
         *,
         trigger: JobTrigger,
-        on_setup: Callable | None,
+        on_setup: Callable | None = None,
         **kwargs,
     ) -> None:
         job_dict: Job = cast(
