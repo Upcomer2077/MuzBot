@@ -9,11 +9,11 @@ class ArtistsShortInfoDict(TypedDict):
 # =====
 class ArtistInfoDict(TypedDict):
     name: str
-    albums: ArtistEntityInfoDict | None
-    singles: ArtistEntityInfoDict | None
+    albums: ArtistEntitiesInfoDict | None
+    singles: ArtistEntitiesInfoDict | None
 
 
-class ArtistEntityInfoDict(TypedDict):
+class ArtistEntitiesInfoDict(TypedDict):
     results: list[ArtistConcreteEntityInfoDict]
     browseId: str
 
