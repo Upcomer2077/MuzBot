@@ -88,7 +88,7 @@ jobs:
 
             type=raw,value=beta,enable=${{ contains(steps.get-tag.outputs.version, 'b') }}
             type=raw,value=alpha,enable=${{ contains(steps.get-tag.outputs.version, 'a') }}
-            type=edge,branch=main
+            type=raw,value=nightly
 
 
       - name: Set up QEMU
