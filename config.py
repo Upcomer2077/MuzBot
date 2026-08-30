@@ -1,5 +1,4 @@
 import os
-from concurrent.futures import ProcessPoolExecutor
 
 from dotenv import load_dotenv
 
@@ -46,7 +45,6 @@ WORKER_CORES_COUNT = max(1, CPU_COUNT - 1)
 """Amount of cores that can be used as pool of workers"""
 DATABASE_PATH = f"{os.getcwd()}/data/{DB_NAME}.db"
 CACHE_ROOT_DIR = "./.cache"
-CPU_POOL = ProcessPoolExecutor(WORKER_CORES_COUNT)
 """Process pool executor main instance"""
 MAX_TRACK_DURATION_SECONDS = 60 * 35
 MAX_PLAYLIST_TRACKS_REQUEST = 300

@@ -1,4 +1,5 @@
 import asyncio
+import os
 from dataclasses import dataclass, field
 from typing import NoReturn
 
@@ -6,7 +7,7 @@ from aiogram.exceptions import TelegramNetworkError
 
 import bot
 from _logger import LOGGER
-from config import CHANNEL_STORAGE_ID, CPU_POOL, WORKER_CORES_COUNT
+from config import CHANNEL_STORAGE_ID, CPU_COUNT, WORKER_CORES_COUNT
 from dungeon import DM
 from helpers import prepare_audio_file_to_send
 from overlord import COLD
@@ -32,11 +33,17 @@ class WorkerPipe:
         self._queue: asyncio.Queue[_DownloadTask] = asyncio.PriorityQueue()
         self._q_shift = 0.0
         self._active_downloads: dict[str, list[F]] = {}
-        self._pool_semaphore = asyncio.Semaphore(WORKER_CORES_COUNT)
+        self._pool_semaphore = asyncio.Semaphore(WORKER_CORES_COUNT + 3)
         self._send_semaphore = asyncio.Semaphore(2)
-        self._create_task_semaphore = asyncio.Semaphore(30)
+        self._execute_download_semaphore = asyncio.Semaphore(30)
         self._disk_space_semaphore = asyncio.Semaphore(30)
         self._worker_task: asyncio.Task | None = None
+
+        _CPUs = os.cpu_count()
+        if _CPUs and (_CPUs < CPU_COUNT):
+            LOGGER.warning(
+                f"CPU_COUNT is higher than it actually is ({CPU_COUNT} vs {_CPUs}). Worker loop freezing expected!"
+            )
 
     def start(self):
         self._worker_task = asyncio.create_task(self._worker_loop())
@@ -93,12 +100,9 @@ class WorkerPipe:
             async with self._pool_semaphore:
                 try:
                     LOGGER.debug(f"Starting worker task on {v_id}")
-                    loop = asyncio.get_event_loop()
-                    success = await loop.run_in_executor(
-                        CPU_POOL, download_from_ytm, v_id
-                    )
+                    success = await asyncio.to_thread(download_from_ytm, v_id)
 
-                    cache = COLD.demand_tribute(v_id)
+                    cache = await COLD.demand_tribute(v_id)
                 except asyncio.CancelledError, KeyboardInterrupt:
                     success = False
                     is_error = True
@@ -123,7 +127,7 @@ class WorkerPipe:
                 await DM.fisting(
                     video_id=v_id, telegram_file_id=file_id, is_too_large=is_too_large
                 )
-            COLD.annihilate(v_id)
+            await COLD.annihilate(v_id)
 
         futures_to_wakeup = self._active_downloads.pop(v_id, [])
         for fut in futures_to_wakeup:
@@ -131,7 +135,7 @@ class WorkerPipe:
                 LOGGER.debug(f"Setting result to worker tasks on {v_id}")
                 fut.set_result((v_id, DownloadResult(file_id, is_too_large, is_error)))
 
-        return self._create_task_semaphore.release()
+        return self._execute_download_semaphore.release()
 
     async def _send_non_cached_to_telegram(
         self, cache: TrackDirContentDict, *, title: str, artist: str
@@ -189,7 +193,7 @@ class WorkerPipe:
         )
 
         while True:
-            await self._create_task_semaphore.acquire()
+            await self._execute_download_semaphore.acquire()
             if self._queue.empty() and self._q_shift:
                 self._reset_shift()
             task = await self._queue.get()

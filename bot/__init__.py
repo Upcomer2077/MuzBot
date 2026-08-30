@@ -5,7 +5,7 @@ from _logger import LOGGER
 from action_limiter import AL
 from backup import B_SHED
 from bot.commands import COMMANDS
-from config import BACKUP_EVERY_N_DAYS, BOT_TOKEN, CPU_POOL, EXPERIMENTAL
+from config import BACKUP_EVERY_N_DAYS, BOT_TOKEN
 from dungeon import DM
 from GC import GC
 from handlers import get_handlers_router
@@ -32,7 +32,6 @@ async def on_shutdown():
     TRACK_PIPELINE.stop()
     await DM.close_dungeon()
     await GC.close_gc()
-    CPU_POOL.shutdown(cancel_futures=True, wait=not EXPERIMENTAL)
     await B_SHED.stop()
     LOGGER.info("Graceful shutdown. Bye!")
 
