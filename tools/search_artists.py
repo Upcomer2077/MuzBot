@@ -12,7 +12,7 @@ async def search_artists_in_ytm(performer: str) -> list[ArtistsShortInfoDict]:
 
     result: list[ArtistsShortInfoDict] = []
 
-    for p in resp:
+    for p in resp[:9]:
         result.append({"name": p["artist"], "id": p["browseId"]})
 
     return result
