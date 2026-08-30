@@ -16,12 +16,17 @@ class IntervalConfig(TypedDict, total=False):
     days: int | None
     hours: int | None
     minutes: int
+    seconds: int | None
 
 
 class CronConfig(TypedDict, total=False):
     day: str | int
     hour: str | int
     minute: str | int
+    second: str | int
+    month: str | int
+    week: str | int
+    day_of_week: str | int
 
 
 class OneTimeConfig(TypedDict, total=False):
