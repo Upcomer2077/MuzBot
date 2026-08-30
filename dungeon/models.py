@@ -109,6 +109,8 @@ class Subscriptions(AIOModel):
         backref="telegram_users",
         on_delete="CASCADE",
     )
+    is_suspended = BooleanField(default=False, null=True)
+    created_at = DateTimeField(default=datetime.now, null=True)
 
     class Meta:
         table_name = "subscriptions"

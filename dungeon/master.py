@@ -1,4 +1,6 @@
+from collections.abc import AsyncGenerator
 from datetime import datetime
+from typing import Any
 
 from peewee_aio import Manager
 from peewee_aio.model import AIOModelSelect
@@ -290,7 +292,7 @@ class DungeonMaster:
             name=performer_name,
             last_single_id=last_single_id,
             last_album_id=last_album_id,
-        )
+        ).on_conflict_replace()
 
         await DB_DISPATCHER.execute(query)
 
@@ -330,3 +332,47 @@ class DungeonMaster:
 
         r = await query
         return list(r)
+
+    async def get_subscripted_authors(
+        self, batch_size=100
+    ) -> AsyncGenerator[list[dict[str, Any]], Any]:
+        q = (
+            Subscriptions.select(
+                Subscriptions.performer_id,
+                YTPerformers.last_album_id,
+                YTPerformers.last_single_id,
+                YTPerformers.name,
+            )
+            .where(Subscriptions.is_suspended == False)
+            .distinct()
+            .join(YTPerformers, on=(YTPerformers.id == Subscriptions.performer_id))
+            .order_by(Subscriptions.performer_id)
+            .dicts()
+        )
+
+        offset = 0
+        while True:
+            batch_query = q.limit(batch_size).offset(offset)
+            results = await batch_query
+
+            if not results:
+                break
+
+            yield results
+
+            offset += batch_size
+
+    async def get_tg_users_with_subs(self, performers_ids: list):
+        return (
+            await Subscriptions.select(
+                Subscriptions.performer_id, Subscriptions.tg_user_id
+            )
+            .where(Subscriptions.performer_id.in_(performers_ids))
+            .order_by(Subscriptions.performer_id)
+            .dicts()
+        )
+
+    async def toggle_user_subscriptions(self, tg_user_id: int, suspend: bool):
+        await Subscriptions.update(is_suspended=suspend).where(
+            Subscriptions.tg_user_id == tg_user_id
+        )
