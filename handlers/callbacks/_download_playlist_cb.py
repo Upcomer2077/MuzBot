@@ -71,7 +71,7 @@ async def handle_playlist_download(
             artist=v.artist,
             priority=DownloadTaskPriorities.ALBUM,
         )
-        for v in list(tracks_info.values())[:PLAYLIST_MAX_TRACKS]
+        for v in list(tracks_info.values())[: PLAYLIST_MAX_TRACKS or None]
         if v.telegram_file_id is None and not v.is_too_large
     ]
 
