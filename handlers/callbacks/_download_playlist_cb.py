@@ -49,7 +49,9 @@ async def handle_playlist_download(
     if AL.is_send_action_allowed(USER_ID):
         await U.send_action(USER_ID)
 
-    tracks_info = await DM.summon_slaves_from_playlist(PLAYLIST_ID)
+    tracks_info = await DM.summon_slaves_from_playlist(
+        PLAYLIST_ID, PLAYLIST_MAX_TRACKS or None
+    )
 
     if not tracks_info:
         r = await extract_playlist_info(PLAYLIST_ID)
@@ -57,7 +59,9 @@ async def handle_playlist_download(
             return ANSWER.edit_text("404 🤷")
         (playlist_info, videos) = r
         await DM.add_playlist_and_tracks(playlist_info, videos)
-        tracks_info = await DM.summon_slaves_from_playlist(PLAYLIST_ID)
+        tracks_info = await DM.summon_slaves_from_playlist(
+            PLAYLIST_ID, PLAYLIST_MAX_TRACKS or None
+        )
         if not tracks_info:
             LOGGER.error(
                 f"Cannot extract info about playlist {PLAYLIST_ID} in playlist_cb"
@@ -71,7 +75,7 @@ async def handle_playlist_download(
             artist=v.artist,
             priority=DownloadTaskPriorities.ALBUM,
         )
-        for v in list(tracks_info.values())[: PLAYLIST_MAX_TRACKS or None]
+        for v in list(tracks_info.values())
         if v.telegram_file_id is None and not v.is_too_large
     ]
 
@@ -86,7 +90,9 @@ async def handle_playlist_download(
 
     mg_builder = MediaGroupBuilder()
     media_group_cached: list[Sequence[MediaType]] = []
-    tracks_info = await DM.summon_slaves_from_playlist(PLAYLIST_ID)
+    tracks_info = await DM.summon_slaves_from_playlist(
+        PLAYLIST_ID, PLAYLIST_MAX_TRACKS or None
+    )
 
     if not tracks_info:
         LOGGER.error(f"Can not find info about playlist {PLAYLIST_ID} in worker loop.")

@@ -58,7 +58,7 @@ async def playlist(message: Message, command: CommandObject):
             )
 
     builder = InlineKeyboardBuilder()
-    text = f"Найден плейлист:\n{playlist.artist} — {playlist.title}. {'(Первые ±300 треков)' if len(slaves) > MAX_PLAYLIST_TRACKS_REQUEST else ''}\n\n"
+    text = f"Найден плейлист:\n{playlist.artist} — {playlist.title}. {f'(Первые ±{MAX_PLAYLIST_TRACKS_REQUEST} треков)' if len(slaves) > MAX_PLAYLIST_TRACKS_REQUEST else ''}\n\n"
     if PLAYLIST_MAX_TRACKS and len(slaves) > PLAYLIST_MAX_TRACKS:
         text += f"Будут скачаны первые {PLAYLIST_MAX_TRACKS} треков из плейлиста (мы работаем над этим)\n\n"
 

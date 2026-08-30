@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 from peewee_aio import Manager
 
 from _logger import LOGGER
-from config import MAX_TRACK_DURATION_SECONDS, TZ
+from config import MAX_PLAYLIST_TRACKS_REQUEST, MAX_TRACK_DURATION_SECONDS, TZ
 from dungeon.dispatcher import DB_DISPATCHER
 from dungeon.models import PlaylistCache, TrackCache, TrackPlaylist
 from type import PlaylistInfoDict, YoutubeSearchResultDict
@@ -238,7 +238,7 @@ class DungeonMaster:
         return r
 
     async def summon_slaves_from_playlist(
-        self, playlist_id: str
+        self, playlist_id: str, limit: int | None = MAX_PLAYLIST_TRACKS_REQUEST + 1
     ) -> dict[str, TrackCache] | None:
         """Fetch cached Telegram file identifiers mapping them to their corresponding video identifiers.
 
@@ -254,6 +254,7 @@ class DungeonMaster:
             .join(TrackPlaylist, on=(TrackCache.video_id == TrackPlaylist.video_id))
             .where(TrackPlaylist.playlist_id == playlist_id)
             .order_by(TrackPlaylist.track_order)
+            .limit(limit)
         )
         rows = await query
         LOGGER.debug(f"Getting slaves from playlist done: {len(rows)} ")
