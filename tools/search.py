@@ -7,7 +7,7 @@ from type import YoutubeSearchResultDict
 
 
 async def search_in_ytm(
-    search_query: str, limit: int = 10
+    search_query: str, limit: int = 27
 ) -> list[YoutubeSearchResultDict]:
     """Search for song items using the YouTube Music API and normalize the returned metadata.
 
@@ -32,7 +32,7 @@ async def search_in_ytm(
 
     video_ids: list[YoutubeSearchResultDict] = []
 
-    for item in SEARCH_RESULTS[: min(limit, 10)]:
+    for item in SEARCH_RESULTS[: max(limit, 1)]:
         title: str = item.get("title") or "Unknown"
         artist = ", ".join([artist["name"] for artist in item.get("artists", [])])
         video_id: str | None = item.get("videoId") or None

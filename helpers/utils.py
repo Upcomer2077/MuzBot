@@ -2,11 +2,16 @@ import asyncio
 
 from aiogram.enums import ChatAction
 from aiogram.types import Message
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 import bot
 from dungeon import DM
 from dungeon.models import TrackCache
+from schemas.callbacks.search_pagination import PaginationCallback
 from tools.extract_info import extract_video_info
+
+_ITEMS_PER_PAGE = 9
+_MAX_ITEMS = 27
 
 
 class U:
@@ -72,3 +77,47 @@ class U:
             await msg.edit_reply_markup(reply_markup=None)
         except Exception:
             return  # Ignore errors if the message was already deleted by the user
+
+    @staticmethod
+    def get_page_content(search_result: list, page: int):
+        """Функция нарезки результатов и сборки клавиатуры"""
+        start_idx = page * _ITEMS_PER_PAGE
+        end_idx = start_idx + _ITEMS_PER_PAGE
+        page_items = search_result[start_idx:end_idx]
+
+        text = f"Найденные варианты (Страница {page + 1}):\n\n"
+        builder = InlineKeyboardBuilder()
+
+        for i, video in enumerate(page_items, start=start_idx + 1):
+            v_id = video["video_id"]
+            title = video["title"]
+            duration = video["duration"]
+            artist = video["artist"]
+            text += f"#{i}. {artist} — {title} [{duration}]\n"
+
+            builder.button(
+                text=f"⬇️ {i}",
+                callback_data=f"dl:{v_id}:{i}",
+            )
+        # TODO: search in video category
+        # if not (end_idx < len(search_result) and end_idx < _MAX_ITEMS):
+        #     text += "\nНе нашли что искали? Попробуйте добавить -v в конце запроса"
+        builder.adjust(3, repeat=True)
+
+        nav_builder = InlineKeyboardBuilder()
+
+        # Кнопка «Назад»
+        if page > 0:
+            nav_builder.button(
+                text="⬅️", callback_data=PaginationCallback(page=page - 1).pack()
+            )
+
+        if end_idx < len(search_result) and end_idx < _MAX_ITEMS:
+            nav_builder.button(
+                text="➡️", callback_data=PaginationCallback(page=page + 1).pack()
+            )
+
+        nav_builder.button(text="❌", callback_data="drop_m")
+
+        builder.attach(nav_builder)
+        return text, builder.as_markup()
