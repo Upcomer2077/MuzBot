@@ -30,7 +30,7 @@ def _get_last(new_info: ArtistInfoDict):
 
 
 async def job():
-    await _fixture()
+    # await _fixture()
     LOGGER.info("Starting notification/subs job")
     async for batch in DM.get_subscripted_authors():
         print(len(batch))
