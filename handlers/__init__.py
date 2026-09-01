@@ -2,10 +2,7 @@ from aiogram import Router
 
 import handlers.callbacks as c_backs
 import handlers.subscriptions as subs
-from handlers import _inline
-from handlers.callbacks.pagination import _search_pag_cb
-
-from . import _force, _help, _playlist, _search, _start
+from handlers import _force, _help, _inline, _playlist, _search, _start
 
 
 def get_handlers_router():
@@ -24,7 +21,6 @@ def get_handlers_router():
         _playlist.router,
         subs.router,
         c_backs.router,
-        _search_pag_cb.router,
         # MUST BE THE LAST
         _search.router,
     )

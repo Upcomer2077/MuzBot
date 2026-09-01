@@ -7,6 +7,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 import bot
 from dungeon import DM
 from dungeon.models import TrackCache
+from schemas.callbacks import DownloadCallback, DropCallback
 from schemas.callbacks.search_pagination import PaginationCallback
 from tools.extract_info import extract_video_info
 
@@ -97,7 +98,7 @@ class U:
 
             builder.button(
                 text=f"⬇️ {i}",
-                callback_data=f"dl:{v_id}:{i}",
+                callback_data=DownloadCallback(video_id=v_id, idx=str(i)),
             )
         # TODO: search in video category
         # if not (end_idx < len(search_result) and end_idx < _MAX_ITEMS):
@@ -117,7 +118,7 @@ class U:
                 text="➡️", callback_data=PaginationCallback(page=page + 1).pack()
             )
 
-        nav_builder.button(text="❌", callback_data="drop_m")
+        nav_builder.button(text="❌", callback_data=DropCallback())
 
         builder.attach(nav_builder)
         return text, builder.as_markup()
