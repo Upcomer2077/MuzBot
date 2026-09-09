@@ -30,14 +30,14 @@ def _get_last(new_info: ArtistInfoDict):
 
 
 async def job():
-    # await _fixture()
     LOGGER.info("Starting notification/subs job")
     async for batch in DM.get_subscripted_authors():
-        print(len(batch))
         for author in batch:
             total_media_groups: list[Sequence[MediaType]] = []
             new_info = await extract_artist_discography(author["performer_id"])
+
             await asyncio.sleep(uniform(1.0, 3.0))
+
             fresh_single_browse_id, fresh_album_browse_id = _get_last(new_info)
 
             if (not fresh_album_browse_id) and (not fresh_single_browse_id):
@@ -116,24 +116,7 @@ async def job():
     LOGGER.info("Notification/subs job: done")
 
 
-async def _fixture():
-    # TODO: don't delete until stable version comes
-    await DM.set_performer_last_release(
-        "UCbdxVfBNjtWCWgybA7kziMg",
-        performer_name="silent anthem",
-        last_album_id="MPREb_SRZiTuHH0Tx",
-        last_single_id="MPREb_mSfRBQuEgeM",
-    )
-    await DM.set_performer_last_release(
-        "UCoz6-veOnOIlmvcVwusiwCA",
-        performer_name="OXVGEN",
-        last_album_id=None,
-        last_single_id="MPREb_pSSQfR8PoLH",
-    )
-
-
 async def _form_media_groups(album_id: str):
-    # unable_to_download: list[_UnableToDownload] = []
     tracks_info = await DM.summon_slaves_from_playlist(album_id)
 
     if not tracks_info:
