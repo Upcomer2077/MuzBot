@@ -44,10 +44,10 @@ services:
       - bot
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3100/ready | grep -q 'ready' || exit 1"]
-      interval: 3s     
-      timeout: 2s      
+      interval: 5s     
+      timeout: 5s      
       retries: 5       
-      start_period: 2s 
+      start_period: 10s 
 
     profiles: [mon]
 
