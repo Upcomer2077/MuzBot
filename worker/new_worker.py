@@ -33,11 +33,16 @@ class WorkerPipe:
         self._queue: asyncio.Queue[_DownloadTask] = asyncio.PriorityQueue()
         self._q_shift = 0.0
         self._active_downloads: dict[str, list[F]] = {}
-        self._pool_semaphore = asyncio.Semaphore(WORKER_CORES_COUNT + 3)
-        self._send_semaphore = asyncio.Semaphore(2)
-        self._execute_download_semaphore = asyncio.Semaphore(30)
-        self._disk_space_semaphore = asyncio.Semaphore(30)
         self._worker_task: asyncio.Task | None = None
+
+        self._workers_pool_semaphore = asyncio.Semaphore(WORKER_CORES_COUNT + 3)
+        """Depends on worker count (CPU threads)"""
+        self._tg_upload_semaphore = asyncio.Semaphore(2)
+        """Telegram upload limit per flood wait"""
+        self._download_execution_semaphore = asyncio.Semaphore(10)
+        """Size of batch that can be taken from queue. Prevents starvation (priorities)"""
+        self._disk_space_semaphore = asyncio.Semaphore(30)
+        """Saves disk space if uploading is too slow and downloading is too fast"""
 
         _CPUs = os.cpu_count()
         if _CPUs and (_CPUs < CPU_COUNT):
@@ -97,7 +102,7 @@ class WorkerPipe:
         cache = None
 
         async with self._disk_space_semaphore:
-            async with self._pool_semaphore:
+            async with self._workers_pool_semaphore:
                 try:
                     LOGGER.debug(f"Starting worker task on {v_id}")
                     success = await asyncio.to_thread(download_from_ytm, v_id)
@@ -109,9 +114,11 @@ class WorkerPipe:
                 except Exception as e:
                     is_error = True
                     LOGGER.error(f"💥Error in worker loop. Video {v_id}: {e}")
+                finally:
+                    self._download_execution_semaphore.release()
 
             if success and cache:
-                async with self._send_semaphore:
+                async with self._tg_upload_semaphore:
                     R = await self._send_non_cached_to_telegram(
                         cache, title=title, artist=artist
                     )
@@ -134,8 +141,6 @@ class WorkerPipe:
             if not fut.done():
                 LOGGER.debug(f"Setting result to worker tasks on {v_id}")
                 fut.set_result((v_id, DownloadResult(file_id, is_too_large, is_error)))
-        # todo
-        return self._execute_download_semaphore.release()
 
     async def _send_non_cached_to_telegram(
         self, cache: TrackDirContentDict, *, title: str, artist: str
@@ -189,11 +194,11 @@ class WorkerPipe:
     async def _worker_loop(self) -> NoReturn:
         """Main loop."""
         LOGGER.debug(
-            f"⚙️ Worker loop has been started. Slots: {self._pool_semaphore._value}"
+            f"⚙️ Worker loop has been started. Slots: {self._workers_pool_semaphore._value}"
         )
 
         while True:
-            await self._execute_download_semaphore.acquire()
+            await self._download_execution_semaphore.acquire()
             if self._queue.empty() and self._q_shift:
                 self._reset_shift()
             task = await self._queue.get()
