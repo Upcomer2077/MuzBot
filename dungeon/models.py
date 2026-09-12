@@ -1,117 +1,98 @@
-from datetime import datetime
-
-from peewee import (
-    SQL,
-    BooleanField,
-    CharField,
-    CompositeKey,
-    DateTimeField,
-    ForeignKeyField,
-    IntegerField,
-)
-from peewee_aio import AIOModel
-
-from dungeon.dispatcher import DB_DISPATCHER
+from tortoise import Model, fields
 
 
-@DB_DISPATCHER.register
-class TrackCache(AIOModel):
-    """Database model for caching downloaded YouTube Music tracks metadata and Telegram file references."""
-
-    video_id = CharField(
-        primary_key=True, max_length=20, constraints=[SQL("ON CONFLICT IGNORE")]
-    )
-    title = CharField(max_length=255)
-    artist = CharField(max_length=255)
-    telegram_file_id = CharField(max_length=255, null=True)
-    track_duration = IntegerField(default=0)
-    is_too_large = BooleanField(default=False, null=True)
-    created_at = DateTimeField(default=datetime.now, null=True)
+class TrackCache(Model):
+    video_id = fields.CharField(primary_key=True, max_length=255)
+    title = fields.CharField(255)
+    artist = fields.CharField(255)
+    telegram_file_id = fields.CharField(max_length=255, null=True)
+    track_duration = fields.IntegerField(default=0)
+    is_too_large = fields.BooleanField(default=False, null=True)
+    created_at = fields.DateTimeField(auto_now_add=True, null=True)
 
     class Meta:
-        table_name = "tracks"
+        table = "tracks"
 
 
-@DB_DISPATCHER.register
-class PlaylistCache(AIOModel):
-    """Database model for caching downloaded YouTube Music playlists metadata."""
-
-    playlist_id = CharField(
-        primary_key=True, max_length=255, constraints=[SQL("ON CONFLICT IGNORE")]
-    )
-    title = CharField(max_length=255, default="UNKNOWN")
-    artist = CharField(max_length=255, default="unknown")
+class PlaylistCache(Model):
+    playlist_id = fields.CharField(255, primary_key=True)
+    title = fields.CharField(255, default="UNKNOWN")
+    artist: fields.CharField[str] = fields.CharField(255, default="unknown")
 
     class Meta:
-        table_name = "playlists"
+        table = "playlists"
 
 
-@DB_DISPATCHER.register
-class TrackPlaylist(AIOModel):
+class TrackPlaylist(Model):
     """Junction database model linking tracks and playlists (Many-to-Many relationship)."""
 
-    video_id = ForeignKeyField(
-        TrackCache,
-        backref="playlists",
-        on_delete="CASCADE",
+    id = fields.IntField(primary_key=True)
+
+    # Свойство называется video, а колонка в базе данных — video_id
+    video = fields.ForeignKeyField(
+        "models.TrackCache",
+        related_name="playlists",
+        on_delete=fields.CASCADE,
+        source_field="video_id",
     )
 
-    playlist_id = ForeignKeyField(
-        PlaylistCache,
-        backref="tracks",
-        on_delete="CASCADE",
+    # Свойство называется playlist, а колонка в базе данных — playlist_id
+    playlist = fields.ForeignKeyField(
+        "models.PlaylistCache",
+        related_name="tracks",
+        on_delete=fields.CASCADE,
+        source_field="playlist_id",
     )
-    track_order = IntegerField(default=0)
+    track_order = fields.IntField(default=0)
 
     class Meta:
-        table_name = "tracks_playlists"
-        primary_key = CompositeKey("video_id", "playlist_id")
+        table = "tracks_playlists"
+        unique_together = (("video", "playlist"),)
 
 
 # ============
 
 
-@DB_DISPATCHER.register
-class TgUsers(AIOModel):
-    id = IntegerField(
-        primary_key=True, constraints=[SQL("ON CONFLICT IGNORE")], null=False
-    )
+class TgUsers(Model):
+    id = fields.BigIntField(pk=True, generated=False)
 
     class Meta:
-        table_name = "telegram_users"
+        table = "telegram_users"
 
 
-@DB_DISPATCHER.register
-class YTPerformers(AIOModel):
-    id = CharField(
-        primary_key=True, max_length=255, constraints=[SQL("ON CONFLICT IGNORE")]
-    )
-    name = CharField(null=False)
-    last_single_id = CharField(null=True)
-    last_album_id = CharField(null=True)
+class YTPerformers(Model):
+    id = fields.CharField(pk=True, max_length=255, generated=False)
+    name = fields.CharField(max_length=255, null=False)
+    last_single_id = fields.CharField(max_length=255, null=True)
+    last_album_id = fields.CharField(max_length=255, null=True)
 
     class Meta:
-        table_name = "yt_performers"
+        table = "yt_performers"
 
 
-@DB_DISPATCHER.register
-class Subscriptions(AIOModel):
+class Subscriptions(Model):
     """Junction database model linking performers and users (Many-to-Many relationship)."""
 
-    tg_user_id = ForeignKeyField(
-        TgUsers,
-        backref="yt_performers",
-        on_delete="CASCADE",
+    id = fields.IntField(primary_key=True)
+
+    # Переименовываем свойство в tg_user, а колонку в БД задаем через source_field
+    tg_user = fields.ForeignKeyField(
+        "models.TgUsers",
+        related_name="yt_performers",
+        on_delete=fields.CASCADE,
+        source_field="tg_user_id",
     )
 
-    performer_id = ForeignKeyField(
-        YTPerformers,
-        backref="telegram_users",
-        on_delete="CASCADE",
+    # Переименовываем свойство в performer, а колонку в БД задаем через source_field
+    performer = fields.ForeignKeyField(
+        "models.YTPerformers",
+        related_name="telegram_users",
+        on_delete=fields.CASCADE,
+        source_field="performer_id",
     )
-    is_suspended = BooleanField(default=False, null=True)
-    created_at = DateTimeField(default=datetime.now, null=True)
+    is_suspended = fields.BooleanField(default=False, null=True)
+    created_at = fields.DatetimeField(auto_now_add=True, null=True)
 
     class Meta:
-        table_name = "subscriptions"
-        primary_key = CompositeKey("performer_id", "tg_user_id")
+        table = "subscriptions"
+        unique_together = (("performer", "tg_user"),)

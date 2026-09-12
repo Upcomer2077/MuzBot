@@ -10,8 +10,7 @@ dependencies = [
     "apscheduler>=3.11.3",
     "load-dotenv>=0.1.0",
     "loki-logger-handler>=1.1.2",
-    "peewee>=4.2.6",
-    "peewee-aio>=3.1.6",
+    "tortoise-orm>=1.1.8",
     "yt-dlp>=2026.7.4",
     "ytmusicapi>=1.12.1",
 ]

@@ -89,7 +89,7 @@ networks:
 - `ffmpeg` - audio conversion
 - `aiogram` - framework upon telegram API
 - `yt-dlp` & `ytmusicapi` - searching and downloading music
-- `Sqlite` & `peewee` - portable lightweight database and ORM manager
+- `Sqlite` & `tortoise` - portable lightweight database and ORM manager
 - `Loki/grafana` - logger
 - `Docker` - containerization system
 - `Github Actions` - runs CI/CD pipelines
