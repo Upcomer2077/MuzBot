@@ -25,7 +25,7 @@ async def handle_sub(callback: CallbackQuery, callback_data: SubCallback):
         )
     # --------------
     USER_ID: Final = callback.from_user.id
-    local_author_info = await DM.get_performer_info(AUTHOR_ID)
+    local_author_info = await DM.subs.get_performer_info(AUTHOR_ID)
 
     if local_author_info:
         return await __subscribe(USER_ID, AUTHOR_ID, local_author_info.name)
@@ -36,7 +36,7 @@ async def handle_sub(callback: CallbackQuery, callback_data: SubCallback):
     SINGLES = [] if not AUTHOR_INFO["singles"] else AUTHOR_INFO["singles"]["results"]
     NAME = AUTHOR_INFO["name"]
 
-    await DM.set_performer_last_release(
+    await DM.subs.set_performer_last_release(
         AUTHOR_ID,
         performer_name=NAME,
         last_album_id=ALBUMS[0]["browseId"] if len(ALBUMS) else None,
@@ -47,5 +47,5 @@ async def handle_sub(callback: CallbackQuery, callback_data: SubCallback):
 
 
 async def __subscribe(USER_ID: int, AUTHOR_ID: str, a_name: str):
-    await DM.subscribe_to_performer(USER_ID, AUTHOR_ID)
+    await DM.subs.subscribe_to_performer(USER_ID, AUTHOR_ID)
     return await bot.bot.send_message(USER_ID, f"Вы подписались на автора {a_name}")

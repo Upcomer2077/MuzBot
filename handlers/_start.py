@@ -13,4 +13,4 @@ async def echo(message: Message):
         "Введите название трека и/или автора. Используйте\n/help для получения инструкции"
     )
     if message.from_user:
-        await DM.toggle_user_subscriptions(message.from_user.id, False)
+        await DM.subs.toggle_user_subscriptions(message.from_user.id, False)

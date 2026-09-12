@@ -124,7 +124,7 @@ class WorkerPipe:
             LOGGER.debug(f"Download task completed on {v_id}")
 
             if not is_error:
-                await DM.fisting(
+                await DM.tracks.fisting(
                     video_id=v_id, telegram_file_id=file_id, is_too_large=is_too_large
                 )
             await COLD.annihilate(v_id)
@@ -134,7 +134,7 @@ class WorkerPipe:
             if not fut.done():
                 LOGGER.debug(f"Setting result to worker tasks on {v_id}")
                 fut.set_result((v_id, DownloadResult(file_id, is_too_large, is_error)))
-
+        # todo
         return self._execute_download_semaphore.release()
 
     async def _send_non_cached_to_telegram(

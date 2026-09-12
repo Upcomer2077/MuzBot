@@ -54,14 +54,14 @@ class TrackPlaylist(Model):
 
 
 class TgUsers(Model):
-    id = fields.BigIntField(pk=True, generated=False)
+    id = fields.BigIntField(primary_key=True, generated=False)
 
     class Meta:
         table = "telegram_users"
 
 
 class YTPerformers(Model):
-    id = fields.CharField(pk=True, max_length=255, generated=False)
+    id = fields.CharField(primary_key=True, max_length=255, generated=False)
     name = fields.CharField(max_length=255, null=False)
     last_single_id = fields.CharField(max_length=255, null=True)
     last_album_id = fields.CharField(max_length=255, null=True)

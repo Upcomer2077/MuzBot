@@ -25,6 +25,6 @@ async def handle_un_sub(callback: CallbackQuery, callback_data: UnSubCallback):
     # --------------
     USER_ID: Final = callback.from_user.id
 
-    await DM.drop_sub(AUTHOR_ID, USER_ID)
+    await DM.subs.drop_sub(AUTHOR_ID, USER_ID)
 
     return await bot.bot.send_message(USER_ID, "Подписка отменена")

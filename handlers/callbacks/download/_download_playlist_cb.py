@@ -49,7 +49,7 @@ async def handle_playlist_download(
     if AL.is_send_action_allowed(USER_ID):
         await U.send_action(USER_ID)
 
-    tracks_info = await DM.summon_slaves_from_playlist(
+    tracks_info = await DM.playlists.summon_slaves_from_playlist(
         PLAYLIST_ID, PLAYLIST_MAX_TRACKS or None
     )
 
@@ -58,8 +58,8 @@ async def handle_playlist_download(
         if not r:
             return ANSWER.edit_text("404 🤷")
         (playlist_info, videos) = r
-        await DM.add_playlist_and_tracks(playlist_info, videos)
-        tracks_info = await DM.summon_slaves_from_playlist(
+        await DM.playlists.add_playlist_and_tracks(playlist_info, videos)
+        tracks_info = await DM.playlists.summon_slaves_from_playlist(
             PLAYLIST_ID, PLAYLIST_MAX_TRACKS or None
         )
         if not tracks_info:
@@ -90,7 +90,7 @@ async def handle_playlist_download(
 
     mg_builder = MediaGroupBuilder()
     media_group_cached: list[Sequence[MediaType]] = []
-    tracks_info = await DM.summon_slaves_from_playlist(
+    tracks_info = await DM.playlists.summon_slaves_from_playlist(
         PLAYLIST_ID, PLAYLIST_MAX_TRACKS or None
     )
 

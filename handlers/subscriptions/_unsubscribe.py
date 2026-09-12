@@ -20,7 +20,7 @@ async def subscribe(message: Message, command: CommandObject):
         return ANSWER.edit_text("Не указан исполнитель")
 
     USER_ID = message.from_user.id
-    subs = await DM.get_artists_by_name(USER_ID, performer)
+    subs = await DM.subs.get_artists_by_name(USER_ID, performer)
 
     if not len(subs):
         return ANSWER.edit_text("Указанный исполнитель не найден в ваших подписках")

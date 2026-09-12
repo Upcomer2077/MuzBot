@@ -27,9 +27,9 @@ async def inline(q: InlineQuery):
 
     if len(search_result) == 0:
         return
-    await DM.enslave_bulk(search_result)
+    await DM.tracks.enslave_bulk(search_result)
 
-    entities = await DM.summon_slaves([one["video_id"] for one in search_result])
+    entities = await DM.tracks.summon_slaves([one["video_id"] for one in search_result])
 
     inline_results = []
     for idx, video in enumerate(search_result, start=1):

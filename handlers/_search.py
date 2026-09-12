@@ -31,7 +31,7 @@ async def get_list(message: Message, state: FSMContext):
     await state.update_data(search_result=search_result)
     await state.set_state(SearchStates.browsing_results)
 
-    await DM.enslave_bulk(search_result)
+    await DM.tracks.enslave_bulk(search_result)
 
     text, reply_markup = U.get_page_content(search_result, page=0)
 

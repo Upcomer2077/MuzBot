@@ -16,11 +16,13 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=9.1.1", "pytest-env", "ruff>=0.15.22"]
+dev = ["pytest>=9.1.1", "pytest-asyncio>=1.4.0", "pytest-env", "ruff>=0.15.22"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 env_files = [".env.example"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff.lint]
 ignore = ["BLE001", "TRY002", "N999"]

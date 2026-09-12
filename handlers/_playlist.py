@@ -35,17 +35,17 @@ async def playlist(message: Message, command: CommandObject):
 
     PLAYLIST_ID = _regex_res[0]
 
-    slaves = await DM.summon_slaves_from_playlist(PLAYLIST_ID)
-    playlist = await DM.get_playlist(PLAYLIST_ID)
+    slaves = await DM.playlists.summon_slaves_from_playlist(PLAYLIST_ID)
+    playlist = await DM.playlists.get_playlist(PLAYLIST_ID)
     if not slaves or not playlist:
         r = await extract_playlist_info(PLAYLIST_ID)
         if not r:
             return ANSWER.edit_text("404 🤷")
 
         (playlist_info, videos) = r
-        await DM.add_playlist_and_tracks(playlist_info, videos)
-        slaves = await DM.summon_slaves_from_playlist(PLAYLIST_ID)
-        playlist = await DM.get_playlist(PLAYLIST_ID)
+        await DM.playlists.add_playlist_and_tracks(playlist_info, videos)
+        slaves = await DM.playlists.summon_slaves_from_playlist(PLAYLIST_ID)
+        playlist = await DM.playlists.get_playlist(PLAYLIST_ID)
 
         if not (slaves and playlist):
             ANSWER.edit_text(

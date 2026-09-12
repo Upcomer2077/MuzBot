@@ -31,12 +31,12 @@ class U:
         Returns:
             The TrackCache model object instance if available, otherwise None.
         """
-        track = await DM.summon_one(video_id)
+        track = await DM.tracks.summon_one(video_id)
         if not track and extract_info_from_ytm:
             res = await extract_video_info(video_id)
             if res:
-                await DM.enslave_bulk([res])
-                track = await DM.summon_one(video_id)
+                await DM.tracks.enslave_bulk([res])
+                track = await DM.tracks.summon_one(video_id)
         return track
 
     @staticmethod

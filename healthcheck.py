@@ -29,10 +29,10 @@ async def _check_database():
     LOGGER.debug("---DATABASE---")
     LOGGER.debug(f"DB_CONTAINER_PATH: {DATABASE_PATH}")
     await DM.open_dungeon()
-    res = await DM._get_slaves_count()
+    res = await DM.tracks.get_total_count()
     LOGGER.debug(f"Slaves in dungeon count: {res}")
 
-    count_enslaved = await DM.enslave_bulk(
+    count_enslaved = await DM.tracks.enslave_bulk(
         [
             YoutubeSearchResultDict(
                 video_id="0",
@@ -46,9 +46,9 @@ async def _check_database():
 
     if count_enslaved > 0:
         LOGGER.debug("Database check: passed")
-        await DM.next_door(video_id="0")
+        await DM.tracks.next_door(video_id="0")
     else:
-        await DM.next_door(video_id="0")
+        await DM.tracks.next_door(video_id="0")
         raise Exception("Database check: failed. I/O error. Check your dungeon!")
 
 
@@ -76,7 +76,7 @@ async def _check():
         LOGGER.critical(f"{e}")
         sys.exit(1)
     finally:
-        await DM.next_door(video_id="0")
+        await DM.tracks.next_door(video_id="0")
         await DM.close_dungeon()
         LOGGER.debug("-----HEALTH CHECK END-----")
 
