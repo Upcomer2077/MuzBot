@@ -33,9 +33,11 @@ async def setup_jobs():
         "Notifications",
         trigger=JobTrigger.CRON,
         day_of_week="tue,fri",
-        hour=3,
+        hour="3,11,20",
         minute=0,
-        on_setup=LOGGER.info("Notification job planned on TUE and FRI at 3am."),
+        on_setup=LOGGER.info(
+            "Notification job planned on TUE and FRI at 3am, 11am and 8pm."
+        ),
     )
 
     return await asyncio.gather(j1, j2, j3)

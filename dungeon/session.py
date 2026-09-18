@@ -10,7 +10,11 @@ class DungeonDBSession:
     @staticmethod
     async def open_dungeon(db_url: str = f"sqlite://{DATABASE_PATH}"):
         """Open database connection, initialize tables, and set PRAGMA optimizations."""
-        await Tortoise.init(db_url=db_url, modules={"models": ["dungeon.models"]})
+        await Tortoise.init(
+            db_url=db_url,
+            modules={"models": ["dungeon.models"]},
+            _enable_global_fallback=True,
+        )
         await Tortoise.generate_schemas()
 
         try:
