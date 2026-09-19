@@ -1,7 +1,8 @@
 from collections.abc import AsyncGenerator
-from typing import Any
+from typing import Any, cast
 
 from dungeon.models import Subscriptions, TgUsers, YTPerformers
+from schemas.database.types import GetUserSubsResult
 
 
 class SubscriptionRepository:
@@ -95,3 +96,29 @@ class SubscriptionRepository:
         return await Subscriptions.filter(tg_user_id=tg_user_id).update(
             is_suspended=suspend
         )
+
+    async def get_user_subscriptions(
+        self, user_id: int, batch_size: int = 100, s_query: str | None = None
+    ) -> AsyncGenerator[list[GetUserSubsResult]]:
+        base_query = YTPerformers.filter(telegram_users__tg_user_id=user_id)
+        if s_query:
+            base_query = base_query.filter(name__icontains=s_query)
+        base_query = base_query.order_by("id")
+
+        offset = 0
+        while True:
+            results = (
+                await base_query.limit(batch_size)
+                .offset(offset)
+                .values(
+                    performer_id="id",
+                    name="name",
+                )
+            )
+
+            if not results:
+                break
+
+            yield cast(list[GetUserSubsResult], results)
+
+            offset += batch_size

@@ -11,6 +11,7 @@ from aiogram.utils.media_group import MediaGroupBuilder, MediaType
 import bot
 from _logger import LOGGER
 from dungeon import DM
+from helpers.get_ytm_video_link import get_artist_link
 from schemas.dicts.artist import ArtistInfoDict
 from schemas.enums.priorities import DownloadTaskPriorities
 from schemas.tuples.worker import DownloadResult
@@ -103,7 +104,7 @@ async def job():
                     await asyncio.sleep(uniform(1.0, 3.0))
                     await bot.bot.send_message(
                         u,
-                        f'Новинка у <a href="https://music.youtube.com/browse/{author["performer_id"]}">{new_info["name"]}</a>!',
+                        f'Новинка у <a href="{get_artist_link(author["performer_id"])}">{new_info["name"]}</a>!',
                         parse_mode=ParseMode.HTML,
                         link_preview_options=LinkPreviewOptions(is_disabled=True),
                     )

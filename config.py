@@ -50,6 +50,8 @@ CACHE_ROOT_DIR = "./.cache"
 MAX_TRACK_DURATION_SECONDS = 60 * 35
 MAX_PLAYLIST_TRACKS_REQUEST = 300
 """Max limit of tracks in playlist that can be fetched from ytm"""
+PAGINATION_ITEMS_PER_PAGE = 9
+"""Limit of results on one page"""
 # ---------------------------------------------------------------
 
 SHOW_ON_STARTUP: dict[str, str | int] = {

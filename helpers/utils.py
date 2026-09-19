@@ -5,13 +5,14 @@ from aiogram.types import Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 import bot
+from config import PAGINATION_ITEMS_PER_PAGE
 from dungeon import DM
 from dungeon.models import TrackCache
-from schemas.callbacks import DownloadCallback, DropCallback
-from schemas.callbacks.search_pagination import PaginationCallback
+from schemas.callbacks import DropCallback
+from schemas.callbacks.pagination import PaginationBase
+from schemas.tuples.utils import PageContentResult
 from tools.extract_info import extract_video_info
 
-_ITEMS_PER_PAGE = 9
 _MAX_ITEMS = 27
 
 
@@ -80,45 +81,30 @@ class U:
             return  # Ignore errors if the message was already deleted by the user
 
     @staticmethod
-    def get_page_content(search_result: list, page: int):
-        """Функция нарезки результатов и сборки клавиатуры"""
-        start_idx = page * _ITEMS_PER_PAGE
-        end_idx = start_idx + _ITEMS_PER_PAGE
-        page_items = search_result[start_idx:end_idx]
-
-        text = f"Найденные варианты (Страница {page + 1}):\n\n"
-        builder = InlineKeyboardBuilder()
-
-        for i, video in enumerate(page_items, start=start_idx + 1):
-            v_id = video["video_id"]
-            title = video["title"]
-            duration = video["duration"]
-            artist = video["artist"]
-            text += f"#{i}. {artist} — {title} [{duration}]\n"
-
-            builder.button(
-                text=f"⬇️ {i}",
-                callback_data=DownloadCallback(video_id=v_id, idx=str(i)),
-            )
-        # TODO: search in video category
-        # if not (end_idx < len(search_result) and end_idx < _MAX_ITEMS):
-        #     text += "\nНе нашли что искали? Попробуйте добавить -v в конце запроса"
-        builder.adjust(3, repeat=True)
+    def get_page_content[T](
+        search_result: list[T],
+        page: int,
+        pag_cb_type: type[PaginationBase],
+        max: int = _MAX_ITEMS,
+    ) -> PageContentResult[T]:
+        """Функция нарезки результатов и nav сборки клавиатуры"""
+        start_idx = page * PAGINATION_ITEMS_PER_PAGE
+        end_idx = start_idx + PAGINATION_ITEMS_PER_PAGE
+        content = search_result[start_idx:end_idx]
 
         nav_builder = InlineKeyboardBuilder()
+        drop_builder = InlineKeyboardBuilder()
 
-        # Кнопка «Назад»
         if page > 0:
             nav_builder.button(
-                text="⬅️", callback_data=PaginationCallback(page=page - 1).pack()
+                text="⬅️", callback_data=pag_cb_type(page=page - 1).pack()
             )
 
-        if end_idx < len(search_result) and end_idx < _MAX_ITEMS:
+        if end_idx < len(search_result) and (end_idx < max if max else True):
             nav_builder.button(
-                text="➡️", callback_data=PaginationCallback(page=page + 1).pack()
+                text="➡️", callback_data=pag_cb_type(page=page + 1).pack()
             )
 
-        nav_builder.button(text="❌", callback_data=DropCallback())
+        drop_builder.button(text="❌", callback_data=DropCallback())
 
-        builder.attach(nav_builder)
-        return text, builder.as_markup()
+        return PageContentResult(content, nav_builder, drop_builder, start_idx)

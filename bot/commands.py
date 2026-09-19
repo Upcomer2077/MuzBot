@@ -10,4 +10,5 @@ COMMANDS = [
     BotCommand(command="plist", description="⚡ Скачать плейлист по ссылке"),
     BotCommand(command="sub", description="🔔 Подписаться на автора"),
     BotCommand(command="usub", description="🔕 Отписаться от автора"),
+    BotCommand(command="slist", description="📝 Список подписок"),
 ]
