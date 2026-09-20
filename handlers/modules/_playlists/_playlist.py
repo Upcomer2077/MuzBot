@@ -1,5 +1,9 @@
+from typing import Final
+
 from aiogram import Router
 from aiogram.filters import CommandObject
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -9,20 +13,43 @@ from config import MAX_PLAYLIST_TRACKS_REQUEST, PLAYLIST_MAX_TRACKS
 from dungeon import DM
 from helpers.regexes import YTM_MIX_PLIST_REGEX, YTM_PLIST_REGEX, YTM_USER_PLIST_REGEX
 from schemas.callbacks import DownloadPlaylistCallback, DropCallback
+from schemas.states import TypedState
 from tools.extract_playlist_info import extract_playlist_info
 
 router = Router()
 
 
-@router.message(COMMANDS[COMSET.PLAYLIST]["backend"])
-async def playlist(message: Message, command: CommandObject):
-    ANSWER = await message.answer("Ищу...")
-    if not message.from_user:
-        return ANSWER.edit_text("Неизвестная ошибка")
+class _PlaylistStates(StatesGroup):
+    first_step = State()
 
+
+@router.message(COMMANDS[COMSET.PLAYLIST]["backend"])
+async def playlist(message: Message, command: CommandObject, state: FSMContext):
     link = command.args
     if not link:
-        return ANSWER.edit_text("Отсутствует ссылка на видео")
+        S: Final = TypedState(state)
+        await S.set_state(_PlaylistStates.first_step)
+        return await message.answer(
+            f"Отправьте ссылку на плейлист или используйте /{COMSET.CANCEL.value}"
+        )
+
+    await _handler(message, link)
+
+
+@router.message(_PlaylistStates.first_step)
+async def playlist_step_2(message: Message, state: FSMContext):
+    link = message.text
+    if link is None:
+        return await message.answer(
+            f"Отсутствует ссылка на видео. Попробуйте ещё раз! Или используйте /{COMSET.CANCEL.value}"
+        )
+
+    await _handler(message, link)
+    await state.clear()
+
+
+async def _handler(message: Message, link: str):
+    ANSWER = await message.answer("Ищу...")
 
     _regex_res = (
         YTM_PLIST_REGEX.search(link)
@@ -30,7 +57,7 @@ async def playlist(message: Message, command: CommandObject):
         or YTM_MIX_PLIST_REGEX.search(link)
     )
     if not _regex_res:
-        return ANSWER.edit_text(
+        return await ANSWER.edit_text(
             "Неверный плейлист! Проверьте корректность ссылки! Доступны для скачивания только альбомы с префиксом OLAK5uy_, RD или PL"
         )
 
@@ -41,7 +68,7 @@ async def playlist(message: Message, command: CommandObject):
     if not slaves or not playlist:
         r = await extract_playlist_info(PLAYLIST_ID)
         if not r:
-            return ANSWER.edit_text("404 🤷")
+            return await ANSWER.edit_text("404 🤷")
 
         (playlist_info, videos) = r
         await DM.playlists.add_playlist_and_tracks(playlist_info, videos)
@@ -85,4 +112,6 @@ async def playlist(message: Message, command: CommandObject):
         callback_data=DropCallback(),
     ).adjust(2, repeat=True)
 
-    return ANSWER.edit_text(text, reply_markup=builder.as_markup(), parse_mode=None)
+    return await ANSWER.edit_text(
+        text, reply_markup=builder.as_markup(), parse_mode=None
+    )

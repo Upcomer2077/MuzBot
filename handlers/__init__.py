@@ -1,6 +1,6 @@
 from aiogram import Router
 
-from handlers import _drop_message, _help, _start
+from handlers import _cancel, _drop_message, _help, _start
 from handlers.modules import _playlists, _search, _singles, _subscriptions
 
 
@@ -16,6 +16,7 @@ def get_handlers_router():
         *[
             x.router
             for x in [
+                _cancel,
                 _start,
                 _help,
                 _drop_message,

@@ -4,6 +4,7 @@ from aiogram import Router
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandObject
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -20,22 +21,49 @@ from schemas.states.subs import USubsArtistsStates
 router = Router()
 
 
+class _USubscriptionState(StatesGroup):
+    first_state = State()
+
+
 @router.message(COMMANDS[COMSET.UNSUBSCRIBE]["backend"])
 async def subscribe(message: Message, command: CommandObject, state: FSMContext):
     S: Final = TypedState(state)
 
-    ANSWER = await message.answer("Ищу исполнителей...")
-    if not message.from_user:
-        return ANSWER.edit_text("Неизвестная ошибка")
     performer = command.args
     if not performer:
-        return ANSWER.edit_text("Не указан исполнитель")
+        await S.set_state(_USubscriptionState.first_state)
+        return await message.answer(
+            f"Укажите исполнителя или используйте /{COMSET.CANCEL.value}"
+        )
 
+    await _handler(message, performer, S)
+
+
+@router.message(_USubscriptionState.first_state)
+async def unsubscribe_step_2(message: Message, state: FSMContext):
+    S: Final = TypedState(state)
+
+    performer = message.text
+    if not performer:
+        return await message.answer(
+            f"Укажите исполнителя или используйте /{COMSET.CANCEL.value}"
+        )
+
+    await S.clear()
+    await _handler(message, performer, S)
+
+
+async def _handler(message: Message, performer: str, S: TypedState):
+    ANSWER = await message.answer("Ищу исполнителей...")
+    if not message.from_user:
+        return await ANSWER.edit_text("Неизвестная ошибка")
     USER_ID = message.from_user.id
     subs = await DM.subs.get_artists_by_name(USER_ID, performer)
 
     if not len(subs):
-        return ANSWER.edit_text("Указанный исполнитель не найден в ваших подписках")
+        return await ANSWER.edit_text(
+            "Указанный исполнитель не найден в ваших подписках"
+        )
 
     content, _nav_markup, _drop_builder, start_idx = U.get_page_content(
         subs, page=0, pag_cb_type=PaginationUSubsArtistsCallback
@@ -59,6 +87,6 @@ async def subscribe(message: Message, command: CommandObject, state: FSMContext)
 
     builder.attach(_drop_builder).adjust(3, repeat=True)
 
-    return ANSWER.edit_text(
+    return await ANSWER.edit_text(
         text, reply_markup=builder.as_markup(), parse_mode=ParseMode.HTML
     )

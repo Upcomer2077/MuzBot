@@ -4,6 +4,7 @@ from aiogram import Router
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandObject
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -21,23 +22,47 @@ from tools.search_artists import search_artists_in_ytm
 router = Router()
 
 
+class _SubscriptionState(StatesGroup):
+    first_state = State()
+
+
 @router.message(COMMANDS[COMSET.SUBSCRIBE]["backend"])
 async def subscribe(message: Message, command: CommandObject, state: FSMContext):
     S: Final = TypedState(state)
 
-    ANSWER = await message.answer("Ищу исполнителей...")
-    if not message.from_user:
-        return ANSWER.edit_text("Неизвестная ошибка")
     performer = command.args
     if not performer:
-        return ANSWER.edit_text("Не указан исполнитель")
+        await S.set_state(_SubscriptionState.first_state)
+        return await message.answer(
+            f"Укажите исполнителя или используйте /{COMSET.CANCEL.value}"
+        )
+
+    await _handler(message, performer, S)
+
+
+@router.message(_SubscriptionState.first_state)
+async def subscribe_step_2(message: Message, state: FSMContext):
+    S: Final = TypedState(state)
+
+    performer = message.text
+    if not performer:
+        return await message.answer(
+            f"Укажите исполнителя или используйте /{COMSET.CANCEL.value}"
+        )
+
+    await S.clear()
+    await _handler(message, performer, S)
+
+
+async def _handler(message: Message, performer: str, S: TypedState):
+    ANSWER = await message.answer("Ищу исполнителей...")
 
     performer = prettify_incoming_query(performer)
 
     artists = await search_artists_in_ytm(performer)
 
     if not len(artists):
-        return ANSWER.edit_text("Указанный исполнитель не найден")
+        return await ANSWER.edit_text("Указанный исполнитель не найден")
 
     content, _nav_markup, _drop_builder, start_idx = U.get_page_content(
         artists, page=0, pag_cb_type=PaginationSubsArtistsCallback
@@ -61,6 +86,6 @@ async def subscribe(message: Message, command: CommandObject, state: FSMContext)
 
     builder.attach(_drop_builder).adjust(3, repeat=True)
 
-    return ANSWER.edit_text(
+    return await ANSWER.edit_text(
         text, reply_markup=builder.as_markup(), parse_mode=ParseMode.HTML
     )
