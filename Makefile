@@ -1,4 +1,4 @@
-.PHONY: lint dev tests patch minor
+.PHONY: lint dev test patch minor
 
 dev:
 	uv run main.py
@@ -6,7 +6,7 @@ dev:
 lint:
 	uv run ruff check .
 
-tests:
+test:
 	uv run pytest
 
 patch:

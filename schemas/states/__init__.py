@@ -4,9 +4,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.base import StateType
 
 from dungeon.models import YTPerformers
-from schemas.database.types import GetUserSubsResult
-from schemas.dicts import YoutubeSearchResultDict
-from schemas.dicts.artist import ArtistsShortInfoDict
+from dungeon.types.subs import GetUserSubsResult
+from tools.types import ArtistsShortInfoDict, YoutubeSearchResultDict
 
 
 class StateData(TypedDict, total=False):

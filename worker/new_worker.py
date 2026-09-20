@@ -1,22 +1,17 @@
 import asyncio
 import os
 from dataclasses import dataclass, field
-from typing import NoReturn
 
-from aiogram.exceptions import TelegramNetworkError
-
-import bot
 from _logger import LOGGER
-from config import CHANNEL_STORAGE_ID, CPU_COUNT, WORKER_CORES_COUNT
+from config import CPU_COUNT, WORKER_CORES_COUNT
 from dungeon import DM
-from helpers import prepare_audio_file_to_send
 from overlord import COLD
-from schemas.dicts.dir import TrackDirContentDict
-from schemas.enums.priorities import DownloadTaskPriorities
-from schemas.tuples.worker import DownloadResult
 from tools.download import download_from_ytm
+from worker._send_non_cached import send_non_cached_audio_to_telegram
+from worker.priorities import DownloadTaskPriorities
+from worker.types import DownloadResult
 
-F = asyncio.Future[tuple[str, DownloadResult]]
+_F = asyncio.Future[tuple[str, DownloadResult]]
 
 
 @dataclass(slots=True, order=True)
@@ -25,14 +20,14 @@ class _DownloadTask:
     video_id: str = field(compare=False)
     track_title: str = field(compare=False)
     artist: str = field(compare=False)
-    future: F = field(default_factory=asyncio.Future, compare=False)
+    future: _F = field(default_factory=asyncio.Future, compare=False)
 
 
 class WorkerPipe:
     def __init__(self):
         self._queue: asyncio.Queue[_DownloadTask] = asyncio.PriorityQueue()
         self._q_shift = 0.0
-        self._active_downloads: dict[str, list[F]] = {}
+        self._active_downloads: dict[str, list[_F]] = {}
         self._worker_task: asyncio.Task | None = None
 
         self._workers_pool_semaphore = asyncio.Semaphore(WORKER_CORES_COUNT + 3)
@@ -76,7 +71,7 @@ class WorkerPipe:
         """
         if video_id in self._active_downloads:
             LOGGER.debug(f"🔗 Already downloading {video_id}. Queued...")
-            fut: F = asyncio.Future()
+            fut: _F = asyncio.Future()
             self._active_downloads[video_id].append(fut)
             return await fut
 
@@ -119,7 +114,7 @@ class WorkerPipe:
 
             if success and cache:
                 async with self._tg_upload_semaphore:
-                    R = await self._send_non_cached_to_telegram(
+                    R = await send_non_cached_audio_to_telegram(
                         cache, title=title, artist=artist
                     )
                     is_too_large = R.is_too_large
@@ -142,56 +137,7 @@ class WorkerPipe:
                 LOGGER.debug(f"Setting result to worker tasks on {v_id}")
                 fut.set_result((v_id, DownloadResult(file_id, is_too_large, is_error)))
 
-    async def _send_non_cached_to_telegram(
-        self, cache: TrackDirContentDict, *, title: str, artist: str
-    ):
-        """
-        Returns:
-            tuple: (file id or none | is too large | is error)"""
-        is_too_large = False
-        is_error = False
-        file_id = None
-        m = None
-        a, tn = prepare_audio_file_to_send.prepare_audio_file_to_send(cache)
-        for attempt in range(1, 4):
-            try:
-                LOGGER.debug(f"Sending track {title} to channel")
-
-                m = await bot.bot.send_audio(
-                    CHANNEL_STORAGE_ID,
-                    audio=a,
-                    thumbnail=tn,
-                    title=title,
-                    performer=artist,
-                    request_timeout=300,
-                )
-                LOGGER.info(f"Sent track {title} to channel")
-                break
-
-            except TelegramNetworkError as e:
-                if str(e).find("Request Entity Too Large") != -1:
-                    is_too_large = True
-                    is_error = True
-
-                    LOGGER.debug(f"Track {title} is too large")
-                    break
-                LOGGER.error(f"Network error: {e}")
-                LOGGER.warning(
-                    f"Sending track to channel failed on attempt {attempt}/3 (timeout after 5 min). {'Retrying in 3 seconds' if attempt < 3 else ''}"
-                )
-                if attempt == 3:
-                    LOGGER.warning("Check your internet speed")
-                    is_error = True
-                    break
-
-                await asyncio.sleep(3)
-                continue
-
-        if m and m.audio:
-            file_id = m.audio.file_id
-        return DownloadResult(file_id, is_too_large, is_error)
-
-    async def _worker_loop(self) -> NoReturn:
+    async def _worker_loop(self):
         """Main loop."""
         LOGGER.debug(
             f"⚙️ Worker loop has been started. Slots: {self._workers_pool_semaphore._value}"

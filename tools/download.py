@@ -6,7 +6,7 @@ import yt_dlp
 
 from _logger import LOGGER
 from config import CACHE_ROOT_DIR
-from helpers.get_ytm_video_link import get_ytm_video_link
+from helpers.get_ytm_links import get_ytm_video_link
 
 if TYPE_CHECKING:
     from yt_dlp import _Params

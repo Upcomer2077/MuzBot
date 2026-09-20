@@ -5,7 +5,8 @@ from _logger import LOGGER
 from config import MAX_PLAYLIST_TRACKS_REQUEST
 from dungeon.models import PlaylistCache, TrackCache, TrackPlaylist
 from dungeon.repos.track import TrackRepository
-from schemas.dicts import PlaylistInfoDict, YoutubeSearchResultDict
+from tools.extract_playlist_info import PlaylistInfoDict
+from tools.types import YoutubeSearchResultDict
 
 
 class PlaylistRepository:

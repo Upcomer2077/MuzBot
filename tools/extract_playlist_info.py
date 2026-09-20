@@ -3,7 +3,7 @@ import random
 
 from _logger import LOGGER
 from config import MAX_PLAYLIST_TRACKS_REQUEST
-from schemas.dicts import PlaylistInfoDict, YoutubeSearchResultDict
+from tools.types import PlaylistInfoDict, YoutubeSearchResultDict
 from tools.YTMusic_client import YT
 
 

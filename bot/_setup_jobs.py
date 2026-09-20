@@ -6,10 +6,10 @@ from config import BACKUP_EVERY_N_DAYS
 from scheduler import SHED
 from scheduler.jobs.backup import job as backup_job
 from scheduler.jobs.sub_notifications import job as sub_notification_job
-from schemas.dicts.scheduler import JobTrigger
+from scheduler.triggers import JobTrigger
 
 
-async def setup_jobs():
+async def setup_jobs() -> tuple[None, None, None]:
     j1 = SHED.register_job(
         backup_job,
         "backup_job",

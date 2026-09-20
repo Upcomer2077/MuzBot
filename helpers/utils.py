@@ -1,4 +1,5 @@
 import asyncio
+from typing import NamedTuple
 
 from aiogram.enums import ChatAction
 from aiogram.types import Message
@@ -10,8 +11,15 @@ from dungeon import DM
 from dungeon.models import TrackCache
 from schemas.callbacks import DropCallback
 from schemas.callbacks.pagination import PaginationBase
-from schemas.tuples.utils import PageContentResult
 from tools.extract_info import extract_video_info
+
+
+class _PageContentResult[T](NamedTuple):
+    content: list[T]
+    nav_builder: InlineKeyboardBuilder
+    drop_builder: InlineKeyboardBuilder
+    start_idx: int
+
 
 _MAX_ITEMS = 27
 
@@ -86,7 +94,7 @@ class U:
         page: int,
         pag_cb_type: type[PaginationBase],
         max: int = _MAX_ITEMS,
-    ) -> PageContentResult[T]:
+    ) -> _PageContentResult[T]:
         """Функция нарезки результатов и nav сборки клавиатуры"""
         start_idx = page * PAGINATION_ITEMS_PER_PAGE
         end_idx = start_idx + PAGINATION_ITEMS_PER_PAGE
@@ -107,4 +115,4 @@ class U:
 
         drop_builder.button(text="❌", callback_data=DropCallback())
 
-        return PageContentResult(content, nav_builder, drop_builder, start_idx)
+        return _PageContentResult(content, nav_builder, drop_builder, start_idx)

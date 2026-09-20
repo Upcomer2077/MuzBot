@@ -1,14 +1,25 @@
 import asyncio
 import time
+from typing import Required, TypedDict
 
 from _logger import LOGGER
 from config import (
     PLAYLIST_DOWNLOAD_COOLDOWN_SECS,
     PLAYLISTS_LIMIT,
     QUERY_DOWNLOAD_LIMIT_SECS,
+    SEARCH_COOLDOWN_SECS,
+    SEARCH_PER_LIMIT,
+    SUBSCRIPTION_COOLDOWN_SECS,
+    SUBSCRIPTIONS_PER_LIMIT,
     TRACKS_PER_LIMIT,
 )
-from schemas.dicts import UserQueryLimitDict
+
+
+class _UserQueryLimitDict(TypedDict):
+    """Data blueprint for monitoring a single user's rate limits, tracking remaining downloads and request timestamps."""
+
+    semaphore: Required[int]
+    ts: Required[float]
 
 
 class LightLimiter:
@@ -17,17 +28,25 @@ class LightLimiter:
     def __init__(
         self,
     ):
-        self._ACTIONS_BANK: dict[int, UserQueryLimitDict] = {}
+        self._ACTIONS_BANK: dict[int, _UserQueryLimitDict] = {}
         self._ACTIONS_COOLDOWN_SECS = 10
         self._ACTION_PER_LIMIT = 1
 
-        self._QUERIES_BANK: dict[int, UserQueryLimitDict] = {}
+        self._QUERIES_BANK: dict[int, _UserQueryLimitDict] = {}
         self._QUERIES_COOLDOWN_SECS = QUERY_DOWNLOAD_LIMIT_SECS
         self._TRACKS_PER_LIMIT = TRACKS_PER_LIMIT
 
-        self._PLAYLIST_BANK: dict[int, UserQueryLimitDict] = {}
+        self._PLAYLIST_BANK: dict[int, _UserQueryLimitDict] = {}
         self._PLAYLIST_COOLDOWN_SECS = PLAYLIST_DOWNLOAD_COOLDOWN_SECS
         self._PLAYLIST_PER_LIMIT = PLAYLISTS_LIMIT
+
+        self._SUBS_BANK: dict[int, _UserQueryLimitDict] = {}
+        self._SUBS_COOLDOWN_SECS = SUBSCRIPTION_COOLDOWN_SECS
+        self._SUBS_PER_LIMIT = SUBSCRIPTIONS_PER_LIMIT
+
+        self._SEARCH_BANK: dict[int, _UserQueryLimitDict] = {}
+        self._SEARCH_COOLDOWN_SECS = SEARCH_COOLDOWN_SECS
+        self._SEARCH_PER_LIMIT = SEARCH_PER_LIMIT
 
     def is_send_action_allowed(
         self,
@@ -56,11 +75,27 @@ class LightLimiter:
             per_limit=self._TRACKS_PER_LIMIT,
         )
 
+    def is_subscription_allowed(self, user_id: int):
+        return self._is_allowed(
+            user_id,
+            bank=self._SUBS_BANK,
+            cooldown=self._SUBS_COOLDOWN_SECS,
+            per_limit=self._SUBS_PER_LIMIT,
+        )
+
+    def is_search_allowed(self, user_id: int):
+        return self._is_allowed(
+            user_id,
+            bank=self._SEARCH_BANK,
+            cooldown=self._SEARCH_COOLDOWN_SECS,
+            per_limit=self._SEARCH_PER_LIMIT,
+        )
+
     def _is_allowed(
         self,
         user_id: int,
         *,
-        bank: dict[int, UserQueryLimitDict],
+        bank: dict[int, _UserQueryLimitDict],
         cooldown: int,
         per_limit: int,
     ):
@@ -94,8 +129,10 @@ class LightLimiter:
                 len(self._ACTIONS_BANK)
                 + len(self._QUERIES_BANK)
                 + len(self._PLAYLIST_BANK)
+                + len(self._SUBS_BANK)
+                + len(self._SEARCH_BANK)
             )
-            if (total_garbage_len) < 30:
+            if total_garbage_len < 50:
                 return
 
             LOGGER.debug(f"Collecting garbage. Total bank: {total_garbage_len}")
@@ -104,6 +141,8 @@ class LightLimiter:
                 (self._ACTIONS_COOLDOWN_SECS, self._ACTIONS_BANK),
                 (self._QUERIES_COOLDOWN_SECS, self._QUERIES_BANK),
                 (self._PLAYLIST_COOLDOWN_SECS, self._PLAYLIST_BANK),
+                (self._SUBS_COOLDOWN_SECS, self._SUBS_BANK),
+                (self._SEARCH_COOLDOWN_SECS, self._SEARCH_BANK),
             ]:
                 cooldown, bank = item
                 for key, info in bank.copy().items():

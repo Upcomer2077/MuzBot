@@ -2,7 +2,7 @@ import asyncio
 
 from ytmusicapi import YTMusic
 
-from schemas.dicts.artist import ArtistsShortInfoDict
+from tools.types import ArtistsShortInfoDict
 
 
 async def search_artists_in_ytm(performer: str) -> list[ArtistsShortInfoDict]:

@@ -11,14 +11,14 @@ from aiogram.utils.media_group import MediaGroupBuilder, MediaType
 import bot
 from _logger import LOGGER
 from dungeon import DM
-from helpers.get_ytm_video_link import get_artist_link
-from schemas.dicts.artist import ArtistInfoDict
-from schemas.enums.priorities import DownloadTaskPriorities
-from schemas.tuples.worker import DownloadResult
+from helpers.get_ytm_links import get_artist_link
 from tools.extract_artist_discography import extract_artist_discography
 from tools.extract_playlist_info import extract_playlist_info
+from tools.types import ArtistInfoDict
 from tools.YTMusic_client import YT
 from worker import TRACK_PIPELINE
+from worker.priorities import DownloadTaskPriorities
+from worker.types import DownloadResult
 
 
 def _get_last(new_info: ArtistInfoDict):

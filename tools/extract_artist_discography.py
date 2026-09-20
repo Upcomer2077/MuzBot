@@ -3,7 +3,7 @@ import asyncio
 from ytmusicapi import YTMusic
 
 from _logger import LOGGER
-from schemas.dicts.artist import ArtistInfoDict
+from tools.types import ArtistInfoDict
 
 
 async def extract_artist_discography(artist_id: str) -> ArtistInfoDict:

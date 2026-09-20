@@ -38,6 +38,9 @@ dp.errors.outer_middleware(BlockedLogMiddleware())
 async def main():
     dp.include_router(get_handlers_router())
     await bot.delete_webhook(drop_pending_updates=True)
-    await bot.set_my_commands(commands=COMMANDS, scope=BotCommandScopeDefault())
+    await bot.set_my_commands(
+        commands=[k["frontend"] for k in COMMANDS.values()],
+        scope=BotCommandScopeDefault(),
+    )
 
     await dp.start_polling(bot)

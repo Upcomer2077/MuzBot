@@ -1,13 +1,13 @@
 from aiogram import Router
-from aiogram.filters import Command
 from aiogram.types import Message
 
 import bot
+from bot.commands import COMMANDS, COMSET
 
 router = Router()
 
 
-@router.message(Command("help"))
+@router.message(COMMANDS[COMSET.HELP]["backend"])
 async def help(message: Message):
     bot_info = await bot.Bot.get_me(bot.bot)
     text = (

@@ -1,7 +1,7 @@
 from _logger import LOGGER
 from config import MAX_TRACK_DURATION_SECONDS
 from dungeon.models import TrackCache
-from schemas.dicts import YoutubeSearchResultDict
+from tools.types import YoutubeSearchResultDict
 
 
 class TrackRepository:

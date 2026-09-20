@@ -2,7 +2,7 @@ from collections.abc import AsyncGenerator
 from typing import Any, cast
 
 from dungeon.models import Subscriptions, TgUsers, YTPerformers
-from schemas.database.types import GetUserSubsResult
+from dungeon.types.subs import GetUserSubsResult
 
 
 class SubscriptionRepository:

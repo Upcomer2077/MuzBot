@@ -6,15 +6,15 @@ from typing import Literal, Unpack, cast, overload
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from _logger import LOGGER
-from schemas.dicts.scheduler import (
+from scheduler.types import (
     CronConfig,
     CronJob,
     IntervalConfig,
     IntervalJob,
+    JobTrigger,
     OneTimeConfig,
     OneTimeJob,
 )
-from schemas.enums.scheduler import JobTrigger
 
 Job = IntervalJob | CronJob | OneTimeJob
 

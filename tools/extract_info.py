@@ -2,7 +2,7 @@ import asyncio
 import random
 
 from _logger import LOGGER
-from schemas.dicts import YoutubeSearchResultDict
+from tools.types import YoutubeSearchResultDict
 from tools.YTMusic_client import YT
 
 

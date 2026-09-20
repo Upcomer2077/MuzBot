@@ -1,13 +1,13 @@
 from aiogram import Router
-from aiogram.filters import Command
 from aiogram.types import Message
 
+from bot.commands import COMMANDS, COMSET
 from dungeon import DM
 
 router = Router()
 
 
-@router.message(Command("start"))
+@router.message(COMMANDS[COMSET.START]["backend"])
 async def echo(message: Message):
     await message.answer(
         "Введите название трека и/или автора. Используйте\n/help для получения инструкции"

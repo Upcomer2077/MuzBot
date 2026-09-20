@@ -1,8 +1,7 @@
 from aiogram import Router
 
-import handlers.callbacks as c_backs
-import handlers.subscriptions as subs
-from handlers import _force, _help, _inline, _playlist, _search, _start
+from handlers import _drop_message, _help, _start
+from handlers.modules import _playlists, _search, _singles, _subscriptions
 
 
 def get_handlers_router():
@@ -14,15 +13,19 @@ def get_handlers_router():
     main_router = Router()
 
     main_router.include_routers(
-        _start.router,
-        _help.router,
-        _force.router,
-        _inline.router,
-        _playlist.router,
-        subs.router,
-        c_backs.router,
-        # MUST BE THE LAST
-        _search.router,
+        *[
+            x.router
+            for x in [
+                _start,
+                _help,
+                _drop_message,
+                _singles,
+                _playlists,
+                _subscriptions,
+                # MUST BE THE LAST
+                _search,
+            ]
+        ]
     )
 
     return main_router

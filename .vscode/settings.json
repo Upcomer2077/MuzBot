@@ -18,6 +18,7 @@
     "baselogger",
     "bestaudio",
     "chunker",
+    "COMSET",
     "cooldown",
     "cooldowns",
     "delenv",
@@ -36,7 +37,12 @@
     "preferredquality",
     "pytest",
     "pythonpath",
+    "slist",
     "stdlogger",
+    "Synthwave",
+    "unsub",
+    "usub",
+    "usubs",
     "writethumbnail",
     "ytmusicapi"
   ]
