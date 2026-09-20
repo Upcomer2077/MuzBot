@@ -6,6 +6,7 @@ from aiogram.types import CallbackQuery
 import bot
 from _logger import LOGGER
 from action_limiter import AL
+from config import SUBSCRIPTION_COOLDOWN_SECS, SUBSCRIPTIONS_PER_LIMIT
 from dungeon import DM
 from schemas.callbacks import SubCallback
 from tools.extract_artist_discography import extract_artist_discography
@@ -34,7 +35,7 @@ async def handle_sub(callback: CallbackQuery, callback_data: SubCallback):
     if not AL.is_subscription_allowed(USER_ID):
         return await bot.bot.send_message(
             USER_ID,
-            "Слишком большое число запросов на подписку! Подождите немного и попробуйте позже",
+            f"Слишком большое число запросов на подписку! Разрешено делать {SUBSCRIPTIONS_PER_LIMIT} запросов в течение {SUBSCRIPTION_COOLDOWN_SECS} секунд",
         )
 
     AUTHOR_INFO: Final = await extract_artist_discography(AUTHOR_ID)

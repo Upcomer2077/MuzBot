@@ -13,6 +13,7 @@ from dungeon import DM
 from dungeon.types.subs import GetUserSubsResult
 from helpers.get_ytm_links import get_artist_link
 from helpers.utils import U
+from schemas.callbacks import UnSubCallback
 from schemas.callbacks.pagination import PaginationSubsListCallback
 from schemas.states import TypedState
 from schemas.states.subs import SubsListStates
@@ -51,6 +52,10 @@ async def subs_list(message: Message, state: FSMContext, command: CommandObject)
         title = artist["name"]
         text += (
             f'#{idx}. <a href="{get_artist_link(artist["performer_id"])}">{title}</a>\n'
+        )
+        builder.button(
+            text=f"🔕{idx}",
+            callback_data=UnSubCallback(author_id=artist["performer_id"]),
         )
 
     if len(subs) > PAGINATION_ITEMS_PER_PAGE:

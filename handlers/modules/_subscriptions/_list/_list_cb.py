@@ -8,6 +8,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from helpers.get_ytm_links import get_artist_link
 from helpers.utils import U
+from schemas.callbacks import UnSubCallback
 from schemas.callbacks.pagination import (
     PaginationSearchCallback,
     PaginationSubsListCallback,
@@ -43,6 +44,10 @@ async def process_pagination(
         title = artist["name"]
         text += (
             f'#{idx}. <a href="{get_artist_link(artist["performer_id"])}">{title}</a>\n'
+        )
+        builder.button(
+            text=f"🔕{idx}",
+            callback_data=UnSubCallback(author_id=artist["performer_id"]),
         )
 
     builder.attach(_nav_markup).attach(_drop_builder).adjust(3, repeat=True)

@@ -6,7 +6,7 @@ from aiogram.types import Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from action_limiter import AL
-from config import PAGINATION_ITEMS_PER_PAGE
+from config import PAGINATION_ITEMS_PER_PAGE, SEARCH_COOLDOWN_SECS, SEARCH_PER_LIMIT
 from dungeon import DM
 from helpers.prettify_incoming_query import prettify_incoming_query
 from helpers.utils import U
@@ -30,7 +30,9 @@ async def get_list(message: Message, state: FSMContext):
     USER_ID: Final = message.from_user.id
 
     if not AL.is_search_allowed(USER_ID):
-        return message.answer("Слишком много запросов!")
+        return message.answer(
+            f"Слишком много запросов! Разрешено {SEARCH_PER_LIMIT} запросов в течение {SEARCH_COOLDOWN_SECS} секунд"
+        )
 
     clean_text = prettify_incoming_query(QUERY)
 
