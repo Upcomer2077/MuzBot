@@ -11,49 +11,57 @@ class _CommandSchema(TypedDict):
 
 
 class COMSET(Enum):
-    START = 0
-    HELP = 1
-    FORCE = 2
-    PLAYLIST = 3
-    SUBSCRIBE = 4
-    UNSUBSCRIBE = 5
-    SUBSCRIPTIONS = 6
+    START = "start"
+    HELP = "help"
+    FORCE = "force"
+    PLAYLIST = "plist"
+    SUBSCRIBE = "sub"
+    UNSUBSCRIBE = "usub"
+    SUBSCRIPTIONS = "slist"
 
 
 COMMANDS: Final[dict[COMSET, _CommandSchema]] = {
     COMSET.START: {
         "backend": Command("start"),
-        "frontend": BotCommand(command="start", description="🚀 Запустить бота"),
+        "frontend": BotCommand(
+            command=COMSET.START.value, description="🚀 Запустить бота"
+        ),
     },
     COMSET.HELP: {
         "backend": Command("help"),
         "frontend": BotCommand(
-            command="help", description="❓ Инструкция по использованию"
+            command=COMSET.HELP.value, description="❓ Инструкция по использованию"
         ),
     },
     COMSET.FORCE: {
         "backend": Command("force"),
         "frontend": BotCommand(
-            command="force",
+            command=COMSET.FORCE.value,
             description="⚡ Скачать по ссылке из youtube.music.com",
         ),
     },
     COMSET.PLAYLIST: {
         "backend": Command("plist"),
         "frontend": BotCommand(
-            command="plist", description="⚡ Скачать плейлист по ссылке"
+            command=COMSET.PLAYLIST.value, description="⚡ Скачать плейлист по ссылке"
         ),
     },
     COMSET.SUBSCRIBE: {
         "backend": Command("sub"),
-        "frontend": BotCommand(command="sub", description="🔔 Подписаться на автора"),
+        "frontend": BotCommand(
+            command=COMSET.SUBSCRIBE.value, description="🔔 Подписаться на автора"
+        ),
     },
     COMSET.UNSUBSCRIBE: {
         "backend": Command("usub"),
-        "frontend": BotCommand(command="usub", description="🔕 Отписаться от автора"),
+        "frontend": BotCommand(
+            command=COMSET.UNSUBSCRIBE.value, description="🔕 Отписаться от автора"
+        ),
     },
     COMSET.SUBSCRIPTIONS: {
         "backend": Command("slist"),
-        "frontend": BotCommand(command="slist", description="📜 Список подписок"),
+        "frontend": BotCommand(
+            command=COMSET.SUBSCRIPTIONS.value, description="📜 Список подписок"
+        ),
     },
 }
