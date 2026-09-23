@@ -1,7 +1,6 @@
 import asyncio
-import os
 import shutil
-from glob import glob
+from pathlib import Path
 
 from _logger import LOGGER
 from overlord.types import TrackDirContentDict
@@ -27,7 +26,8 @@ class CacheOverlord:
         Returns:
             True if the directory exists, False otherwise.
         """
-        return await asyncio.to_thread(os.path.exists, f"{self._cache_dir}/{video_id}")
+        target_dir = Path(self._cache_dir) / video_id
+        return await asyncio.to_thread(target_dir.is_dir)
 
     async def _get_dir_content(self, video_id: str):
         """Retrieve absolute file pathways contained within a track cached directory structure.
@@ -39,7 +39,10 @@ class CacheOverlord:
             A list of absolute file paths if the directory exists, otherwise None.
         """
         if await self._lookup(video_id):
-            return await asyncio.to_thread(glob, f"{self._cache_dir}/{video_id}/*")
+            target_dir = Path(self._cache_dir) / video_id
+            return await asyncio.to_thread(
+                lambda: [str(p) for p in target_dir.iterdir()]
+            )
 
     async def demand_tribute(self, video_id: str):
         """Locate and match audio files and visual thumbnail paths within the track cache directory.
@@ -66,6 +69,7 @@ class CacheOverlord:
                 thumbnail_path = file
         LOGGER.debug(f"Got audio and thumbnail: {audio_path}, {thumbnail_path}")
         if audio_path is None:
+            LOGGER.error(f"Audio path oа track {video_id} is None")
             return None
         return TrackDirContentDict(
             audio_path=audio_path, thumbnail_path=thumbnail_path, _video_id=video_id
