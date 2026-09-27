@@ -6,10 +6,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from helpers.get_ytm_links import get_artist_link
+from handlers.modules._subscriptions._sub.callbacks import (
+    PaginationSubsArtistsCallback,
+    SubCallback,
+)
+from helpers.get_ytm_links import get_browse_link
 from helpers.utils import U
-from schemas.callbacks import SubCallback
-from schemas.callbacks.pagination import PaginationSubsArtistsCallback
 from schemas.states import TypedState
 
 router = Router()
@@ -41,7 +43,7 @@ async def process_pagination(
     text = f"Найденные исполнители (Страница {target_page + 1}):\n\n"
     for idx, artist in enumerate(content, start=start_idx + 1):
         title = artist["name"]
-        text += f'#{idx}. <a href="{get_artist_link(artist["id"])}">{title}</a>\n'
+        text += f'#{idx}. <a href="{get_browse_link(artist["id"])}">{title}</a>\n'
         builder.button(
             text=f"🔔{idx}",
             callback_data=SubCallback(author_id=artist["id"]),

@@ -8,12 +8,11 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from action_limiter import AL
 from config import PAGINATION_ITEMS_PER_PAGE, SEARCH_COOLDOWN_SECS, SEARCH_PER_LIMIT
 from dungeon import DM
+from handlers.modules._search.callbacks import PaginationSearchCallback
+from handlers.modules._singles.callbacks import DownloadCallback
 from helpers.prettify_incoming_query import prettify_incoming_query
 from helpers.utils import U
-from schemas.callbacks import DownloadCallback
-from schemas.callbacks.pagination import PaginationSearchCallback
 from schemas.states import TypedState
-from schemas.states.search import SearchStates
 from tools.search import search_in_ytm
 from tools.types import YoutubeSearchResultDict
 
@@ -70,7 +69,6 @@ async def get_list(message: Message, state: FSMContext):
     if len(search_result) > PAGINATION_ITEMS_PER_PAGE:
         builder.attach(_nav_markup)
         await S.update_data({"search_result": search_result})
-        await S.set_state(SearchStates.browsing_results)
 
     builder.attach(_drop_builder).adjust(3, repeat=True)
 

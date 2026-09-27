@@ -11,8 +11,9 @@ from _logger import LOGGER
 from bot.commands import COMMANDS, COMSET
 from config import MAX_PLAYLIST_TRACKS_REQUEST, PLAYLIST_MAX_TRACKS
 from dungeon import DM
+from handlers._drop_message.callbacks import DropCallback
+from handlers.modules._playlists.callbacks import DownloadPlaylistCallback
 from helpers.regexes import YTM_MIX_PLIST_REGEX, YTM_PLIST_REGEX, YTM_USER_PLIST_REGEX
-from schemas.callbacks import DownloadPlaylistCallback, DropCallback
 from schemas.states import TypedState
 from tools.extract_playlist_info import extract_playlist_info
 

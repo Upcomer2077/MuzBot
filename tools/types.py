@@ -25,18 +25,15 @@ class ArtistsShortInfoDict(TypedDict):
 # =====
 class ArtistInfoDict(TypedDict):
     name: str
-    albums: ArtistEntitiesInfoDict | None
-    singles: ArtistEntitiesInfoDict | None
-
-
-class ArtistEntitiesInfoDict(TypedDict):
-    results: list[ArtistConcreteEntityInfoDict]
-    browseId: str
+    albums: list[ArtistConcreteEntityInfoDict] | None
+    singles: list[ArtistConcreteEntityInfoDict] | None
 
 
 class ArtistConcreteEntityInfoDict(TypedDict):
     title: str
     browseId: str
+    audioPlaylistId: str
+    order: int
 
 
 # =====

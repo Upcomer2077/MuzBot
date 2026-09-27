@@ -5,9 +5,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from handlers.modules._search.callbacks import PaginationSearchCallback
+from handlers.modules._singles.callbacks import DownloadCallback
 from helpers.utils import U
-from schemas.callbacks import DownloadCallback
-from schemas.callbacks.pagination import PaginationSearchCallback
 from schemas.states import TypedState
 
 router = Router()

@@ -11,7 +11,7 @@ from aiogram.utils.media_group import MediaGroupBuilder, MediaType
 import bot
 from _logger import LOGGER
 from dungeon import DM
-from helpers.get_ytm_links import get_artist_link
+from helpers.get_ytm_links import get_browse_link
 from tools.extract_artist_discography import extract_artist_discography
 from tools.extract_playlist_info import extract_playlist_info
 from tools.types import ArtistInfoDict
@@ -22,8 +22,8 @@ from worker.types import DownloadResult
 
 
 def _get_last(new_info: ArtistInfoDict):
-    albums = None if not new_info["albums"] else new_info["albums"]["results"]
-    singles = None if not new_info["singles"] else new_info["singles"]["results"]
+    albums = None if not new_info["albums"] else new_info["albums"]
+    singles = None if not new_info["singles"] else new_info["singles"]
 
     last_single_id = None if not singles else singles[0]["browseId"]
     last_album_id = None if not albums else albums[0]["browseId"]
@@ -38,13 +38,18 @@ async def job():
             new_info = await extract_artist_discography(author["performer_id"])
 
             await asyncio.sleep(uniform(1.0, 3.0))
+            if not new_info:
+                LOGGER.error(
+                    f"No info fetched about performer {author['performer_id']}"
+                )
+                continue
 
             fresh_single_browse_id, fresh_album_browse_id = _get_last(new_info)
 
             if (not fresh_album_browse_id) and (not fresh_single_browse_id):
                 continue
 
-            local_performer_info = await DM.subs.get_performer_info(
+            local_performer_info = await DM.performers.get_performer_info(
                 author["performer_id"]
             )
             if not local_performer_info:
@@ -104,7 +109,7 @@ async def job():
                     await asyncio.sleep(uniform(1.0, 3.0))
                     await bot.bot.send_message(
                         u,
-                        f'Новинка у <a href="{get_artist_link(author["performer_id"])}">{new_info["name"]}</a>!',
+                        f'Новинка у <a href="{get_browse_link(author["performer_id"])}">{new_info["name"]}</a>!',
                         parse_mode=ParseMode.HTML,
                         link_preview_options=LinkPreviewOptions(is_disabled=True),
                     )

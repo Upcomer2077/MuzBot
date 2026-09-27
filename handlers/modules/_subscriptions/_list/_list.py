@@ -11,12 +11,11 @@ from bot.commands import COMMANDS, COMSET
 from config import PAGINATION_ITEMS_PER_PAGE
 from dungeon import DM
 from dungeon.types.subs import GetUserSubsResult
-from helpers.get_ytm_links import get_artist_link
+from handlers.modules._subscriptions._list.callbacks import PaginationSubsListCallback
+from handlers.modules._subscriptions._unsub.callbacks import UnSubCallback
+from helpers.get_ytm_links import get_browse_link
 from helpers.utils import U
-from schemas.callbacks import UnSubCallback
-from schemas.callbacks.pagination import PaginationSubsListCallback
 from schemas.states import TypedState
-from schemas.states.subs import SubsListStates
 
 router = Router()
 
@@ -51,7 +50,7 @@ async def subs_list(message: Message, state: FSMContext, command: CommandObject)
     for idx, artist in enumerate(content, start=start_idx + 1):
         title = artist["name"]
         text += (
-            f'#{idx}. <a href="{get_artist_link(artist["performer_id"])}">{title}</a>\n'
+            f'#{idx}. <a href="{get_browse_link(artist["performer_id"])}">{title}</a>\n'
         )
         builder.button(
             text=f"🔕{idx}",
@@ -61,7 +60,6 @@ async def subs_list(message: Message, state: FSMContext, command: CommandObject)
     if len(subs) > PAGINATION_ITEMS_PER_PAGE:
         builder.attach(_nav_markup)
         await S.update_data({"subs_list": subs})
-        await S.set_state(SubsListStates.browsing_results)
 
     builder.attach(drop_builder).adjust(3, repeat=True)
 

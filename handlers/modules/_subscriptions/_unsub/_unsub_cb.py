@@ -6,7 +6,7 @@ from aiogram.types import CallbackQuery
 import bot
 from _logger import LOGGER
 from dungeon import DM
-from schemas.callbacks import UnSubCallback
+from handlers.modules._subscriptions._unsub.callbacks import UnSubCallback
 
 router = Router()
 

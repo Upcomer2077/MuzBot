@@ -8,7 +8,7 @@ from _logger import LOGGER
 from action_limiter import AL
 from config import SUBSCRIPTION_COOLDOWN_SECS, SUBSCRIPTIONS_PER_LIMIT
 from dungeon import DM
-from schemas.callbacks import SubCallback
+from handlers.modules._subscriptions._sub.callbacks import SubCallback
 from tools.extract_artist_discography import extract_artist_discography
 
 router = Router()
@@ -27,7 +27,7 @@ async def handle_sub(callback: CallbackQuery, callback_data: SubCallback):
         )
     # --------------
     USER_ID: Final = callback.from_user.id
-    local_author_info = await DM.subs.get_performer_info(AUTHOR_ID)
+    local_author_info = await DM.performers.get_performer_info(AUTHOR_ID)
 
     if local_author_info:
         return await __subscribe(USER_ID, AUTHOR_ID, local_author_info.name)
@@ -39,9 +39,12 @@ async def handle_sub(callback: CallbackQuery, callback_data: SubCallback):
         )
 
     AUTHOR_INFO: Final = await extract_artist_discography(AUTHOR_ID)
-
-    ALBUMS = [] if not AUTHOR_INFO["albums"] else AUTHOR_INFO["albums"]["results"]
-    SINGLES = [] if not AUTHOR_INFO["singles"] else AUTHOR_INFO["singles"]["results"]
+    if not AUTHOR_INFO:
+        return callback.answer(
+            "Что-то пошло не так при попытке подписаться... Повторите попытку"
+        )
+    ALBUMS = [] if not AUTHOR_INFO["albums"] else AUTHOR_INFO["albums"]
+    SINGLES = [] if not AUTHOR_INFO["singles"] else AUTHOR_INFO["singles"]
     NAME = AUTHOR_INFO["name"]
 
     await DM.subs.set_performer_last_release(
@@ -51,7 +54,7 @@ async def handle_sub(callback: CallbackQuery, callback_data: SubCallback):
         last_single_id=SINGLES[0]["browseId"] if len(SINGLES) else None,
     )
 
-    return await __subscribe(USER_ID, AUTHOR_ID, NAME)
+    return await __subscribe(USER_ID, AUTHOR_ID, AUTHOR_INFO["name"])
 
 
 async def __subscribe(USER_ID: int, AUTHOR_ID: str, a_name: str):

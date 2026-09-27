@@ -6,5 +6,5 @@ def get_ytm_playlist_link(playlist_id: str):
     return f"https://music.youtube.com/playlist?list={playlist_id}"
 
 
-def get_artist_link(artist_id: str):
-    return f"https://music.youtube.com/browse/{artist_id}"
+def get_browse_link(entity_id: str):
+    return f"https://music.youtube.com/browse/{entity_id}"

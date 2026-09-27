@@ -1,7 +1,7 @@
 from aiogram import Router, types
 from aiogram.exceptions import TelegramBadRequest
 
-from schemas.callbacks import DropCallback
+from handlers._drop_message.callbacks import DropCallback
 
 router = Router()
 

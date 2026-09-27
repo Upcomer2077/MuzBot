@@ -9,7 +9,7 @@ import bot
 from config import PAGINATION_ITEMS_PER_PAGE
 from dungeon import DM
 from dungeon.models import TrackCache
-from schemas.callbacks import DropCallback
+from handlers._drop_message.callbacks import DropCallback
 from schemas.callbacks.pagination import PaginationBase
 from tools.extract_info import extract_video_info
 

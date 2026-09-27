@@ -3,7 +3,7 @@ from typing import TypedDict, cast
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.base import StateType
 
-from dungeon.models import YTPerformers
+from dungeon.models import Albums, Singles, YTPerformers
 from dungeon.types.subs import GetUserSubsResult
 from tools.types import ArtistsShortInfoDict, YoutubeSearchResultDict
 
@@ -13,6 +13,8 @@ class StateData(TypedDict, total=False):
     search_result: list[YoutubeSearchResultDict]
     subs_artists: list[ArtistsShortInfoDict]
     usubs_artists: list[YTPerformers]
+    singles_pack: _PlaylistPack[Singles]
+    albums_pack: _PlaylistPack[Albums]
 
 
 class TypedState:
@@ -31,3 +33,8 @@ class TypedState:
 
     async def clear(self) -> None:
         await self._state.clear()
+
+
+class _PlaylistPack[T](TypedDict, total=False):
+    artists: list[ArtistsShortInfoDict]
+    entities: list[T]

@@ -9,8 +9,8 @@ from config import (
     QUERY_DOWNLOAD_LIMIT_SECS,
     TRACKS_PER_LIMIT,
 )
+from handlers.modules._singles.callbacks import DownloadCallback
 from helpers.utils import U
-from schemas.callbacks import DownloadCallback
 from worker import TRACK_PIPELINE
 from worker.priorities import DownloadTaskPriorities
 

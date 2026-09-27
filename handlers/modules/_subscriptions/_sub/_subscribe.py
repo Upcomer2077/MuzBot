@@ -10,13 +10,14 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from bot.commands import COMMANDS, COMSET
 from config import PAGINATION_ITEMS_PER_PAGE
-from helpers.get_ytm_links import get_artist_link
+from handlers.modules._subscriptions._sub.callbacks import (
+    PaginationSubsArtistsCallback,
+    SubCallback,
+)
+from helpers.get_ytm_links import get_browse_link
 from helpers.prettify_incoming_query import prettify_incoming_query
 from helpers.utils import U
-from schemas.callbacks import SubCallback
-from schemas.callbacks.pagination import PaginationSubsArtistsCallback
 from schemas.states import TypedState
-from schemas.states.subs import SubsArtistsStates
 from tools.search_artists import search_artists_in_ytm
 
 router = Router()
@@ -73,7 +74,7 @@ async def _handler(message: Message, performer: str, S: TypedState):
     text = "Найденные исполнители: \n"
     for idx, artist in enumerate(content, start=start_idx + 1):
         title = artist["name"]
-        text += f'#{idx}. <a href="{get_artist_link(artist["id"])}">{title}</a>\n'
+        text += f'#{idx}. <a href="{get_browse_link(artist["id"])}">{title}</a>\n'
         builder.button(
             text=f"🔔{idx}",
             callback_data=SubCallback(author_id=artist["id"]),
@@ -82,7 +83,6 @@ async def _handler(message: Message, performer: str, S: TypedState):
     if len(artists) > PAGINATION_ITEMS_PER_PAGE:
         builder.attach(_nav_markup)
         await S.update_data({"subs_artists": artists})
-        await S.set_state(SubsArtistsStates.browsing_results)
 
     builder.attach(_drop_builder).adjust(3, repeat=True)
 

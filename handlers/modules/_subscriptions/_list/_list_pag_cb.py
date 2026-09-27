@@ -6,13 +6,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from helpers.get_ytm_links import get_artist_link
+from handlers.modules._subscriptions._list.callbacks import PaginationSubsListCallback
+from handlers.modules._subscriptions._unsub.callbacks import UnSubCallback
+from helpers.get_ytm_links import get_browse_link
 from helpers.utils import U
-from schemas.callbacks import UnSubCallback
-from schemas.callbacks.pagination import (
-    PaginationSearchCallback,
-    PaginationSubsListCallback,
-)
 from schemas.states import TypedState
 
 router = Router()
@@ -20,7 +17,9 @@ router = Router()
 
 @router.callback_query(PaginationSubsListCallback.filter())
 async def process_pagination(
-    callback: CallbackQuery, callback_data: PaginationSearchCallback, state: FSMContext
+    callback: CallbackQuery,
+    callback_data: PaginationSubsListCallback,
+    state: FSMContext,
 ):
     S: Final = TypedState(state)
     data = await S.get_data()
@@ -43,7 +42,7 @@ async def process_pagination(
     for idx, artist in enumerate(content, start=start_idx + 1):
         title = artist["name"]
         text += (
-            f'#{idx}. <a href="{get_artist_link(artist["performer_id"])}">{title}</a>\n'
+            f'#{idx}. <a href="{get_browse_link(artist["performer_id"])}">{title}</a>\n'
         )
         builder.button(
             text=f"🔕{idx}",
