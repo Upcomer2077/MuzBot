@@ -9,3 +9,4 @@ class YTMusicProvider(YTMusic):
         self.playlist_lock = Semaphore(2)
         self.search_lock = Semaphore(4)
         self.track_lock = Semaphore(2)
+        self.rec_lock = Semaphore(4)

@@ -2,10 +2,9 @@ import asyncio
 from random import uniform
 from typing import Final
 
-from ytmusicapi import YTMusic
-
 from _logger import LOGGER
 from tools.types import ArtistConcreteEntityInfoDict, ArtistInfoDict
+from tools.YTMusic_client import YT
 
 
 async def extract_artist_discography(
@@ -19,7 +18,6 @@ async def extract_artist_discography(
     Returns:
         A structured dictionary with video metadata if successful, or None if extraction fails.
     """
-    YT = YTMusic()
 
     LOGGER.debug(f"Extracting info about author {artist_id}")
     try:

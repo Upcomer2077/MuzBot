@@ -11,6 +11,7 @@ from tools.types import ArtistsShortInfoDict, YoutubeSearchResultDict
 class StateData(TypedDict, total=False):
     subs_list: list[GetUserSubsResult]
     search_result: list[YoutubeSearchResultDict]
+    rec_result: list[YoutubeSearchResultDict]
     subs_artists: list[ArtistsShortInfoDict]
     usubs_artists: list[YTPerformers]
     singles_pack: _PlaylistPack[Singles]

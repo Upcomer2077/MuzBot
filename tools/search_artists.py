@@ -1,12 +1,10 @@
 import asyncio
 
-from ytmusicapi import YTMusic
-
 from tools.types import ArtistsShortInfoDict
+from tools.YTMusic_client import YT
 
 
 async def search_artists_in_ytm(performer: str) -> list[ArtistsShortInfoDict]:
-    YT = YTMusic()
 
     resp = await asyncio.to_thread(YT.search, performer, filter="artists", limit=3)
 

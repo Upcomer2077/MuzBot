@@ -5,6 +5,7 @@ from handlers.modules import (
     _albums,
     _catalog,
     _playlists,
+    _recom,
     _search,
     _singles,
     _subscriptions,
@@ -32,6 +33,7 @@ def get_handlers_router():
                 _subscriptions,
                 _catalog,
                 _albums,
+                _recom,
                 # MUST BE THE LAST
                 _search,
             ]
