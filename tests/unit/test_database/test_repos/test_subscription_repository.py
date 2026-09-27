@@ -1,5 +1,6 @@
 from dungeon.models import Subscriptions, TgUsers, YTPerformers
 from dungeon.repos.subscriptions import SubscriptionRepository
+from dungeon.repos.ytperformers import YTPerformersRepository
 
 
 async def test_set_performer_last_release_upsert():
@@ -65,7 +66,7 @@ async def test_subscribe_and_drop_operations():
 
 async def test_get_artists_by_name_prefix_search():
     """Проверяем регистронезависимый поиск по началу имени артиста (__istartswith)."""
-    repo = SubscriptionRepository()
+    repo = YTPerformersRepository()
 
     # Создаем артистов
     await YTPerformers.create(id="1", name="Linkin Park")

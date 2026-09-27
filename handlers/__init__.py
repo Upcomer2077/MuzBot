@@ -1,7 +1,14 @@
 from aiogram import Router
 
 from handlers import _cancel, _drop_message, _help, _start
-from handlers.modules import _playlists, _search, _singles, _subscriptions
+from handlers.modules import (
+    _albums,
+    _catalog,
+    _playlists,
+    _search,
+    _singles,
+    _subscriptions,
+)
 
 
 def get_handlers_router():
@@ -23,6 +30,8 @@ def get_handlers_router():
                 _singles,
                 _playlists,
                 _subscriptions,
+                _catalog,
+                _albums,
                 # MUST BE THE LAST
                 _search,
             ]

@@ -34,6 +34,11 @@ SUBSCRIPTION_COOLDOWN_SECS = max(
 SUBSCRIPTIONS_PER_LIMIT = max(int(os.environ.get("SUBSCRIPTIONS_PER_LIMIT", "4")), 4)
 """Subscription request limit per user"""
 
+CATALOG_COOLDOWN_SECS = max(int(os.environ.get("CATALOG_COOLDOWN_SECS", "20")), 20)
+"""Catalog/albums cooldown (flood wait)"""
+CATALOG_PER_LIMIT = max(int(os.environ.get("CATALOG_PER_LIMIT", "5")), 5)
+"""Catalog/albums request limit per user"""
+
 SEARCH_COOLDOWN_SECS = max(int(os.environ.get("SEARCH_COOLDOWN_SECS", "20")), 20)
 """Search cooldown (flood wait)"""
 SEARCH_PER_LIMIT = max(int(os.environ.get("SEARCH_PER_LIMIT", "3")), 3)

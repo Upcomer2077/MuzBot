@@ -4,6 +4,8 @@ from typing import Required, TypedDict
 
 from _logger import LOGGER
 from config import (
+    CATALOG_COOLDOWN_SECS,
+    CATALOG_PER_LIMIT,
     PLAYLIST_DOWNLOAD_COOLDOWN_SECS,
     PLAYLISTS_LIMIT,
     QUERY_DOWNLOAD_LIMIT_SECS,
@@ -47,6 +49,21 @@ class LightLimiter:
         self._SEARCH_BANK: dict[int, _UserQueryLimitDict] = {}
         self._SEARCH_COOLDOWN_SECS = SEARCH_COOLDOWN_SECS
         self._SEARCH_PER_LIMIT = SEARCH_PER_LIMIT
+
+        self._CATALOG_BANK: dict[int, _UserQueryLimitDict] = {}
+        self._CATALOG_COOLDOWN_SECS = CATALOG_COOLDOWN_SECS
+        self._CATALOG_PER_LIMIT = CATALOG_PER_LIMIT
+
+    def is_catalog_action_allowed(
+        self,
+        chat_id: int,
+    ):
+        return self._is_allowed(
+            chat_id,
+            bank=self._CATALOG_BANK,
+            cooldown=self._CATALOG_COOLDOWN_SECS,
+            per_limit=self._CATALOG_PER_LIMIT,
+        )
 
     def is_send_action_allowed(
         self,
@@ -131,6 +148,7 @@ class LightLimiter:
                 + len(self._PLAYLIST_BANK)
                 + len(self._SUBS_BANK)
                 + len(self._SEARCH_BANK)
+                + len(self._CATALOG_BANK)
             )
             if total_garbage_len < 50:
                 return
@@ -143,6 +161,7 @@ class LightLimiter:
                 (self._PLAYLIST_COOLDOWN_SECS, self._PLAYLIST_BANK),
                 (self._SUBS_COOLDOWN_SECS, self._SUBS_BANK),
                 (self._SEARCH_COOLDOWN_SECS, self._SEARCH_BANK),
+                (self._CATALOG_COOLDOWN_SECS, self._CATALOG_BANK),
             ]:
                 cooldown, bank = item
                 for key, info in bank.copy().items():

@@ -14,11 +14,13 @@ class COMSET(Enum):
     START = "start"
     HELP = "help"
     FORCE = "force"
-    PLAYLIST = "plist"
+    PLAYLIST = "fplist"
     SUBSCRIBE = "sub"
     UNSUBSCRIBE = "usub"
     SUBSCRIPTIONS = "slist"
     CANCEL = "cancel"
+    CATALOG = "cat"
+    ALBUMS = "albums"
 
 
 COMMANDS: Final[dict[COMSET, _CommandSchema]] = {
@@ -63,6 +65,18 @@ COMMANDS: Final[dict[COMSET, _CommandSchema]] = {
         "backend": Command(COMSET.SUBSCRIPTIONS.value),
         "frontend": BotCommand(
             command=COMSET.SUBSCRIPTIONS.value, description="📜 Список подписок"
+        ),
+    },
+    COMSET.CATALOG: {
+        "backend": Command(COMSET.CATALOG.value),
+        "frontend": BotCommand(
+            command=COMSET.CATALOG.value, description="💿 Синглы артиста"
+        ),
+    },
+    COMSET.ALBUMS: {
+        "backend": Command(COMSET.ALBUMS.value),
+        "frontend": BotCommand(
+            command=COMSET.ALBUMS.value, description="💿 Альбомы артиста"
         ),
     },
     COMSET.CANCEL: {

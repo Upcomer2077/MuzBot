@@ -76,6 +76,20 @@ async def help(message: Message, command: CommandObject):
             parse_mode=ParseMode.MARKDOWN,
         )
 
+    if ARGS.strip().find(COMSET.ALBUMS.value) != -1:
+        return message.answer(
+            f"*{COMSET.ALBUMS.value}*: позволяет получить все альбомы указанного артиста.\n"
+            f"Пример: /{COMSET.ALBUMS.value} Currents (покажет все альбомы, которые выпустили 'Currents')",
+            parse_mode=ParseMode.MARKDOWN,
+        )
+
+    if ARGS.strip().find(COMSET.CATALOG.value) != -1:
+        return message.answer(
+            f"*{COMSET.CATALOG.value}*: позволяет получить все альбомы указанного артиста.\n"
+            f"Пример: /{COMSET.CATALOG.value} thrown (покажет все синглы, которые выпустили 'thrown')",
+            parse_mode=ParseMode.MARKDOWN,
+        )
+
     if ARGS.strip().find(COMSET.CANCEL.value) != -1:
         return message.answer(
             f"*{COMSET.CANCEL.value}*: отменяет действия. Используется там, где команды вводятся в несколько этапов",
