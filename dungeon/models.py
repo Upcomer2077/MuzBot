@@ -1,4 +1,7 @@
+from typing import ClassVar
+
 from tortoise import Model, fields
+from tortoise.indexes import PartialIndex
 
 
 class TrackCache(Model):
@@ -29,7 +32,7 @@ class TrackPlaylist(Model):
     id = fields.IntField(primary_key=True)
 
     # Свойство называется video, а колонка в базе данных — video_id
-    video = fields.ForeignKeyField(
+    video: fields.ForeignKeyRelation[TrackCache] = fields.ForeignKeyField(
         "models.TrackCache",
         related_name="playlists",
         on_delete=fields.CASCADE,
@@ -37,7 +40,7 @@ class TrackPlaylist(Model):
     )
 
     # Свойство называется playlist, а колонка в базе данных — playlist_id
-    playlist = fields.ForeignKeyField(
+    playlist: fields.ForeignKeyRelation[PlaylistCache] = fields.ForeignKeyField(
         "models.PlaylistCache",
         related_name="tracks",
         on_delete=fields.CASCADE,
@@ -47,7 +50,11 @@ class TrackPlaylist(Model):
 
     class Meta:
         table = "tracks_playlists"
-        unique_together = (("video", "playlist"),)
+        unique_together: ClassVar[tuple[str, str, str]] = (
+            "playlist",
+            "track_order",
+            "video",
+        )
 
 
 # ============
@@ -63,6 +70,7 @@ class TgUsers(Model):
 class YTPerformers(Model):
     id = fields.CharField(primary_key=True, max_length=255, generated=False)
     name = fields.CharField(max_length=255, null=False)
+    # TODO: make mig with new table? [updated_at]
     last_single_id = fields.CharField(max_length=255, null=True)
     last_album_id = fields.CharField(max_length=255, null=True)
 
@@ -75,16 +83,14 @@ class Subscriptions(Model):
 
     id = fields.IntField(primary_key=True)
 
-    # Переименовываем свойство в tg_user, а колонку в БД задаем через source_field
-    tg_user = fields.ForeignKeyField(
+    tg_user: fields.ForeignKeyRelation[TgUsers] = fields.ForeignKeyField(
         "models.TgUsers",
         related_name="yt_performers",
         on_delete=fields.CASCADE,
         source_field="tg_user_id",
     )
 
-    # Переименовываем свойство в performer, а колонку в БД задаем через source_field
-    performer = fields.ForeignKeyField(
+    performer: fields.ForeignKeyRelation[YTPerformers] = fields.ForeignKeyField(
         "models.YTPerformers",
         related_name="telegram_users",
         on_delete=fields.CASCADE,
@@ -96,3 +102,51 @@ class Subscriptions(Model):
     class Meta:
         table = "subscriptions"
         unique_together = (("performer", "tg_user"),)
+        indexes: ClassVar[list[PartialIndex]] = [
+            PartialIndex(
+                fields=["performer"],
+                condition={"is_suspended": False},
+            )
+        ]
+
+
+class Singles(Model):
+    playlist: fields.ForeignKeyRelation[PlaylistCache] = fields.ForeignKeyField(
+        "models.PlaylistCache",
+        related_name="singles",
+        on_delete=fields.CASCADE,
+        source_field="playlist_id",
+    )
+    performer: fields.ForeignKeyRelation[YTPerformers] = fields.ForeignKeyField(
+        "models.YTPerformers",
+        related_name="single_entries",
+        on_delete=fields.CASCADE,
+        source_field="performer_id",
+    )
+    browse_id = fields.CharField(255, null=False)
+    order = fields.SmallIntegerField(null=False)
+
+    class Meta:
+        table = "singles"
+        unique_together: ClassVar[tuple[str, str]] = ("performer", "playlist")
+
+
+class Albums(Model):
+    playlist: fields.ForeignKeyRelation[PlaylistCache] = fields.ForeignKeyField(
+        "models.PlaylistCache",
+        related_name="albums",
+        on_delete=fields.CASCADE,
+        source_field="playlist_id",
+    )
+    performer: fields.ForeignKeyRelation[YTPerformers] = fields.ForeignKeyField(
+        "models.YTPerformers",
+        related_name="album_entries",
+        on_delete=fields.CASCADE,
+        source_field="performer_id",
+    )
+    browse_id = fields.CharField(255, null=False)
+    order: fields.SmallIntField = fields.SmallIntegerField(null=False)
+
+    class Meta:
+        table = "albums"
+        unique_together: ClassVar[tuple[str, str]] = ("performer", "playlist")

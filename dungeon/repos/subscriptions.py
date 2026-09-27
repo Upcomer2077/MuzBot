@@ -34,50 +34,48 @@ class SubscriptionRepository:
         )
         return 1 if created else 0
 
-    async def get_performer_info(self, performer_id: str) -> YTPerformers | None:
-        """Look up unique artist properties cached in the node store."""
-        return await YTPerformers.get_or_none(id=performer_id)
-
     async def drop_sub(self, performer_id: str, user_id: int) -> int:
         """Unsubscribe user identity completely from designated target artist events stream."""
         return await Subscriptions.filter(
             tg_user_id=user_id, performer_id=performer_id
         ).delete()
 
-    async def get_artists_by_name(
-        self, user_id: int, s_query: str
-    ) -> list[YTPerformers]:
-        """Perform fuzzy prefix query filter lookup scanning for user specific active artists bindings."""
-        r = await YTPerformers.filter(
-            telegram_users__tg_user_id=user_id, name__istartswith=s_query
-        ).only("id", "name")
-        return list(r)
-
     async def get_subscripted_authors(
         self, batch_size: int = 100
     ) -> AsyncGenerator[list[dict[str, Any]]]:
-        """Iteratively load distinct rows bundles grouping active profiles that carry active metrics."""
-        base_query = (
-            YTPerformers.filter(telegram_users__is_suspended=False)
-            .distinct()
-            .order_by("id")
-        )
-        offset = 0
+        """Iteratively load distinct rows bundles grouping active profiles using keyset pagination."""
+
+        last_id = ""
+
         while True:
-            results = (
-                await base_query.limit(batch_size)
-                .offset(offset)
+            query = Subscriptions.filter(is_suspended=False)
+            if last_id:
+                query = query.filter(performer_id__gt=last_id)
+
+            subs_results = (
+                await query.order_by("performer_id")
+                .limit(batch_size)
+                .distinct()
+                .values_list("performer_id", flat=True)
+            )
+
+            if not subs_results:
+                break
+
+            performers = (
+                await YTPerformers.filter(id__in=subs_results)
+                .order_by("id")
                 .values(
                     performer_id="id",
                     name="name",
-                    last_album_id="last_album_id",
-                    last_single_id="last_single_id",
                 )
             )
-            if not results:
+
+            if not performers:
                 break
-            yield results
-            offset += batch_size
+
+            yield performers
+            last_id = subs_results[-1]
 
     async def get_tg_users_with_subs(
         self, performers_ids: list

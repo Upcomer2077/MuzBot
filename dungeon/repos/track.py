@@ -31,7 +31,7 @@ class TrackRepository:
                 )
 
             LOGGER.debug(f"Inserting tracks (bulk). Total count: {len(tracks)}")
-            await TrackCache.bulk_create(instances_to_insert)
+            await TrackCache.bulk_create(instances_to_insert, ignore_conflicts=True)
             LOGGER.debug("Inserting complete")
             return len(tracks)
         except Exception as e:
@@ -40,6 +40,8 @@ class TrackRepository:
 
     async def summon_slaves(self, video_ids: list[str]) -> dict[str, TrackCache]:
         """Fetch cached tracks mapping them to their corresponding video identifiers."""
+        if not video_ids:
+            return {}
         LOGGER.debug(f"Selecting slaves {video_ids}")
         rows = await TrackCache.filter(video_id__in=video_ids)
         LOGGER.debug(f"Selected slaves count: {len(rows)}")

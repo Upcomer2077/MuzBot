@@ -26,11 +26,11 @@ class PlaylistRepository:
         self, playlist_info: PlaylistInfoDict, tracks: list[YoutubeSearchResultDict]
     ) -> int:
         """Atomically cache a playlist structure and link incoming batch tracks."""
-        LOGGER.debug("Adding playlist and tracks")
-        count = await self.track_repo.enslave_bulk(tracks)
-        LOGGER.debug(f"Tracks enslaved: {count}")
-
         async with in_transaction():
+            LOGGER.debug("Adding playlist and tracks")
+            count = await self.track_repo.enslave_bulk(tracks)
+            LOGGER.debug(f"Tracks enslaved: {count}")
+
             LOGGER.debug(f"Enslaving playlist info: {playlist_info['id']} ")
             await PlaylistCache.get_or_create(
                 playlist_id=playlist_info["id"],
@@ -65,16 +65,13 @@ class PlaylistRepository:
     ) -> dict[str, TrackCache] | None:
         """Fetch all track object nodes bound to a playlist sorted sequentially."""
         LOGGER.debug(f"Getting slaves from playlist: {playlist_id} ")
-        query = TrackCache.filter(playlists__playlist_id=playlist_id).order_by(
-            "playlists__track_order"
-        )
+        query = TrackPlaylist.filter(playlist_id=playlist_id).order_by("track_order")
 
         if limit is not None:
             query = query.limit(limit)
 
-        rows = await query
-        LOGGER.debug(f"Getting slaves from playlist done: {len(rows)} ")
-        if not rows:
+        relations = await query.prefetch_related("video")
+        if not relations:
             return None
 
-        return {row.video_id: row for row in rows if row.video_id}
+        return {r.video.video_id: r.video for r in relations if r.video}

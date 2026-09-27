@@ -1,6 +1,7 @@
 from dungeon.repos.playlist import PlaylistRepository
 from dungeon.repos.subscriptions import SubscriptionRepository
 from dungeon.repos.track import TrackRepository
+from dungeon.repos.ytperformers import YTPerformersRepository
 from dungeon.session import DungeonDBSession
 
 
@@ -11,6 +12,7 @@ class DungeonMaster:
         self.tracks = TrackRepository()
         self.playlists = PlaylistRepository(track_repo=self.tracks)
         self.subs = SubscriptionRepository()
+        self.performers = YTPerformersRepository()
 
     async def open_dungeon(self):
         await DungeonDBSession.open_dungeon()
