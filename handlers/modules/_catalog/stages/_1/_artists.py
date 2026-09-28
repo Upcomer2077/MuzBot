@@ -28,7 +28,7 @@ from tools.search_artists import search_artists_in_ytm
 router = Router()
 
 
-class _AlbumsState(StatesGroup):
+class _CatalogState(StatesGroup):
     first_state = State()
 
 
@@ -42,7 +42,7 @@ async def get_artists(message: Message, command: CommandObject, state: FSMContex
 
     performer = command.args
     if not performer:
-        await S.set_state(_AlbumsState.first_state)
+        await S.set_state(_CatalogState.first_state)
         return await message.answer(
             f"Укажите исполнителя или используйте /{COMSET.CANCEL.value}"
         )
@@ -50,7 +50,7 @@ async def get_artists(message: Message, command: CommandObject, state: FSMContex
     await _handler(message, performer, S)
 
 
-@router.message(_AlbumsState.first_state)
+@router.message(_CatalogState.first_state)
 async def get_artists_step_2(message: Message, state: FSMContext):
     S: Final = TypedState(state)
 

@@ -73,32 +73,25 @@ class YTPerformersRepository:
         ).only("id", "name")
         return list(r)
 
-    async def get_artist_releases(
-        self, performer_id: str, *, fetch_singles=True, fetch_albums=True
-    ):
-        performer = await YTPerformers.get_or_none(id=performer_id)
-        if not performer:
-            return None
-        albums = singles = None
-        if fetch_albums:
-            albums = (
-                await Albums.filter(performer_id=performer_id)
-                .prefetch_related("playlist")
-                .order_by("-order")
-            )
-            if not len(albums):
-                albums = None
-        if fetch_singles:
-            singles = (
-                await Singles.filter(performer_id=performer_id)
-                .prefetch_related("playlist")
-                .order_by("-order")
-            )
-            if not len(singles):
-                singles = None
-        if (fetch_singles and not singles) and (fetch_albums and not albums):
-            return None
-        return (albums, singles)
+    async def get_artist_singles(self, performer_id: str):
+        singles = (
+            await Singles.filter(performer_id=performer_id)
+            .prefetch_related("playlist")
+            .order_by("-order")
+        )
+        if not len(singles):
+            singles = None
+        return singles
+
+    async def get_artist_albums(self, performer_id: str):
+        albums = (
+            await Albums.filter(performer_id=performer_id)
+            .prefetch_related("playlist")
+            .order_by("-order")
+        )
+        if not len(albums):
+            albums = None
+        return albums
 
     async def get_artist_last_release(
         self, performer_id: str, *, fetch_singles=True, fetch_albums=True

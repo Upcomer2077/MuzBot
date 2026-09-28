@@ -40,9 +40,13 @@ async def get_albums_list(
     ANSWER = await bot.bot.send_message(USER_ID, "Ищу...")
     AUTHOR_ID = callback_data.author_id
 
-    releases = await DM.performers.get_artist_releases(AUTHOR_ID, fetch_singles=False)
+    releases = await DM.performers.get_artist_albums(AUTHOR_ID)
+    LOGGER.debug(
+        f"Found info about artist {AUTHOR_ID} albums: {len(releases) if releases else None}"
+    )
     if not releases:
         res = await extract_artist_discography(AUTHOR_ID, top_only=False)
+
         if not res:
             LOGGER.error(
                 f"Cannot extract performer {AUTHOR_ID} releases on albums/stage/2"
@@ -52,17 +56,17 @@ async def get_albums_list(
             )
         await DM.performers.set_performer_releases_v2(AUTHOR_ID, info=res)
 
-        releases = await DM.performers.get_artist_releases(
-            AUTHOR_ID, fetch_singles=False
+        releases = await DM.performers.get_artist_albums(AUTHOR_ID)
+        LOGGER.debug(
+            f"2 Found info about artist {AUTHOR_ID} albums: {len(releases) if releases else None}"
         )
-
         if not releases:
             LOGGER.error(f"Cannot set performer {AUTHOR_ID} releases on albums/stage/2")
             return await ANSWER.edit_text(
                 "Не удалось выполнить запрос. Повторите попытку"
             )
 
-    albums, _ = releases
+    albums = releases
 
     if not albums:
         return await ANSWER.edit_text("У исполнителя нет альбомов")

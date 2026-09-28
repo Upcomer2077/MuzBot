@@ -4,6 +4,7 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from tortoise.expressions import Q
 
 import bot
 from action_limiter import AL
@@ -38,15 +39,22 @@ async def handle_audio(message: Message, state: FSMContext):
     if not audio:
         return await STATUS_MESSAGE.edit_text("Не удалось распознать файл!")
 
+    # TODO: file unique id?
     file_id = audio.file_id
-    video_id = await TrackCache.filter(telegram_file_id=file_id).first()
-    if not video_id:
+    file_name = audio.title
+    file_performer = audio.performer
+
+    track = await TrackCache.filter(
+        Q(telegram_file_id=file_id) | Q(title=file_name, artist=file_performer)
+    ).first()
+
+    if not track:
         bot_info = await bot.Bot.get_me(bot.bot)
         return await STATUS_MESSAGE.edit_text(
             f"Не удалось распознать файл! Файл должен быть переслан от {f'@{bot_info.username}' if bot_info else 'этого бота'}. Подробнее в /{COMSET.HELP.value}"
         )
 
-    watch_pl = await get_watch_pl(video_id.video_id)
+    watch_pl = await get_watch_pl(track.video_id)
     if not watch_pl:
         return await STATUS_MESSAGE.edit_text("Не удалось найти рекомендации!")
 

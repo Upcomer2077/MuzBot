@@ -39,7 +39,10 @@ async def get_singles_list(
     S: Final = TypedState(state)
     ANSWER = await bot.bot.send_message(callback.from_user.id, "Ищу...")
     AUTHOR_ID = callback_data.author_id
-    releases = await DM.performers.get_artist_releases(AUTHOR_ID, fetch_albums=False)
+    releases = await DM.performers.get_artist_singles(AUTHOR_ID)
+    LOGGER.debug(
+        f"Found info about artist {AUTHOR_ID} singles: {len(releases) if releases else None}"
+    )
     if not releases:
         res = await extract_artist_discography(AUTHOR_ID, top_only=False)
         if not res:
@@ -51,10 +54,10 @@ async def get_singles_list(
             )
         await DM.performers.set_performer_releases_v2(AUTHOR_ID, info=res)
 
-        releases = await DM.performers.get_artist_releases(
-            AUTHOR_ID, fetch_albums=False
+        releases = await DM.performers.get_artist_singles(AUTHOR_ID)
+        LOGGER.debug(
+            f"2 Found info about artist {AUTHOR_ID} singles: {len(releases) if releases else None}"
         )
-
         if not releases:
             LOGGER.error(
                 f"Cannot set performer {AUTHOR_ID} releases on catalog/stage/2"
@@ -63,7 +66,7 @@ async def get_singles_list(
                 "Не удалось выполнить запрос. Повторите попытку"
             )
 
-    _, singles = releases
+    singles = releases
 
     if not singles:
         return await ANSWER.edit_text("У исполнителя нет выпусков")

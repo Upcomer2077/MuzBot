@@ -18,6 +18,7 @@ router = Router()
 async def get_playlist_content(
     callback: CallbackQuery, callback_data: ShowAlbumPlaylistContentCallback
 ):
+    await callback.answer()
     PLAYLIST_ID = callback_data.playlist_id
     USER_ID = callback.from_user.id
     ANSWER = await bot.bot.send_message(USER_ID, "Ищу...")
