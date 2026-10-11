@@ -7,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram_i18n import I18nContext
 
 from action_limiter import AL
 from bot.commands import COMMANDS, COMSET
@@ -22,6 +23,7 @@ from handlers.modules._catalog.callbacks import (
 from helpers.get_ytm_links import get_browse_link
 from helpers.prettify_incoming_query import prettify_incoming_query
 from helpers.utils import U
+from localization import L10N
 from schemas.states import TypedState
 from tools.search_artists import search_artists_in_ytm
 
@@ -33,10 +35,16 @@ class _CatalogState(StatesGroup):
 
 
 @router.message(COMMANDS[COMSET.CATALOG]["backend"])
-async def get_artists(message: Message, command: CommandObject, state: FSMContext):
+async def get_artists(
+    message: Message, command: CommandObject, state: FSMContext, i18n: I18nContext
+):
     if not AL.is_subscription_allowed(message.chat.id):
         return await message.answer(
-            f"Достигнут лимит запросов каталогов: {SUBSCRIPTIONS_PER_LIMIT} авторов за {SUBSCRIPTION_COOLDOWN_SECS} секунд",
+            i18n.get(
+                L10N["catalog"].cat_limit_rate,
+                limit_count=SUBSCRIPTIONS_PER_LIMIT,
+                limit_secs=SUBSCRIPTION_COOLDOWN_SECS,
+            )
         )
     S: Final = TypedState(state)
 
@@ -44,35 +52,39 @@ async def get_artists(message: Message, command: CommandObject, state: FSMContex
     if not performer:
         await S.set_state(_CatalogState.first_state)
         return await message.answer(
-            f"Укажите исполнителя или используйте /{COMSET.CANCEL.value}"
+            i18n.get(
+                L10N["catalog"].cat_prompt_performer, cancelcommand=COMSET.CANCEL.value
+            )
         )
 
-    await _handler(message, performer, S)
+    await _handler(message, performer, S, i18n)
 
 
 @router.message(_CatalogState.first_state)
-async def get_artists_step_2(message: Message, state: FSMContext):
+async def get_artists_step_2(message: Message, state: FSMContext, i18n: I18nContext):
     S: Final = TypedState(state)
 
     performer = message.text
     if not performer:
         return await message.answer(
-            f"Укажите исполнителя или используйте /{COMSET.CANCEL.value}"
+            i18n.get(
+                L10N["catalog"].cat_prompt_performer, cancelcommand=COMSET.CANCEL.value
+            )
         )
 
     await S.clear()
-    await _handler(message, performer, S)
+    await _handler(message, performer, S, i18n)
 
 
-async def _handler(message: Message, performer: str, S: TypedState):
-    ANSWER = await message.answer("Ищу исполнителей...")
+async def _handler(message: Message, performer: str, S: TypedState, i18n: I18nContext):
+    ANSWER = await message.answer(i18n.get(L10N["catalog"].cat_searching))
 
     performer = prettify_incoming_query(performer)
 
     artists = await search_artists_in_ytm(performer)
 
     if not len(artists):
-        return await ANSWER.edit_text("Указанный исполнитель не найден")
+        return await ANSWER.edit_text(i18n.get(L10N["catalog"].cat_not_found))
 
     content, _nav_markup, _drop_builder, start_idx = U.get_page_content(
         artists, page=0, pag_cb_type=PaginationSingles1Callback
@@ -80,7 +92,7 @@ async def _handler(message: Message, performer: str, S: TypedState):
 
     builder = InlineKeyboardBuilder()
 
-    text = "Найденные исполнители: \n"
+    text = i18n.get(L10N["catalog"].cat_results_title) + "\n"
     for idx, artist in enumerate(content, start=start_idx + 1):
         title = artist["name"]
         text += f'#{idx}. <a href="{get_browse_link(artist["id"])}">{title}</a>\n'

@@ -1,6 +1,7 @@
 from aiogram import Router
 from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram_i18n import I18nContext
 
 import bot
 from _logger import LOGGER
@@ -9,6 +10,7 @@ from dungeon import DM
 from handlers._drop_message.callbacks import DropCallback
 from handlers.modules._catalog.callbacks import ShowSinglePlaylistContentCallback
 from handlers.modules._playlists.callbacks import DownloadPlaylistCallback
+from localization import L10N
 from tools.extract_playlist_info import extract_playlist_info
 
 router = Router()
@@ -16,12 +18,16 @@ router = Router()
 
 @router.callback_query(ShowSinglePlaylistContentCallback.filter())
 async def get_playlist_content(
-    callback: CallbackQuery, callback_data: ShowSinglePlaylistContentCallback
+    callback: CallbackQuery,
+    callback_data: ShowSinglePlaylistContentCallback,
+    i18n: I18nContext,
 ):
     await callback.answer()
     PLAYLIST_ID = callback_data.playlist_id
     USER_ID = callback.from_user.id
-    ANSWER = await bot.bot.send_message(USER_ID, "Ищу...")
+    ANSWER = await bot.bot.send_message(
+        USER_ID, i18n.get(L10N["catalog"].cat_searching_generic)
+    )
 
     slaves = await DM.playlists.summon_slaves_from_playlist(PLAYLIST_ID)
     playlist = await DM.playlists.get_playlist(PLAYLIST_ID)
@@ -29,7 +35,7 @@ async def get_playlist_content(
     if not slaves or not playlist:
         r = await extract_playlist_info(PLAYLIST_ID)
         if not r:
-            return await ANSWER.edit_text("404 🤷")
+            return await ANSWER.edit_text(i18n.get(L10N["playlist"].pl_error_not_found))
 
         (playlist_info, videos) = r
         await DM.playlists.add_playlist_and_tracks(playlist_info, videos)
@@ -37,9 +43,7 @@ async def get_playlist_content(
         playlist = await DM.playlists.get_playlist(PLAYLIST_ID)
 
         if not (slaves and playlist):
-            ANSWER.edit_text(
-                "Что-то пошло не так при поиске плейлиста. Повторите попытку"
-            )
+            ANSWER.edit_text(i18n.get(L10N["catalog"].cat_pl_error_db_failed))
             LOGGER.error(
                 f"Unable to get playlist-slaves from database. pl_id: {PLAYLIST_ID}. Has slaves: {bool(slaves)}. Has playlist {bool(playlist)}"
             )
@@ -48,9 +52,32 @@ async def get_playlist_content(
             )
 
     builder = InlineKeyboardBuilder()
-    text = f"Найден плейлист:\n{playlist.artist} — {playlist.title}. {f'(Первые ±{MAX_PLAYLIST_TRACKS_REQUEST} треков)' if len(slaves) > MAX_PLAYLIST_TRACKS_REQUEST else ''}\n\n"
+
+    if len(slaves) > MAX_PLAYLIST_TRACKS_REQUEST:
+        text = (
+            i18n.get(
+                L10N["playlist"].pl_found_title_limited,
+                artist=playlist.artist,
+                title=playlist.title,
+                limit=MAX_PLAYLIST_TRACKS_REQUEST,
+            )
+            + "\n\n"
+        )
+    else:
+        text = (
+            i18n.get(
+                L10N["playlist"].pl_found_title,
+                artist=playlist.artist,
+                title=playlist.title,
+            )
+            + "\n\n"
+        )
+
     if PLAYLIST_MAX_TRACKS and len(slaves) > PLAYLIST_MAX_TRACKS:
-        text += f"Будут скачаны первые {PLAYLIST_MAX_TRACKS} треков из плейлиста (мы работаем над этим)\n\n"
+        text += (
+            i18n.get(L10N["playlist"].pl_limit_warning, limit=PLAYLIST_MAX_TRACKS)
+            + "\n\n"
+        )
 
     and_more = 0
     for idx, video in enumerate(
@@ -62,8 +89,11 @@ async def get_playlist_content(
             and_more += 1
             continue
         text += new_line
-    text += f"И ещё {and_more} треков\n" if and_more else ""
-    text += "\nСкачать?"
+
+    if and_more:
+        text += i18n.get(L10N["playlist"].pl_and_more, count=and_more) + "\n"
+
+    text += "\n" + i18n.get(L10N["playlist"].pl_download_prompt)
 
     builder.button(
         text="⬇️",

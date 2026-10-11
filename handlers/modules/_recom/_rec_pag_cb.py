@@ -4,10 +4,12 @@ from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram_i18n import I18nContext
 
 from handlers.modules._recom.callbacks import PaginationRecCallback
 from handlers.modules._singles.callbacks import DownloadCallback
 from helpers.utils import U
+from localization import L10N
 from schemas.states import TypedState
 
 router = Router()
@@ -15,7 +17,10 @@ router = Router()
 
 @router.callback_query(PaginationRecCallback.filter())
 async def process_pagination(
-    callback: CallbackQuery, callback_data: PaginationRecCallback, state: FSMContext
+    callback: CallbackQuery,
+    callback_data: PaginationRecCallback,
+    state: FSMContext,
+    i18n: I18nContext,
 ):
     S: Final = TypedState(state)
     data = await S.get_data()
@@ -23,7 +28,7 @@ async def process_pagination(
 
     if not search_result or not len(search_result):
         return await callback.answer(
-            "Результаты поиска устарели. Повторите поиск.", show_alert=True
+            i18n.get(L10N["shared"].too_old_result), show_alert=True
         )
 
     target_page = callback_data.page
@@ -34,7 +39,7 @@ async def process_pagination(
 
     builder = InlineKeyboardBuilder()
 
-    text = f"Найденные рекомендации (Страница {target_page + 1}):\n\n"
+    text = f"{i18n.get(L10N['recommendations'].rec_results_title_pag, num=target_page + 1)}\n\n"
     for i, video in enumerate(content, start=start_idx + 1):
         v_id = video["video_id"]
         title = video["title"]

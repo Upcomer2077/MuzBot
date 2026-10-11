@@ -3,6 +3,3 @@ search_searching = 🔍 Ищу варианты...
 search_not_found = 404 🤷
 search_results_title = Найденные варианты:
 search_results_title_pag = Найденные варианты (Страница {$num}):
-
-search_inline_track_description = ⏱: {$duration}
-search_inline_track_message = {$artist} — {$title} [{$duration}]

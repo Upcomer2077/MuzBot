@@ -5,6 +5,7 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram_i18n import I18nContext
 
 import bot
 from _logger import LOGGER
@@ -18,6 +19,7 @@ from handlers.modules._catalog.callbacks import (
 )
 from helpers.get_ytm_links import get_browse_link
 from helpers.utils import U
+from localization import L10N
 from schemas.states import TypedState
 from tools.extract_artist_discography import extract_artist_discography
 
@@ -26,18 +28,27 @@ router = Router()
 
 @router.callback_query(CatalogCallback.filter())
 async def get_singles_list(
-    callback: CallbackQuery, state: FSMContext, callback_data: CatalogCallback
+    callback: CallbackQuery,
+    state: FSMContext,
+    callback_data: CatalogCallback,
+    i18n: I18nContext,
 ):
     await callback.answer()
     USER_ID = callback.from_user.id
     if not AL.is_catalog_action_allowed(USER_ID):
         return await bot.bot.send_message(
             USER_ID,
-            f"Достигнут лимит запросов каталога: {CATALOG_PER_LIMIT} плейлистов за {CATALOG_COOLDOWN_SECS} секунд",
+            i18n.get(
+                L10N["catalog"].cat_action_limit_rate,
+                limit_count=CATALOG_PER_LIMIT,
+                limit_secs=CATALOG_COOLDOWN_SECS,
+            ),
         )
 
     S: Final = TypedState(state)
-    ANSWER = await bot.bot.send_message(callback.from_user.id, "Ищу...")
+    ANSWER = await bot.bot.send_message(
+        callback.from_user.id, i18n.get(L10N["catalog"].cat_searching_generic)
+    )
     AUTHOR_ID = callback_data.author_id
     releases = await DM.performers.get_artist_singles(AUTHOR_ID)
     LOGGER.debug(
@@ -49,9 +60,7 @@ async def get_singles_list(
             LOGGER.error(
                 f"Cannot extract performer {AUTHOR_ID} releases on catalog/stage/2"
             )
-            return await ANSWER.edit_text(
-                "Не удалось выполнить запрос. Повторите попытку"
-            )
+            return await ANSWER.edit_text(i18n.get(L10N["catalog"].cat_error_failed))
         await DM.performers.set_performer_releases_v2(AUTHOR_ID, info=res)
 
         releases = await DM.performers.get_artist_singles(AUTHOR_ID)
@@ -62,14 +71,12 @@ async def get_singles_list(
             LOGGER.error(
                 f"Cannot set performer {AUTHOR_ID} releases on catalog/stage/2"
             )
-            return await ANSWER.edit_text(
-                "Не удалось выполнить запрос. Повторите попытку"
-            )
+            return await ANSWER.edit_text(i18n.get(L10N["catalog"].cat_error_failed))
 
     singles = releases
 
     if not singles:
-        return await ANSWER.edit_text("У исполнителя нет выпусков")
+        return await ANSWER.edit_text(i18n.get(L10N["catalog"].cat_no_releases))
 
     content, _nav_markup, _drop_builder, start_idx = U.get_page_content(
         singles, page=0, pag_cb_type=PaginationSingles2Callback
@@ -77,7 +84,7 @@ async def get_singles_list(
 
     builder = InlineKeyboardBuilder()
 
-    text = "Найденные выпуски: \n"
+    text = i18n.get(L10N["catalog"].cat_releases_title) + "\n"
     for idx, album in enumerate(content, start=start_idx + 1):
         title = album.playlist.title
         text += f'#{idx}. <a href="{get_browse_link(album.browse_id)}">{title}</a>\n'

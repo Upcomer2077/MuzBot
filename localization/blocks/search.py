@@ -11,10 +11,3 @@ class _SearchBlock:
     search_results_title_pag: Literal["search_results_title_pag"] = (
         "search_results_title_pag"
     )
-    # inline
-    inline_track_description: Literal["search_inline_track_description"] = (
-        "search_inline_track_description"
-    )
-    inline_track_message: Literal["search_inline_track_message"] = (
-        "search_inline_track_message"
-    )

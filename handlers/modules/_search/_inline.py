@@ -8,11 +8,9 @@ from aiogram.types import (
     InputTextMessageContent,
     LinkPreviewOptions,
 )
-from aiogram_i18n import I18nContext
 
 from dungeon import DM
 from helpers.prettify_incoming_query import prettify_incoming_query
-from localization import L10N
 from tools.search import search_in_ytm
 from tools.types import YoutubeSearchResultDict
 
@@ -20,7 +18,7 @@ router = Router()
 
 
 @router.inline_query()
-async def inline(q: InlineQuery, i18n: I18nContext):
+async def inline(q: InlineQuery):
     if not q.query:
         return q.answer([])
 
@@ -52,18 +50,11 @@ async def inline(q: InlineQuery, i18n: I18nContext):
             InlineQueryResultArticle(
                 id=v_id,
                 title=f"{artist} — {title}",
-                description=i18n.get(
-                    L10N["search"].inline_track_description, duration=duration
-                ),
+                description=f"⏱: {duration}",
                 hide_url=True,
                 input_message_content=InputTextMessageContent(
                     link_preview_options=LinkPreviewOptions(is_disabled=True),
-                    message_text=i18n.get(
-                        L10N["search"].inline_track_message,
-                        artist=artist,
-                        title=title,
-                        duration=duration,
-                    ),
+                    message_text=f"{artist} — {title} [{duration}]",
                     disable_web_page_preview=True,
                 ),
                 reply_markup=InlineKeyboardMarkup(

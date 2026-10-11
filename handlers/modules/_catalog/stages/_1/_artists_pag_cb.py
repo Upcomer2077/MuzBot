@@ -5,6 +5,7 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram_i18n import I18nContext
 
 from action_limiter import AL
 from config import SUBSCRIPTION_COOLDOWN_SECS, SUBSCRIPTIONS_PER_LIMIT
@@ -14,6 +15,7 @@ from handlers.modules._catalog.callbacks import (
 )
 from helpers.get_ytm_links import get_browse_link
 from helpers.utils import U
+from localization import L10N
 from schemas.states import TypedState
 from tools.types import ArtistsShortInfoDict
 
@@ -25,10 +27,15 @@ async def process_pagination(
     callback: CallbackQuery,
     callback_data: PaginationSingles1Callback,
     state: FSMContext,
+    i18n: I18nContext,
 ):
     if not AL.is_subscription_allowed(callback.from_user.id):
         return await callback.answer(
-            f"Достигнут лимит запросов каталогов: {SUBSCRIPTIONS_PER_LIMIT} авторов за {SUBSCRIPTION_COOLDOWN_SECS} секунд",
+            i18n.get(
+                L10N["catalog"].cat_limit_rate,
+                limit_count=SUBSCRIPTIONS_PER_LIMIT,
+                limit_secs=SUBSCRIPTION_COOLDOWN_SECS,
+            )
         )
     S: Final = TypedState(state)
     data = await S.get_data()
@@ -38,7 +45,7 @@ async def process_pagination(
 
     if not artists or not len(artists):
         return await callback.answer(
-            "Результаты поиска устарели. Повторите поиск.", show_alert=True
+            i18n.get(L10N["shared"].too_old_result), show_alert=True
         )
 
     target_page = callback_data.page
@@ -49,7 +56,7 @@ async def process_pagination(
 
     builder = InlineKeyboardBuilder()
 
-    text = f"Найденные исполнители (Страница {target_page + 1}):\n\n"
+    text = i18n.get(L10N["catalog"].cat_results_title_pag, num=target_page + 1) + "\n"
     for idx, artist in enumerate(content, start=start_idx + 1):
         title = artist["name"]
         text += f'#{idx}. <a href="{get_browse_link(artist["id"])}">{title}</a>\n'

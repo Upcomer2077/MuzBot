@@ -5,6 +5,7 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram_i18n import I18nContext
 
 from action_limiter import AL
 from config import CATALOG_COOLDOWN_SECS, CATALOG_PER_LIMIT
@@ -15,6 +16,7 @@ from handlers.modules._albums.callbacks import (
 )
 from helpers.get_ytm_links import get_browse_link
 from helpers.utils import U
+from localization import L10N
 from schemas.states import TypedState
 
 router = Router()
@@ -25,11 +27,16 @@ async def process_pagination(
     callback: CallbackQuery,
     callback_data: PaginationAlbums2Callback,
     state: FSMContext,
+    i18n: I18nContext,
 ):
     USER_ID = callback.from_user.id
     if not AL.is_catalog_action_allowed(USER_ID):
         return await callback.answer(
-            f"Достигнут лимит запросов альбомов: {CATALOG_PER_LIMIT} плейлистов за {CATALOG_COOLDOWN_SECS} секунд",
+            i18n.get(
+                L10N["albums"].alb_action_limit_rate,
+                limit_count=CATALOG_PER_LIMIT,
+                limit_secs=CATALOG_COOLDOWN_SECS,
+            ),
         )
 
     S: Final = TypedState(state)
@@ -40,7 +47,10 @@ async def process_pagination(
 
     if not albums or not len(albums):
         return await callback.answer(
-            "Результаты поиска устарели. Повторите поиск.", show_alert=True
+            i18n.get(
+                L10N["shared"].too_old_result,
+            ),
+            show_alert=True,
         )
 
     target_page = callback_data.page
@@ -51,7 +61,7 @@ async def process_pagination(
 
     builder = InlineKeyboardBuilder()
 
-    text = "Найденные альбомы: \n"
+    text = i18n.get(L10N["albums"].alb_albums_title_pag, num=target_page + 1) + "\n"
     for idx, album in enumerate(content, start=start_idx + 1):
         title = album.playlist.title
         text += f'#{idx}. <a href="{get_browse_link(album.browse_id)}">{title}</a>\n'

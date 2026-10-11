@@ -5,6 +5,7 @@ from typing import NamedTuple
 from aiogram import Router
 from aiogram.types import CallbackQuery
 from aiogram.utils.media_group import MediaGroupBuilder, MediaType
+from aiogram_i18n import I18nContext
 
 import bot
 from _logger import LOGGER
@@ -13,6 +14,7 @@ from config import PLAYLIST_DOWNLOAD_COOLDOWN_SECS, PLAYLIST_MAX_TRACKS, PLAYLIS
 from dungeon import DM
 from handlers.modules._playlists.callbacks import DownloadPlaylistCallback
 from helpers.utils import U
+from localization import L10N
 from tools.extract_playlist_info import extract_playlist_info
 from worker import TRACK_PIPELINE
 from worker.priorities import DownloadTaskPriorities
@@ -27,23 +29,27 @@ class _UnableToDownload(NamedTuple):
 
 @router.callback_query(DownloadPlaylistCallback.filter())
 async def handle_playlist_download(
-    callback: CallbackQuery, callback_data: DownloadPlaylistCallback
+    callback: CallbackQuery, callback_data: DownloadPlaylistCallback, i18n: I18nContext
 ):
     await callback.answer()
 
     USER_ID = callback.from_user.id
     PLAYLIST_ID = callback_data.playlist_id
-    ANSWER = await bot.bot.send_message(USER_ID, "Загружаю... Это займет время.")
+    ANSWER = await bot.bot.send_message(
+        USER_ID, i18n.get(L10N["playlist"].pl_downloading)
+    )
 
     if len(PLAYLIST_ID) == 0:
         LOGGER.error("Video_id param len is 0. Check callback data")
-        return ANSWER.edit_text(
-            "Что-то пошло не так при загрузке плейлиста... Повторите попытку"
-        )
+        return ANSWER.edit_text(i18n.get(L10N["playlist"].pl_download_error_generic))
 
     if not AL.is_playlist_download_allowed(USER_ID):
         return ANSWER.edit_text(
-            f"Достигнут лимит скачивания: {PLAYLISTS_LIMIT} плейлистов за {PLAYLIST_DOWNLOAD_COOLDOWN_SECS} секунд",
+            i18n.get(
+                L10N["playlist"].pl_download_limit_rate,
+                limit_playlists=PLAYLISTS_LIMIT,
+                limit_secs=PLAYLIST_DOWNLOAD_COOLDOWN_SECS,
+            )
         )
 
     if AL.is_send_action_allowed(USER_ID):
@@ -56,7 +62,7 @@ async def handle_playlist_download(
     if not tracks_info:
         r = await extract_playlist_info(PLAYLIST_ID)
         if not r:
-            return ANSWER.edit_text("404 🤷")
+            return ANSWER.edit_text(i18n.get(L10N["playlist"].pl_error_not_found))
         (playlist_info, videos) = r
         await DM.playlists.add_playlist_and_tracks(playlist_info, videos)
         tracks_info = await DM.playlists.summon_slaves_from_playlist(
@@ -66,7 +72,9 @@ async def handle_playlist_download(
             LOGGER.error(
                 f"Cannot extract info about playlist {PLAYLIST_ID} in playlist_cb"
             )
-            return ANSWER.edit_text("Неизвестная ошибка. Повторите попытку.")
+            return ANSWER.edit_text(
+                i18n.get(L10N["playlist"].pl_download_error_unknown)
+            )
 
     tasks = [
         TRACK_PIPELINE.submit(
@@ -96,7 +104,7 @@ async def handle_playlist_download(
 
     if not tracks_info:
         LOGGER.error(f"Can not find info about playlist {PLAYLIST_ID} in worker loop.")
-        return ANSWER.edit_text("Не удалось скачать плейлист. Повторите попытку.")
+        return ANSWER.edit_text(i18n.get(L10N["playlist"].pl_error_db_failed))
 
     group_count = 0
     for t in tracks_info.values():
@@ -118,16 +126,18 @@ async def handle_playlist_download(
 
     and_more = 0
     if len(unable_to_download):
-        text = "Не удалось отправить треки:\n"
+        text = i18n.get(L10N["playlist"].pl_download_failed_title) + "\n"
         for idx, u in enumerate(unable_to_download, 1):
             track = tracks_info[u.v_id]
-            is_too_large_text = ": трек слишком большой, скачать не выйдет."
+            is_too_large_text = i18n.get(L10N["playlist"].pl_download_failed_too_large)
             new_line = f"#{idx}. {track.artist} - {track.title}{is_too_large_text if u.is_too_large else ''}\n"
             if len(text) + len(new_line) > 4000:
                 and_more += 1
                 continue
             text += new_line
-        text += f"И ещё {and_more} треков" if and_more else ""
+
+        if and_more:
+            text += i18n.get(L10N["playlist"].pl_and_more, count=and_more)
 
         await bot.bot.send_message(USER_ID, f"{text}")
 
