@@ -1,0 +1,11 @@
+command_start = 🚀 Start the bot
+command_lang = 🌐 Choose language
+command_help = ❓ Usage instructions
+command_force = ⚡ Download via link from youtube.music.com
+command_playlist = ⚡ Download playlist via link
+command_subscribe = 🔔 Subscribe to the author
+command_unsubscribe = 🔕 Unsubscribe from the author
+command_subscriptions = 📜 Subscription list
+command_catalog = 💿 Artist singles
+command_albums = 💿 Artist albums
+command_cancel = ❌ Cancel

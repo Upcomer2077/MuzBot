@@ -1,0 +1,11 @@
+command_start = 🚀 Запустить бота
+command_lang = 🌐 Выбрать язык
+command_help = ❓ Инструкция по использованию
+command_force = ⚡ Скачать по ссылке из youtube.music.com
+command_playlist = ⚡ Скачать плейлист по ссылке
+command_subscribe = 🔔 Подписаться на автора
+command_unsubscribe = 🔕 Отписаться от автора
+command_subscriptions = 📜 Список подписок
+command_catalog = 💿 Синглы артиста
+command_albums = 💿 Альбомы артиста
+command_cancel = ❌ Отменить
