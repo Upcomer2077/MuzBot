@@ -5,6 +5,7 @@ from aiogram.filters import CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
+from aiogram_i18n import I18nContext
 
 import bot
 from _logger import LOGGER
@@ -17,6 +18,7 @@ from config import (
 )
 from helpers.regexes import YTM_REGEX, YTM_VID_REGEX
 from helpers.utils import U
+from localization import L10N
 from schemas.states import TypedState
 from worker import TRACK_PIPELINE
 from worker.priorities import DownloadTaskPriorities
@@ -29,61 +31,73 @@ class _ForceState(StatesGroup):
 
 
 @router.message(COMMANDS[COMSET.FORCE]["backend"])
-async def force(message: Message, command: CommandObject, state: FSMContext):
+async def force(
+    message: Message, command: CommandObject, state: FSMContext, i18n: I18nContext
+):
     if not command.args:
         S: Final = TypedState(state)
         await S.set_state(_ForceState.first_enter_link)
         return await message.answer(
-            f"Отправьте ссылку на видео или используйте /{COMSET.CANCEL.value}"
+            i18n.get(
+                L10N["single"].force_prompt_link, cancelcommand=COMSET.CANCEL.value
+            )
         )
 
     YTM_LINK = command.args
 
     if YTM_REGEX.match(YTM_LINK) is None:
-        return await message.answer("Некорректная ссылка")
+        return await message.answer(i18n.get(L10N["single"].force_invalid_link))
 
-    return await _handler(message, YTM_LINK)
+    return await _handler(message, YTM_LINK, i18n)
 
 
 @router.message(_ForceState.first_enter_link)
-async def force_step_2(message: Message, state: FSMContext):
+async def force_step_2(message: Message, state: FSMContext, i18n: I18nContext):
     YTM_LINK = message.text
 
     if YTM_LINK is None or YTM_REGEX.match(YTM_LINK) is None:
         return await message.answer(
-            f"Некорректная ссылка. Попробуйте ещё раз! Или используйте /{COMSET.CANCEL.value}"
+            i18n.get(
+                L10N["single"].force_invalid_link_retry,
+                cancelcommand=COMSET.CANCEL.value,
+            )
         )
 
-    await _handler(message, YTM_LINK)
+    await _handler(message, YTM_LINK, i18n)
     return await state.clear()
 
 
 # ======================================================================
 
 
-async def _handler(message: Message, ytm_link: str):
+async def _handler(message: Message, ytm_link: str, i18n: I18nContext):
     VIDEO_ID = YTM_VID_REGEX.search(ytm_link)
     if not VIDEO_ID:
         LOGGER.warning(f"Video id not recognized: {ytm_link}")
-        return await message.answer("Не удалось распознать идентификатор видео")
-    ANSWER = await message.answer(
-        "⏳ Обрабатываю запрос (это займет несколько секунд)\n"
-    )
+        return await message.answer(i18n.get(L10N["single"].force_id_not_recognized))
+    ANSWER = await message.answer(i18n.get(L10N["single"].download_processing))
     VIDEO_ID = VIDEO_ID.group(1)
     CHAT_ID = message.chat.id
 
     track = await U.get_track(VIDEO_ID)
     if not track:
-        return await ANSWER.edit_text("Не удалось найти информацию о видео")
+        return await ANSWER.edit_text(i18n.get(L10N["single"].download_info_not_found))
 
     if track.is_too_large:
         return await ANSWER.edit_text(
-            f"Превышен лимит в {int(MAX_TRACK_DURATION_SECONDS / 60)} минут или вес больше 50МБ. Скачать не выйдет"
+            i18n.get(
+                L10N["single"].download_limit_size_duration,
+                limit_min=int(MAX_TRACK_DURATION_SECONDS / 60),
+            )
         )
 
     if not AL.is_track_download_allowed(CHAT_ID):
         return await ANSWER.edit_text(
-            f"Разрешено загружать не более {TRACKS_PER_LIMIT} треков за {QUERY_DOWNLOAD_LIMIT_SECS} сек"
+            i18n.get(
+                L10N["single"].download_limit_rate,
+                limit_tracks=TRACKS_PER_LIMIT,
+                limit_secs=QUERY_DOWNLOAD_LIMIT_SECS,
+            )
         )
 
     if AL.is_send_action_allowed(CHAT_ID):
@@ -99,15 +113,24 @@ async def _handler(message: Message, ytm_link: str):
         if cache.file_id or cache.is_too_large:
             if cache.is_too_large:
                 return await ANSWER.edit_text(
-                    f"Превышен лимит в {int(MAX_TRACK_DURATION_SECONDS / 60)} минут или вес больше 50МБ. Скачать не выйдет"
+                    i18n.get(
+                        L10N["single"].download_limit_size_duration,
+                        limit_min=int(MAX_TRACK_DURATION_SECONDS / 60),
+                    )
                 )
             track = await U.get_track(VIDEO_ID, extract_info_from_ytm=False)
             if not (track and track.telegram_file_id):
-                return await ANSWER.edit_text("Не удалось найти информацию о видео")
+                return await ANSWER.edit_text(
+                    i18n.get(L10N["single"].download_info_not_found)
+                )
 
         else:
             return await ANSWER.edit_text(
-                f"Произошла ошибка при скачивании трека {track.artist} - {track.title}"
+                i18n.get(
+                    L10N["single"].download_error_failed,
+                    artist=track.artist,
+                    title=track.title,
+                )
             )
 
     await bot.bot.send_audio(CHAT_ID, track.telegram_file_id)

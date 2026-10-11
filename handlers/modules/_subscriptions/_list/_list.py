@@ -6,6 +6,7 @@ from aiogram.filters import CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram_i18n import I18nContext
 
 from bot.commands import COMMANDS, COMSET
 from config import PAGINATION_ITEMS_PER_PAGE
@@ -15,17 +16,20 @@ from handlers.modules._subscriptions._list.callbacks import PaginationSubsListCa
 from handlers.modules._subscriptions._unsub.callbacks import UnSubCallback
 from helpers.get_ytm_links import get_browse_link
 from helpers.utils import U
+from localization import L10N
 from schemas.states import TypedState
 
 router = Router()
 
 
 @router.message(COMMANDS[COMSET.SUBSCRIPTIONS]["backend"])
-async def subs_list(message: Message, state: FSMContext, command: CommandObject):
+async def subs_list(
+    message: Message, state: FSMContext, command: CommandObject, i18n: I18nContext
+):
     S: Final = TypedState(state)
-    ANSWER = await message.answer("Ищу исполнителей...")
+    ANSWER = await message.answer(i18n.get(L10N["subs"].list_searching))
     if not message.from_user:
-        return ANSWER.edit_text("Неизвестная ошибка")
+        return ANSWER.edit_text(i18n.get(L10N["subs"].list_unknown_error))
     USER_ID = message.from_user.id
     ARGS: Final = command.args
     subs: list[GetUserSubsResult] = []
@@ -37,8 +41,8 @@ async def subs_list(message: Message, state: FSMContext, command: CommandObject)
 
     if not len(subs):
         if ARGS:
-            return ANSWER.edit_text("Подписок по данному запросу не найдено")
-        return ANSWER.edit_text("Нет активных подписок")
+            return ANSWER.edit_text(i18n.get(L10N["subs"].list_not_found_query))
+        return ANSWER.edit_text(i18n.get(L10N["subs"].list_empty))
 
     builder = InlineKeyboardBuilder()
 
@@ -46,7 +50,7 @@ async def subs_list(message: Message, state: FSMContext, command: CommandObject)
         subs, page=0, pag_cb_type=PaginationSubsListCallback, max=0
     )
 
-    text = "Ваши подписки:\n\n"
+    text = f"{i18n.get(L10N['subs'].list_title)}\n\n"
     for idx, artist in enumerate(content, start=start_idx + 1):
         title = artist["name"]
         text += (

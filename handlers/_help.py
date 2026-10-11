@@ -4,97 +4,88 @@ from aiogram import Router
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandObject
 from aiogram.types import Message
+from aiogram_i18n import I18nContext
 
 import bot
 from bot.commands import COMMANDS, COMSET
+from localization import L10N
 
 router = Router()
 
 
 @router.message(COMMANDS[COMSET.HELP]["backend"])
-async def help(message: Message, command: CommandObject):
+async def help(message: Message, command: CommandObject, i18n: I18nContext):
     ARGS: Final = command.args
     if not ARGS:
         bot_info = await bot.Bot.get_me(bot.bot)
-        text = (
-            ""
-            "Введите запрос для поиска трека.\n"
-            "Если трек не найден - попробуйте ввести более точный запрос.\n"
-            "Поиск идет по базе music.youtube.com (и только)"
-            f"\nДоступен inline-режим. Напишите в любом чате @{bot_info.username or 'username_бота'} *<трек>*"
-            "\n\nДоступна возможность подписаться на исполнителя. При подписке бот будет автоматически отправлять новые релизы в чат."
-            "\nНекоторые команды могут вводиться как с аргументами, так и самостоятельно."
-            f"\nЧтобы узнать подробнее о работе команд напишите:\n/{COMSET.HELP.value} *<команда>*"
-            f"\n\nДоступны рекомендации! Просто отправьте боту свой любимый трек и получите список подобранных для вас! (*Важно*: трек должен быть переслан от этого бота, иначе результат будет непредсказуемым)"
+        text = i18n.get(
+            L10N["help"].help_full,
+            botname=bot_info.username or "bot_username",
+            helpcommand=COMSET.HELP.value,
         )
 
         return message.answer(text, parse_mode=ParseMode.MARKDOWN)
 
     if ARGS.strip().find(COMSET.START.value) != -1:
         return message.answer(
-            f"*{COMSET.START.value}*: базовая команда для запуска бота. Если бот был заблокирован, при повторном запуске размораживает подписки.\nВ ручном вызове нет необходимости",
+            i18n.get(L10N["help"].help_start, com=COMSET.START.value),
             parse_mode=ParseMode.MARKDOWN,
         )
 
     if ARGS.strip().find(COMSET.HELP.value) != -1:
-        return message.answer("А что не ясно?")
+        return message.answer(i18n.get(L10N["help"].help_help))
 
     if ARGS.strip().find(COMSET.FORCE.value) != -1:
         return message.answer(
-            f"*{COMSET.FORCE.value}*: команда для непосредственного скачивания трека по ссылке из music.youtube.com.\n"
-            f"Пример: /{COMSET.FORCE.value} https://music.youtube.com/watch?v=YCi7qXeA\\_vM.\nТак же можно написать команду и отправить ссылку отдельно. \n"
-            "Удобно, если трек уже включен в ютуб музыке или по каким-либо причинам не может быть найден через интерфейс бота."
-            "\n*Важно!*: треки скачиваются только с ресурса music.youtube.com. Другие ссылки будут отклонены.",
+            i18n.get(L10N["help"].help_force, com=COMSET.FORCE.value),
             parse_mode=ParseMode.MARKDOWN,
         )
 
     if ARGS.strip().find(COMSET.PLAYLIST.value) != -1:
         return message.answer(
-            f"*{COMSET.PLAYLIST.value}*: команда для скачивания плейлиста по ссылке. Аналогична команде /{COMSET.FORCE.value}, но для плейлистов. Так же можно написать команду и отправить ссылку отдельно.\n"
-            f"Пример: /{COMSET.PLAYLIST.value} music.youtube.com/playlist?list=OLAK5uy\\_kodfrWJRKHZNTPRTIx8NWqcvYhNeZnqnA ",
+            i18n.get(
+                L10N["help"].help_playlist,
+                com=COMSET.PLAYLIST.value,
+                comForce=COMSET.FORCE.value,
+            ),
             parse_mode=ParseMode.MARKDOWN,
         )
 
     # MUST BE EARLIER THAN SUB
     if ARGS.strip().find(COMSET.UNSUBSCRIBE.value) != -1:
         return message.answer(
-            f"*{COMSET.UNSUBSCRIBE.value}*: удаляет подписку на исполнителя. Так же можно написать команду и отправить исполнителя отдельно.\n"
-            f"Пример: /{COMSET.UNSUBSCRIBE.value} instasasalka",
+            i18n.get(L10N["help"].help_unsubscribe, com=COMSET.UNSUBSCRIBE.value),
             parse_mode=ParseMode.MARKDOWN,
         )
 
     if ARGS.strip().find(COMSET.SUBSCRIBE.value) != -1:
         return message.answer(
-            f"*{COMSET.SUBSCRIBE.value}*: позволяет подписаться на исполнителя. Так же можно написать команду и отправить исполнителя отдельно.\nКаждые несколько дней бот проверяет релизы исполнителей и при появлении новых отправляет их в чат\n"
-            f"Пример: /{COMSET.SUBSCRIBE.value} [OXVGEN](https://music.youtube.com/@oxvgen9)",
+            i18n.get(L10N["help"].help_subscribe, com=COMSET.SUBSCRIBE.value),
             parse_mode=ParseMode.MARKDOWN,
         )
 
     if ARGS.strip().find(COMSET.SUBSCRIPTIONS.value) != -1:
         return message.answer(
-            f"*{COMSET.SUBSCRIPTIONS.value}*: показывает все ваши подписки. Может использоваться как самостоятельная команда.\n"
-            f"Пример: /{COMSET.SUBSCRIPTIONS.value} arc (покажет все подписки, которые включают слово 'arc')",
+            i18n.get(L10N["help"].help_subscriptions, com=COMSET.SUBSCRIPTIONS.value),
             parse_mode=ParseMode.MARKDOWN,
         )
 
     if ARGS.strip().find(COMSET.ALBUMS.value) != -1:
         return message.answer(
-            f"*{COMSET.ALBUMS.value}*: позволяет получить все альбомы указанного артиста.\n"
-            f"Пример: /{COMSET.ALBUMS.value} Currents (покажет все альбомы, которые выпустили 'Currents')",
+            i18n.get(L10N["help"].help_albums, com=COMSET.ALBUMS.value),
             parse_mode=ParseMode.MARKDOWN,
         )
 
     if ARGS.strip().find(COMSET.CATALOG.value) != -1:
         return message.answer(
-            f"*{COMSET.CATALOG.value}*: позволяет получить все альбомы указанного артиста.\n"
-            f"Пример: /{COMSET.CATALOG.value} thrown (покажет все синглы, которые выпустили 'thrown')",
+            i18n.get(L10N["help"].help_catalog, com=COMSET.CATALOG.value),
             parse_mode=ParseMode.MARKDOWN,
         )
 
     if ARGS.strip().find(COMSET.CANCEL.value) != -1:
         return message.answer(
-            f"*{COMSET.CANCEL.value}*: отменяет действия. Используется там, где команды вводятся в несколько этапов",
+            i18n.get(L10N["help"].help_cancel, com=COMSET.CANCEL.value),
             parse_mode=ParseMode.MARKDOWN,
         )
 
-    return message.answer(f"Неизвестный аргумент: {ARGS}")
+    return message.answer(i18n.get(L10N["help"].help_unknown_arg, args=ARGS))

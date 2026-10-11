@@ -5,11 +5,13 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram_i18n import I18nContext
 
 from handlers.modules._subscriptions._list.callbacks import PaginationSubsListCallback
 from handlers.modules._subscriptions._unsub.callbacks import UnSubCallback
 from helpers.get_ytm_links import get_browse_link
 from helpers.utils import U
+from localization import L10N
 from schemas.states import TypedState
 
 router = Router()
@@ -20,6 +22,7 @@ async def process_pagination(
     callback: CallbackQuery,
     callback_data: PaginationSubsListCallback,
     state: FSMContext,
+    i18n: I18nContext,
 ):
     S: Final = TypedState(state)
     data = await S.get_data()
@@ -27,7 +30,7 @@ async def process_pagination(
 
     if not state or not data or not subs or not len(subs):
         return await callback.answer(
-            "Результаты поиска устарели. Повторите поиск.", show_alert=True
+            i18n.get(L10N["shared"].too_old_result), show_alert=True
         )
 
     target_page = callback_data.page
@@ -38,7 +41,7 @@ async def process_pagination(
 
     builder = InlineKeyboardBuilder()
 
-    text = f"Ваши подписки (Страница {target_page + 1}):\n\n"
+    text = f"{i18n.get(L10N['subs'].list_title_pag, num=target_page + 1)}\n\n"
     for idx, artist in enumerate(content, start=start_idx + 1):
         title = artist["name"]
         text += (
