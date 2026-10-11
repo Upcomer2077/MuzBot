@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "aiogram>=3.29.1",
+    "aiogram-i18n[compiler]>=1.5",
     "aiosqlite>=0.22.1",
     "apscheduler>=3.11.3",
     "load-dotenv>=0.1.0",
@@ -16,7 +17,13 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=9.1.1", "pytest-asyncio>=1.4.0", "pytest-env", "ruff>=0.15.22"]
+dev = [
+    "aiogram-i18n[compiler]>=1.5",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "pytest-env",
+    "ruff>=0.15.22",
+]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

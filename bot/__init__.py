@@ -1,5 +1,8 @@
 from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommandScopeDefault
+from aiogram_i18n.cores import FluentCompileCore
+from aiogram_i18n.managers import FSMManager
+from aiogram_i18n.middleware import I18nMiddleware
 
 from _logger import LOGGER
 from bot._setup_jobs import setup_jobs
@@ -33,6 +36,13 @@ async def _on_shutdown():
 
 
 dp.errors.outer_middleware(BlockedLogMiddleware())
+
+i18n = I18nMiddleware(
+    core=FluentCompileCore(path="localization/locales/{locale}/"),
+    default_locale="ru",
+    manager=FSMManager(),
+)
+i18n.setup(dispatcher=dp)
 
 
 async def main():
