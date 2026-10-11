@@ -13,6 +13,7 @@ class _CommandSchema(TypedDict):
 class COMSET(Enum):
     START = "start"
     HELP = "help"
+    LANG = "language"
     FORCE = "force"
     PLAYLIST = "fplist"
     SUBSCRIBE = "sub"
@@ -28,6 +29,12 @@ COMMANDS: Final[dict[COMSET, _CommandSchema]] = {
         "backend": Command(COMSET.START.value),
         "frontend": BotCommand(
             command=COMSET.START.value, description="🚀 Запустить бота"
+        ),
+    },
+    COMSET.LANG: {
+        "backend": Command(COMSET.LANG.value),
+        "frontend": BotCommand(
+            command=COMSET.LANG.value, description="🌐 Выбрать язык"
         ),
     },
     COMSET.HELP: {

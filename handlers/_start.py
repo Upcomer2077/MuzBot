@@ -11,6 +11,8 @@ router = Router()
 
 @router.message(COMMANDS[COMSET.START]["backend"])
 async def echo(message: Message, i18n: I18nContext):
-    await message.answer(i18n.get(L10N["start"].start))
+    await message.answer(
+        i18n.get(L10N["start"].start, help=COMSET.HELP.value, lang=COMSET.LANG.value)
+    )
     if message.from_user:
         await DM.subs.toggle_user_subscriptions(message.from_user.id, False)
