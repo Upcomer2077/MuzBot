@@ -16,7 +16,7 @@ async def cmd_language(message: Message, i18n: I18nContext):
         text=i18n.get(L10N["lang"].lang_select_text),
         reply_markup=InlineKeyboardBuilder()
         .button(text="Русский", callback_data=SwitchLangCallback(lang="ru"))
-        .button(text="English", callback_data=SwitchLangCallback(lang="ru"))
+        .button(text="English", callback_data=SwitchLangCallback(lang="en"))
         .as_markup(),
     )
 

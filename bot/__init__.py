@@ -39,7 +39,7 @@ dp.errors.outer_middleware(BlockedLogMiddleware())
 
 i18n = I18nMiddleware(
     core=FluentCompileCore(path="localization/locales/{locale}/"),
-    default_locale="ru",
+    default_locale="en",
     manager=FSMManager(),
 )
 i18n.setup(dispatcher=dp)
