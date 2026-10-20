@@ -8,9 +8,11 @@ load_dotenv("./.env.dist")
 # REQUIRED
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHANNEL_STORAGE_ID = int(os.environ["CHANNEL_STORAGE_ID"])
-"""Telegram system channel id for caching songs and backups"""
+"""Telegram system channel id for caching songs (and backups)"""
 # -------------
 # OPTIONAL
+BACKUP_CHANNEL_ID = int(os.environ.get("BACKUP_CHANNEL_ID", "0"))
+"""Telegram system channel id for backups only"""
 TRACKS_PER_LIMIT = max(int(os.environ.get("TRACKS_PER_LIMIT", "5")), 5)
 """Single (track) download request limit per user"""
 QUERY_DOWNLOAD_LIMIT_SECS = max(

@@ -6,7 +6,13 @@ from aiogram.types import FSInputFile
 
 import bot
 from _logger import LOGGER
-from config import CACHE_ROOT_DIR, CHANNEL_STORAGE_ID, DATABASE_PATH, TZ
+from config import (
+    BACKUP_CHANNEL_ID,
+    CACHE_ROOT_DIR,
+    CHANNEL_STORAGE_ID,
+    DATABASE_PATH,
+    TZ,
+)
 
 
 def _make_backup():
@@ -42,12 +48,13 @@ async def _send_to_channel(archive_path):
     Args:
         archive_path (str): File path of the backup archive to be sent.
     """
+    channel = BACKUP_CHANNEL_ID or CHANNEL_STORAGE_ID
     bot_info = await bot.bot.get_me()
     caption = f"📦 **#Backup** for @{bot_info.username or 'bot'}\n📅 {datetime.now(TZ).strftime('%d.%m.%Y %H:%M')}"
     document = FSInputFile(archive_path)
     try:
         await bot.bot.send_document(
-            chat_id=CHANNEL_STORAGE_ID,
+            chat_id=channel,
             document=document,
             caption=caption,
             parse_mode="Markdown",

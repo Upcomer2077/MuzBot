@@ -184,3 +184,28 @@ class TestGeneral:
         assert CACHE_ROOT_DIR == "./.cache"
 
     # endregion
+
+    # region BACKUP_CHANNEL_ID
+    def test_BACKUP_CHANNEL_ID(self, monkeypatch):
+        monkeypatch.setenv("BACKUP_CHANNEL_ID", "-137")
+        from config import BACKUP_CHANNEL_ID
+
+        assert BACKUP_CHANNEL_ID is not None
+        assert type(BACKUP_CHANNEL_ID) is int
+        assert BACKUP_CHANNEL_ID == -137
+
+    def test_BACKUP_CHANNEL_ID_0(self, monkeypatch):
+        monkeypatch.setattr("dotenv.load_dotenv", lambda *_: None)
+        monkeypatch.delenv("BACKUP_CHANNEL_ID", raising=False)
+        from config import BACKUP_CHANNEL_ID
+
+        assert type(BACKUP_CHANNEL_ID) is int
+        assert BACKUP_CHANNEL_ID == 0
+        assert BACKUP_CHANNEL_ID == False
+
+    def test_BACKUP_CHANNEL_ID_raises(self, monkeypatch):
+        monkeypatch.setenv("BACKUP_CHANNEL_ID", "str")
+        with pytest.raises(ValueError):
+            from config import BACKUP_CHANNEL_ID  # noqa: F401
+
+    # endregion
