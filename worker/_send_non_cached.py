@@ -6,6 +6,7 @@ import bot
 from _logger import LOGGER
 from config import CHANNEL_STORAGE_ID
 from helpers import fetch_local_audio
+from helpers.get_hash_tags import get_hash_tags
 from overlord.types import TrackDirContentDict
 from worker.types import DownloadResult
 
@@ -24,7 +25,7 @@ async def send_non_cached_audio_to_telegram(
     for attempt in range(1, 4):
         try:
             LOGGER.debug(f"Sending track {title} to channel")
-
+            tags = get_hash_tags(artist)
             m = await bot.bot.send_audio(
                 CHANNEL_STORAGE_ID,
                 audio=a,
@@ -32,6 +33,7 @@ async def send_non_cached_audio_to_telegram(
                 title=title,
                 performer=artist,
                 request_timeout=300,
+                caption=", ".join(tags),
             )
             LOGGER.info(f"Sent track {title} to channel")
             break
