@@ -1,4 +1,4 @@
-.PHONY: lint dev test patch minor
+.PHONY: lint dev test patch minor stable
 
 dev:
 	uv run main.py
@@ -14,3 +14,6 @@ patch:
 
 minor:
 	uv version --bump minor
+
+stable:
+	uv version --bump stable

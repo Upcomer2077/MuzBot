@@ -11,15 +11,17 @@ from config import BOT_TOKEN
 from dungeon import DM
 from handlers import get_handlers_router
 from middlewares.handle_errors import BlockedLogMiddleware
+from red import RED
 from scheduler import SHED
 from worker import TRACK_PIPELINE
 
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
+dp = Dispatcher(storage=RED.get_redis_storage())
 
 
 @dp.startup()
 async def _on_startup():
+    await RED.open()
     await setup_jobs()
     await SHED.start()
     await DM.open_dungeon()
@@ -29,6 +31,7 @@ async def _on_startup():
 
 @dp.shutdown()
 async def _on_shutdown():
+    await RED.close()
     TRACK_PIPELINE.stop()
     await DM.close_dungeon()
     await SHED.stop()

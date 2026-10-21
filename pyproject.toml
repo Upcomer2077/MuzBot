@@ -1,6 +1,6 @@
 [project]
 name = "muzbot"
-version = "1.13.1b1"
+version = "1.13.1"
 description = "Download music from youtube music to telegram"
 readme = "README.md"
 requires-python = ">=3.14"
@@ -11,6 +11,7 @@ dependencies = [
     "apscheduler>=3.11.3",
     "load-dotenv>=0.1.0",
     "loki-logger-handler>=1.1.2",
+    "redis>=8.1.0",
     "tortoise-orm>=1.1.8",
     "yt-dlp>=2026.7.4",
     "ytmusicapi>=1.12.1",

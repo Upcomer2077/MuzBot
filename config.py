@@ -9,6 +9,8 @@ load_dotenv("./.env.dist")
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHANNEL_STORAGE_ID = int(os.environ["CHANNEL_STORAGE_ID"])
 """Telegram system channel id for caching songs (and backups)"""
+REDIS_CACHE_URL = os.environ["REDIS_CACHE_URL"]
+"""Connection string for redis instance"""
 # -------------
 # OPTIONAL
 BACKUP_CHANNEL_ID = int(os.environ.get("BACKUP_CHANNEL_ID", "0"))
@@ -87,5 +89,6 @@ SHOW_ON_STARTUP: dict[str, str | int] = {
     "SUBSCRIPTIONS_PER_LIMIT": SUBSCRIPTIONS_PER_LIMIT,
     "SEARCH_COOLDOWN_SECS": SEARCH_COOLDOWN_SECS,
     "SEARCH_PER_LIMIT": SEARCH_PER_LIMIT,
+    "REDIS_CACHE": REDIS_CACHE_URL,
     "DEBUG": DEBUG,
 }

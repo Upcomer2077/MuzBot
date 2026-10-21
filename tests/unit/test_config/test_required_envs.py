@@ -35,3 +35,17 @@ class TestRequired:
         monkeypatch.setenv("CHANNEL_STORAGE_ID", "str")
         with pytest.raises(ValueError):
             from config import CHANNEL_STORAGE_ID  # noqa: F401
+
+    def test_redis_cache(self, monkeypatch):
+        monkeypatch.setenv("REDIS_CACHE_URL", "-137")
+        from config import REDIS_CACHE_URL
+
+        assert REDIS_CACHE_URL is not None
+        assert type(REDIS_CACHE_URL) is str
+        assert REDIS_CACHE_URL == "-137"
+
+    def test_redis_cache_raises(self, monkeypatch):
+        monkeypatch.setattr("dotenv.load_dotenv", lambda *_: None)
+        monkeypatch.delenv("REDIS_CACHE_URL", raising=False)
+        with pytest.raises(KeyError):
+            from config import REDIS_CACHE_URL  # noqa: F401
