@@ -12,3 +12,4 @@ alb_no_albums = У исполнителя нет альбомов
 alb_albums_title = Найденные альбомы: 
 alb_albums_title_pag = Найденные альбомы (Страница {$num}): 
 alb_pl_error_db_failed = Что-то пошло не так при поиске плейлиста. Повторите попытку
+alb_pl_has_no_albums = У исполнителя нет альбомов

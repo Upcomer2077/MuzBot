@@ -65,6 +65,10 @@ async def get_albums_list(
             return await ANSWER.edit_text(i18n.get(L10N["albums"].alb_error_failed))
         await DM.performers.set_performer_releases_v2(AUTHOR_ID, info=res)
 
+        if not res["albums"] or not len(res["albums"]):
+            LOGGER.debug(f"Performer {res['name']} has no albums")
+            return await ANSWER.edit_text(i18n.get(L10N["albums"].alb_pl_has_no_albums))
+
         releases = await DM.performers.get_artist_albums(AUTHOR_ID)
         LOGGER.debug(
             f"2 Found info about artist {AUTHOR_ID} albums: {len(releases) if releases else None}"

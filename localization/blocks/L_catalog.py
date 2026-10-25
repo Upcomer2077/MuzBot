@@ -18,3 +18,4 @@ class _CatalogBlock:
     cat_releases_title: Literal["cat_releases_title"] = "cat_releases_title"
     cat_releases_title_pag: Literal["cat_releases_title_pag"] = "cat_releases_title_pag"
     cat_pl_error_db_failed: Literal["cat_pl_error_db_failed"] = "cat_pl_error_db_failed"
+    cat_pl_has_no_singles: Literal["cat_pl_has_no_singles"] = "cat_pl_has_no_singles"

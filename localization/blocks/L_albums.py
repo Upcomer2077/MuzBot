@@ -18,3 +18,4 @@ class _AlbumsBlock:
     alb_albums_title: Literal["alb_albums_title"] = "alb_albums_title"
     alb_albums_title_pag: Literal["alb_albums_title_pag"] = "alb_albums_title_pag"
     alb_pl_error_db_failed: Literal["alb_pl_error_db_failed"] = "alb_pl_error_db_failed"
+    alb_pl_has_no_albums: Literal["alb_pl_has_no_albums"] = "alb_pl_has_no_albums"

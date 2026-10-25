@@ -12,3 +12,4 @@ cat_no_releases = The performer has no releases
 cat_releases_title = Releases found: 
 cat_releases_title_pag = Releases found (Page {$num}): 
 cat_pl_error_db_failed = Something went wrong while searching for the playlist. Please try again
+cat_pl_has_no_singles = The artist has no singles

@@ -12,3 +12,4 @@ alb_no_albums = The performer has no albums
 alb_albums_title = Albums found: 
 alb_albums_title_pag = Albums found (Page {$num}): 
 alb_pl_error_db_failed = Something went wrong while searching for the playlist. Please try again
+alb_pl_has_no_albums = The artist has no albums

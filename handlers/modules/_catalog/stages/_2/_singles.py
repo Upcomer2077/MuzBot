@@ -63,6 +63,12 @@ async def get_singles_list(
             return await ANSWER.edit_text(i18n.get(L10N["catalog"].cat_error_failed))
         await DM.performers.set_performer_releases_v2(AUTHOR_ID, info=res)
 
+        if not res["singles"] or not len(res["singles"]):
+            LOGGER.debug(f"Performer {res['name']} has no singles")
+            return await ANSWER.edit_text(
+                i18n.get(L10N["catalog"].cat_pl_has_no_singles)
+            )
+
         releases = await DM.performers.get_artist_singles(AUTHOR_ID)
         LOGGER.debug(
             f"2 Found info about artist {AUTHOR_ID} singles: {len(releases) if releases else None}"
