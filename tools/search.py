@@ -1,13 +1,15 @@
 import asyncio
 from typing import cast
 
+from ytmusicapi.type_alias import JsonList
+
 from _logger import LOGGER
 from tools.types import YoutubeSearchResultDict
 from tools.YTMusic_client import YT
 
 
 async def search_in_ytm(
-    search_query: str, limit: int = 27
+    search_query: str, limit: int = 27 * 2
 ) -> list[YoutubeSearchResultDict]:
     """Search for song items using the YouTube Music API and normalize the returned metadata.
 
@@ -54,4 +56,17 @@ async def search_in_ytm(
 
 
 def _extract(query: str, limit: int):
-    return YT.search(query=query, filter="songs", limit=limit)
+    RES1 = YT.search(query=query, filter="songs", limit=limit)
+    RES2 = YT.search(query=query, filter="videos", limit=limit)
+
+    result: JsonList = []
+    for i in range(0, max(len(RES1), len(RES2)), 4):
+        chunk1 = RES1[i : i + 4]
+        if chunk1:
+            result.extend(chunk1)
+
+        chunk2 = RES2[i : i + 4]
+        if chunk2:
+            result.extend(chunk2)
+
+    return result

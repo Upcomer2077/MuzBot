@@ -21,7 +21,7 @@ class _PageContentResult[T](NamedTuple):
     start_idx: int
 
 
-_MAX_ITEMS = 27
+_MAX_ITEMS = 27 * 2
 
 
 class U:

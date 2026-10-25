@@ -44,7 +44,7 @@ async def get_list(message: Message, state: FSMContext, i18n: I18nContext):
     if len(clean_text) == 0:
         return None
     STATUS_MESSAGE = await message.answer(i18n.get(L10N["search"].search_searching))
-    search_result: list[YoutubeSearchResultDict] = await search_in_ytm(QUERY, 27)
+    search_result: list[YoutubeSearchResultDict] = await search_in_ytm(QUERY, 27 * 2)
 
     if len(search_result) == 0:
         return STATUS_MESSAGE.edit_text(i18n.get(L10N["search"].search_not_found))
