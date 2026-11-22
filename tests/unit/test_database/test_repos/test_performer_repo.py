@@ -1,7 +1,7 @@
 from _logger import LOGGER
-from dungeon.models import Albums, Singles, Subscriptions, TgUsers, YTPerformers
-from dungeon.repos.ytperformers import YTPerformersRepository
-from tools.types import ArtistConcreteEntityInfoDict
+from infra.dungeon.models import Albums, Singles, Subscriptions, TgUsers, YTPerformers
+from infra.dungeon.repos.ytperformers import YTPerformersRepository
+from infra.tools.types import ArtistConcreteEntityInfoDict
 
 
 async def test_set_performer_last_release_upsert():

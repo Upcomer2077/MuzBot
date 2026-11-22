@@ -3,22 +3,22 @@ from aiogram.types import CallbackQuery, Message
 from aiogram_i18n import I18nContext
 
 from _logger import LOGGER
-from action_limiter import AL
 from bot.bot import bot
 from config import (
     MAX_TRACK_DURATION_SECONDS,
     QUERY_DOWNLOAD_LIMIT_SECS,
     TRACKS_PER_LIMIT,
 )
-from dungeon import DM
 from handlers.modules._singles.callbacks import DownloadCallback
 from helpers.get_track import get_track
 from helpers.telegram.send_action import send_action
 from helpers.telegram.send_anchor_message import send_anchor_message
+from infra.action_limiter import AL
+from infra.dungeon import DM
+from infra.tools.MusicTools import MT
+from infra.worker import TRACK_PIPELINE
+from infra.worker.priorities import DownloadTaskPriorities
 from localization import L10N
-from tools.MusicTools import MT
-from worker import TRACK_PIPELINE
-from worker.priorities import DownloadTaskPriorities
 
 router = Router()
 

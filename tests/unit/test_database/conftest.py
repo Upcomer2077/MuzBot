@@ -7,7 +7,7 @@ from tortoise import Tortoise
 )
 async def setup_track_db():
     await Tortoise.init(
-        db_url="sqlite://:memory:", modules={"models": ["dungeon.models"]}
+        db_url="sqlite://:memory:", modules={"models": ["infra.dungeon.models"]}
     )
     await Tortoise.generate_schemas()
 

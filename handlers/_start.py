@@ -3,7 +3,7 @@ from aiogram.types import Message
 from aiogram_i18n import I18nContext
 
 from bot.commands import COMMANDS, COMSET
-from dungeon import DM
+from infra.dungeon import DM
 from localization import L10N
 
 router = Router()

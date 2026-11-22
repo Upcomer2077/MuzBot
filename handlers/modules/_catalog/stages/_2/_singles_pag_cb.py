@@ -7,15 +7,15 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_i18n import I18nContext
 
-from action_limiter import AL
 from config import CATALOG_COOLDOWN_SECS, CATALOG_PER_LIMIT
-from dungeon.models import Singles
 from handlers.modules._catalog.callbacks import (
     PaginationSingles2Callback,
     ShowSinglePlaylistContentCallback,
 )
 from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
+from infra.action_limiter import AL
+from infra.dungeon.models import Singles
 from localization import L10N
 from schemas.states import TypedState
 

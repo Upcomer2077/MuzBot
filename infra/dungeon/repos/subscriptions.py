@@ -1,0 +1,123 @@
+from collections.abc import AsyncGenerator
+from typing import Any, cast
+
+from infra.dungeon.models import Subscriptions, TgUsers, YTPerformers
+from infra.dungeon.repos.base import BaseRepo
+from infra.dungeon.types.subs import GetUserSubsResult
+
+
+class SubscriptionRepository(BaseRepo):
+    """Manages users subscriptions, artists caching profiles, and bulk queries mappings."""
+
+    async def set_performer_last_release(
+        self,
+        performer_id: str,
+        *,
+        performer_name: str,
+        last_album_id: str | None,
+        last_single_id: str | None,
+    ) -> None:
+        """Create or update performer status releases configuration profile."""
+        await YTPerformers.update_or_create(
+            id=performer_id,
+            defaults={
+                "name": performer_name,
+                "last_single_id": last_single_id,
+                "last_album_id": last_album_id,
+            },
+        )
+
+    async def subscribe_to_performer(self, user_id: int, performer_id: str) -> int:
+        """Establish unique binding link between TG user profile node and artist identity."""
+        await TgUsers.get_or_create(id=user_id, defaults={})
+        _, created = await Subscriptions.get_or_create(
+            tg_user_id=user_id, performer_id=performer_id
+        )
+        return 1 if created else 0
+
+    async def drop_sub(self, performer_id: str, user_id: int) -> int:
+        """Unsubscribe user identity completely from designated target artist events stream."""
+        return await Subscriptions.filter(
+            tg_user_id=user_id, performer_id=performer_id
+        ).delete()
+
+    async def get_subscripted_authors(
+        self, batch_size: int = 100
+    ) -> AsyncGenerator[list[dict[str, Any]]]:
+        """Iteratively load distinct rows bundles grouping active profiles using keyset pagination."""
+
+        last_id = ""
+
+        while True:
+            query = Subscriptions.filter(is_suspended=False)
+            if last_id:
+                query = query.filter(performer_id__gt=last_id)
+
+            subs_results = (
+                await query.order_by("performer_id")
+                .limit(batch_size)
+                .distinct()
+                .values_list("performer_id", flat=True)
+            )
+
+            if not subs_results:
+                break
+
+            performers = (
+                await YTPerformers.filter(id__in=subs_results)
+                .order_by("id")
+                .values(
+                    performer_id="id",
+                    name="name",
+                )
+            )
+
+            if not performers:
+                break
+
+            yield performers
+            last_id = subs_results[-1]
+
+    async def get_tg_users_with_subs(
+        self, performers_ids: list
+    ) -> list[dict[str, Any]]:
+        """Fetch relation structures between performers and active user targets mapped arrays."""
+        if not performers_ids:
+            return []
+        return (
+            await Subscriptions.filter(performer_id__in=performers_ids)
+            .order_by("performer_id")
+            .values(performer_id="performer_id", tg_user_id="tg_user_id")
+        )
+
+    async def toggle_user_subscriptions(self, tg_user_id: int, suspend: bool) -> int:
+        """Mass toggle activation flags variables for specific profiles records bundle."""
+        return await Subscriptions.filter(tg_user_id=tg_user_id).update(
+            is_suspended=suspend
+        )
+
+    async def get_user_subscriptions(
+        self, user_id: int, batch_size: int = 100, s_query: str | None = None
+    ) -> AsyncGenerator[list[GetUserSubsResult]]:
+        base_query = YTPerformers.filter(telegram_users__tg_user_id=user_id)
+        if s_query:
+            base_query = base_query.filter(name__icontains=s_query)
+        base_query = base_query.order_by("id")
+
+        offset = 0
+        while True:
+            results = (
+                await base_query.limit(batch_size)
+                .offset(offset)
+                .values(
+                    performer_id="id",
+                    name="name",
+                )
+            )
+
+            if not results:
+                break
+
+            yield cast(list[GetUserSubsResult], results)
+
+            offset += batch_size

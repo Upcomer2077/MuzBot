@@ -6,12 +6,12 @@ from aiogram_i18n import I18nContext
 from _logger import LOGGER
 from bot.bot import bot
 from config import MAX_PLAYLIST_TRACKS_REQUEST, PLAYLIST_MAX_TRACKS
-from dungeon import DM
 from handlers._drop_message.callbacks import DropCallback
 from handlers.modules._albums.callbacks import ShowAlbumPlaylistContentCallback
 from handlers.modules._playlists.callbacks import DownloadPlaylistCallback
+from infra.dungeon import DM
+from infra.tools.MusicTools import MT
 from localization import L10N
-from tools.MusicTools import MT
 
 router = Router()
 

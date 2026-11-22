@@ -6,7 +6,7 @@ from tortoise import Tortoise, connections
 from tortoise.exceptions import ConfigurationError
 
 from _logger import LOGGER
-from dungeon.session import DungeonDBSession
+from infra.dungeon.session import DungeonDBSession
 
 
 async def test_dungeon_session_lifecycle(tmp_path: Path):

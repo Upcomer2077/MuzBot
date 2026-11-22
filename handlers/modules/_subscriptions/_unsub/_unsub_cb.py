@@ -6,8 +6,8 @@ from aiogram_i18n import I18nContext
 
 from _logger import LOGGER
 from bot.bot import bot
-from dungeon import DM
 from handlers.modules._subscriptions._unsub.callbacks import UnSubCallback
+from infra.dungeon import DM
 from localization import L10N
 
 router = Router()

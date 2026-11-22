@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 
-from dungeon.repos.playlist import PlaylistRepository
-from dungeon.repos.subscriptions import SubscriptionRepository
-from dungeon.repos.track import TrackRepository
-from dungeon.repos.ytperformers import YTPerformersRepository
+from infra.dungeon.repos.playlist import PlaylistRepository
+from infra.dungeon.repos.subscriptions import SubscriptionRepository
+from infra.dungeon.repos.track import TrackRepository
+from infra.dungeon.repos.ytperformers import YTPerformersRepository
 from interfaces.ilogger import ILogger
 
 

@@ -8,7 +8,6 @@ from aiogram.types import Message
 from aiogram_i18n import I18nContext
 
 from _logger import LOGGER
-from action_limiter import AL
 from bot.bot import bot
 from bot.commands import COMMANDS, COMSET
 from config import (
@@ -16,15 +15,16 @@ from config import (
     QUERY_DOWNLOAD_LIMIT_SECS,
     TRACKS_PER_LIMIT,
 )
-from dungeon import DM
 from helpers.get_track import get_track
 from helpers.regexes import YTM_REGEX, YTM_VID_REGEX
 from helpers.telegram.send_action import send_action
+from infra.action_limiter import AL
+from infra.dungeon import DM
+from infra.tools.MusicTools import MT
+from infra.worker import TRACK_PIPELINE
+from infra.worker.priorities import DownloadTaskPriorities
 from localization import L10N
 from schemas.states import TypedState
-from tools.MusicTools import MT
-from worker import TRACK_PIPELINE
-from worker.priorities import DownloadTaskPriorities
 
 router = Router()
 

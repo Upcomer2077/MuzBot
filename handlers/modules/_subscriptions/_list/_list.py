@@ -10,12 +10,12 @@ from aiogram_i18n import I18nContext
 
 from bot.commands import COMMANDS, COMSET
 from config import PAGINATION_ITEMS_PER_PAGE
-from dungeon import DM
-from dungeon.types.subs import GetUserSubsResult
 from handlers.modules._subscriptions._list.callbacks import PaginationSubsListCallback
 from handlers.modules._subscriptions._unsub.callbacks import UnSubCallback
 from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
+from infra.dungeon import DM
+from infra.dungeon.types.subs import GetUserSubsResult
 from localization import L10N
 from schemas.states import TypedState
 

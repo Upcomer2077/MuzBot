@@ -8,16 +8,16 @@ from aiogram.utils.media_group import MediaGroupBuilder, MediaType
 from aiogram_i18n import I18nContext
 
 from _logger import LOGGER
-from action_limiter import AL
 from bot.bot import bot
 from config import PLAYLIST_DOWNLOAD_COOLDOWN_SECS, PLAYLIST_MAX_TRACKS, PLAYLISTS_LIMIT
-from dungeon import DM
 from handlers.modules._playlists.callbacks import DownloadPlaylistCallback
 from helpers.telegram.send_action import send_action
+from infra.action_limiter import AL
+from infra.dungeon import DM
+from infra.tools.MusicTools import MT
+from infra.worker import TRACK_PIPELINE
+from infra.worker.priorities import DownloadTaskPriorities
 from localization import L10N
-from tools.MusicTools import MT
-from worker import TRACK_PIPELINE
-from worker.priorities import DownloadTaskPriorities
 
 router = Router()
 

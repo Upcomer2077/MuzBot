@@ -9,7 +9,6 @@ from aiogram.types import Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_i18n import I18nContext
 
-from action_limiter import AL
 from bot.commands import COMMANDS, COMSET
 from config import (
     PAGINATION_ITEMS_PER_PAGE,
@@ -23,9 +22,10 @@ from handlers.modules._catalog.callbacks import (
 from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
 from helpers.prettify_incoming_query import prettify_incoming_query
+from infra.action_limiter import AL
+from infra.tools.MusicTools import MT
 from localization import L10N
 from schemas.states import TypedState
-from tools.MusicTools import MT
 
 router = Router()
 

@@ -9,10 +9,10 @@ from aiogram.types import (
     LinkPreviewOptions,
 )
 
-from dungeon import DM
 from helpers.prettify_incoming_query import prettify_incoming_query
-from tools.MusicTools import MT
-from tools.types import SearchResultDict
+from infra.dungeon import DM
+from infra.tools.MusicTools import MT
+from infra.tools.types import SearchResultDict
 
 router = Router()
 

@@ -6,17 +6,17 @@ from aiogram.types import Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_i18n import I18nContext
 
-from action_limiter import AL
 from config import PAGINATION_ITEMS_PER_PAGE, SEARCH_COOLDOWN_SECS, SEARCH_PER_LIMIT
-from dungeon import DM
 from handlers.modules._search.callbacks import PaginationSearchCallback
 from handlers.modules._singles.callbacks import DownloadCallback
 from helpers.get_page_content import get_page_content
 from helpers.prettify_incoming_query import prettify_incoming_query
+from infra.action_limiter import AL
+from infra.dungeon import DM
+from infra.tools.MusicTools import MT
+from infra.tools.types import SearchResultDict
 from localization import L10N
 from schemas.states import TypedState
-from tools.MusicTools import MT
-from tools.types import SearchResultDict
 
 router = Router()
 

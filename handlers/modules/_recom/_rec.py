@@ -7,18 +7,18 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_i18n import I18nContext
 from tortoise.expressions import Q
 
-from action_limiter import AL
 from bot.bot import bot
 from bot.commands import COMSET
 from config import PAGINATION_ITEMS_PER_PAGE, SEARCH_COOLDOWN_SECS, SEARCH_PER_LIMIT
-from dungeon import DM
-from dungeon.models import TrackCache
 from handlers.modules._recom.callbacks import PaginationRecCallback
 from handlers.modules._singles.callbacks import DownloadCallback
 from helpers.get_page_content import get_page_content
+from infra.action_limiter import AL
+from infra.dungeon import DM
+from infra.dungeon.models import TrackCache
+from infra.tools.MusicTools import MT
 from localization import L10N
 from schemas.states import TypedState
-from tools.MusicTools import MT
 
 router = Router()
 

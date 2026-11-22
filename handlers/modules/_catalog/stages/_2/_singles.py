@@ -8,10 +8,8 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_i18n import I18nContext
 
 from _logger import LOGGER
-from action_limiter import AL
 from bot.bot import bot
 from config import CATALOG_COOLDOWN_SECS, CATALOG_PER_LIMIT, PAGINATION_ITEMS_PER_PAGE
-from dungeon import DM
 from handlers.modules._catalog.callbacks import (
     CatalogCallback,
     PaginationSingles2Callback,
@@ -19,9 +17,11 @@ from handlers.modules._catalog.callbacks import (
 )
 from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
+from infra.action_limiter import AL
+from infra.dungeon import DM
+from infra.tools.MusicTools import MT
 from localization import L10N
 from schemas.states import TypedState
-from tools.MusicTools import MT
 
 router = Router()
 

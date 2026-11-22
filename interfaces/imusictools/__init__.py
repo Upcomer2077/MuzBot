@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 
-from interfaces.ilogger import ILogger
-from tools.types import (
+from infra.tools.types import (
     ArtistInfoDict,
     ArtistsShortInfoDict,
     PlaylistInfoDict,
     SearchResultDict,
 )
+from interfaces.ilogger import ILogger
 
 
 class IMusicTools(ABC):

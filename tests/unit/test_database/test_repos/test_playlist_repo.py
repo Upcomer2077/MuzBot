@@ -1,8 +1,8 @@
 from _logger import LOGGER
-from dungeon.models import PlaylistCache, TrackCache, TrackPlaylist
-from dungeon.repos.playlist import PlaylistRepository
-from dungeon.repos.track import TrackRepository
-from tools.types import PlaylistInfoDict, SearchResultDict
+from infra.dungeon.models import PlaylistCache, TrackCache, TrackPlaylist
+from infra.dungeon.repos.playlist import PlaylistRepository
+from infra.dungeon.repos.track import TrackRepository
+from infra.tools.types import PlaylistInfoDict, SearchResultDict
 
 
 async def test_get_playlist_returns_correct_data():

@@ -9,19 +9,22 @@ from bot._setup_jobs import setup_jobs
 from bot.bot import bot
 from bot.commands import COMMANDS
 from config import REDIS_CACHE_URL
-from dungeon import DM
 from handlers import get_handlers_router
+from infra.dungeon import DM
+from infra.red import RED
+from infra.scheduler import SHED
+from infra.worker import TRACK_PIPELINE
 from middlewares.handle_errors import BlockedLogMiddleware
-from red import RED
-from scheduler import SHED
-from worker import TRACK_PIPELINE
 
 dp = Dispatcher(storage=RED.get_storage(REDIS_CACHE_URL))
 
 
 @dp.startup()
 async def _on_startup():
-    await RED.open(REDIS_CACHE_URL)
+
+    RED.open(REDIS_CACHE_URL)
+    await RED.healthcheck()
+
     await setup_jobs(logger=LOGGER)
     await SHED.start()
     await DM.open_dungeon()

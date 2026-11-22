@@ -5,13 +5,13 @@ from aiogram.types import CallbackQuery
 from aiogram_i18n import I18nContext
 
 from _logger import LOGGER
-from action_limiter import AL
 from bot.bot import bot
 from config import SUBSCRIPTION_COOLDOWN_SECS, SUBSCRIPTIONS_PER_LIMIT
-from dungeon import DM
 from handlers.modules._subscriptions._sub.callbacks import SubCallback
+from infra.action_limiter import AL
+from infra.dungeon import DM
+from infra.tools.MusicTools import MT
 from localization import L10N
-from tools.MusicTools import MT
 
 router = Router()
 

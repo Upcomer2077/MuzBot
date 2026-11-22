@@ -1,8 +1,8 @@
 from _logger import LOGGER
 from config import MAX_TRACK_DURATION_SECONDS
-from dungeon.models import TrackCache
-from dungeon.repos.track import TrackRepository
-from tools.types import SearchResultDict
+from infra.dungeon.models import TrackCache
+from infra.dungeon.repos.track import TrackRepository
+from infra.tools.types import SearchResultDict
 
 
 async def test_enslave_bulk_success(setup_track_db):

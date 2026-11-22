@@ -3,9 +3,9 @@ from typing import TypedDict, cast
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.base import StateType
 
-from dungeon.models import Albums, Singles, YTPerformers
-from dungeon.types.subs import GetUserSubsResult
-from tools.types import ArtistsShortInfoDict, SearchResultDict
+from infra.dungeon.models import Albums, Singles, YTPerformers
+from infra.dungeon.types.subs import GetUserSubsResult
+from infra.tools.types import ArtistsShortInfoDict, SearchResultDict
 
 
 class StateData(TypedDict, total=False):

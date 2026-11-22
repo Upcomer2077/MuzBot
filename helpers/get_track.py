@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from dungeon.models import TrackCache
+    from infra.dungeon.models import TrackCache
     from interfaces.idatabase import IDataBase
     from interfaces.imusictools import IMusicTools
 
