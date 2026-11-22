@@ -4,11 +4,11 @@ import sys
 import requests
 from aiogram.enums import ChatMemberStatus
 
-import bot
 from _logger import LOGGER
+from bot.bot import bot
 from config import CHANNEL_STORAGE_ID, DATABASE_PATH, LOKI_URL
 from dungeon import DM
-from tools.types import YoutubeSearchResultDict
+from tools.types import SearchResultDict
 
 
 async def _check_loki():
@@ -34,7 +34,7 @@ async def _check_database():
 
     count_enslaved = await DM.tracks.enslave_bulk(
         [
-            YoutubeSearchResultDict(
+            SearchResultDict(
                 video_id="0",
                 title="0",
                 artist="0",
@@ -53,12 +53,10 @@ async def _check_database():
 
 
 async def _check_channel():
-    async with bot.bot.context():
-        me = await bot.bot.get_me()
+    async with bot.context():
+        me = await bot.get_me()
 
-        member = await bot.bot.get_chat_member(
-            chat_id=CHANNEL_STORAGE_ID, user_id=me.id
-        )
+        member = await bot.get_chat_member(chat_id=CHANNEL_STORAGE_ID, user_id=me.id)
         if member.status != ChatMemberStatus.ADMINISTRATOR:
             raise Exception(f"Bot is not administrator i {CHANNEL_STORAGE_ID} channel")
 

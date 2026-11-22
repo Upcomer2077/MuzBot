@@ -11,8 +11,8 @@ from aiogram.types import (
 
 from dungeon import DM
 from helpers.prettify_incoming_query import prettify_incoming_query
-from tools.search import search_in_ytm
-from tools.types import YoutubeSearchResultDict
+from tools.MusicTools import MT
+from tools.types import SearchResultDict
 
 router = Router()
 
@@ -23,7 +23,7 @@ async def inline(q: InlineQuery):
         return q.answer([])
 
     query = prettify_incoming_query(q.query)
-    search_result: list[YoutubeSearchResultDict] = await search_in_ytm(query, 9)
+    search_result: list[SearchResultDict] = await MT.search_track_in(query, 9)
 
     if len(search_result) == 0:
         return

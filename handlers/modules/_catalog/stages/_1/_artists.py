@@ -20,12 +20,12 @@ from handlers.modules._catalog.callbacks import (
     CatalogCallback,
     PaginationSingles1Callback,
 )
+from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
 from helpers.prettify_incoming_query import prettify_incoming_query
-from helpers.utils import U
 from localization import L10N
 from schemas.states import TypedState
-from tools.search_artists import search_artists_in_ytm
+from tools.MusicTools import MT
 
 router = Router()
 
@@ -81,12 +81,12 @@ async def _handler(message: Message, performer: str, S: TypedState, i18n: I18nCo
 
     performer = prettify_incoming_query(performer)
 
-    artists = await search_artists_in_ytm(performer)
+    artists = await MT.search_artists_in(performer)
 
     if not len(artists):
         return await ANSWER.edit_text(i18n.get(L10N["catalog"].cat_not_found))
 
-    content, _nav_markup, _drop_builder, start_idx = U.get_page_content(
+    content, _nav_markup, _drop_builder, start_idx = get_page_content(
         artists, page=0, pag_cb_type=PaginationSingles1Callback
     )
 

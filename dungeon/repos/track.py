@@ -1,13 +1,13 @@
-from _logger import LOGGER
 from config import MAX_TRACK_DURATION_SECONDS
 from dungeon.models import TrackCache
-from tools.types import YoutubeSearchResultDict
+from dungeon.repos.base import BaseRepo
+from tools.types import SearchResultDict
 
 
-class TrackRepository:
+class TrackRepository(BaseRepo):
     """Handles persistence logic, status updates, and retrieval operations for tracks."""
 
-    async def enslave_bulk(self, tracks: list[YoutubeSearchResultDict]) -> int:
+    async def enslave_bulk(self, tracks: list[SearchResultDict]) -> int:
         """Insert multiple tracks into the cache database in a single batch query."""
         if not tracks:
             return 0
@@ -30,41 +30,41 @@ class TrackRepository:
                     )
                 )
 
-            LOGGER.debug(f"Inserting tracks (bulk). Total count: {len(tracks)}")
+            self._logger.debug(f"Inserting tracks (bulk). Total count: {len(tracks)}")
             await TrackCache.bulk_create(instances_to_insert, ignore_conflicts=True)
-            LOGGER.debug("Inserting complete")
+            self._logger.debug("Inserting complete")
             return len(tracks)
         except Exception as e:
-            LOGGER.error(f"Bulk saving error: {e}")
+            self._logger.error(f"Bulk saving error: {e}")
             return 0
 
     async def summon_slaves(self, video_ids: list[str]) -> dict[str, TrackCache]:
         """Fetch cached tracks mapping them to their corresponding video identifiers."""
         if not video_ids:
             return {}
-        LOGGER.debug(f"Selecting slaves {video_ids}")
+        self._logger.debug(f"Selecting slaves {video_ids}")
         rows = await TrackCache.filter(video_id__in=video_ids)
-        LOGGER.debug(f"Selected slaves count: {len(rows)}")
+        self._logger.debug(f"Selected slaves count: {len(rows)}")
         return {row.video_id: row for row in rows if row.video_id}
 
     async def summon_one(self, video_id: str) -> TrackCache | None:
         """Retrieve a specific track record by its identifier."""
-        LOGGER.debug(f"Selecting one slave {video_id}")
+        self._logger.debug(f"Selecting one slave {video_id}")
         try:
             return await TrackCache.get_or_none(video_id=video_id)
         except Exception as e:
-            LOGGER.error(f"Can't find track {video_id} in database: {e}")
+            self._logger.error(f"Can't find track {video_id} in database: {e}")
             return None
 
     async def next_door(self, video_id: str) -> bool:
         """Delete a specific track cache record completely from the database."""
         try:
-            LOGGER.debug(f"Removing {video_id}")
+            self._logger.debug(f"Removing {video_id}")
             res = await TrackCache.filter(video_id=video_id).delete()
-            LOGGER.debug(f"Removed {video_id}")
+            self._logger.debug(f"Removed {video_id}")
             return res > 0
         except Exception as e:
-            LOGGER.error(f"Can't delete track {video_id}: {e}")
+            self._logger.error(f"Can't delete track {video_id}: {e}")
             return False
 
     async def fisting(
@@ -74,7 +74,7 @@ class TrackRepository:
         is_too_large: bool | None = None,
     ) -> bool:
         """Update attribute states or Telegram properties on a specific track."""
-        LOGGER.debug(f"Updating records: {video_id}")
+        self._logger.debug(f"Updating records: {video_id}")
         update_data = {
             "telegram_file_id": telegram_file_id,
             "is_too_large": is_too_large,
@@ -93,10 +93,12 @@ class TrackRepository:
             rows_updated = await TrackCache.filter(**filter_kwargs).update(
                 **filtered_update_data
             )
-            LOGGER.debug(f"Updated records count: {rows_updated}. ids: {video_id}")
+            self._logger.debug(
+                f"Updated records count: {rows_updated}. ids: {video_id}"
+            )
             return rows_updated != 0
         except Exception as e:
-            LOGGER.error(f"Caught error while updating records: {e}")
+            self._logger.error(f"Caught error while updating records: {e}")
             return False
 
     async def get_total_count(self) -> int:

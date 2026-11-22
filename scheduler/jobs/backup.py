@@ -4,8 +4,7 @@ from datetime import datetime
 
 from aiogram.types import FSInputFile
 
-import bot
-from _logger import LOGGER
+from bot.bot import bot
 from config import (
     BACKUP_CHANNEL_ID,
     CACHE_ROOT_DIR,
@@ -13,9 +12,10 @@ from config import (
     DATABASE_PATH,
     TZ,
 )
+from interfaces.ilogger import ILogger
 
 
-def _make_backup():
+def _make_backup(logger: ILogger):
     """Create a compressed tar.xz archive of the database file.
 
     Returns:
@@ -23,7 +23,7 @@ def _make_backup():
     """
     backup_dir = f"{CACHE_ROOT_DIR}/backups"
     if not os.path.exists(DATABASE_PATH):
-        LOGGER.critical(f"BACKUP: file {DATABASE_PATH} not found.")
+        logger.critical(f"BACKUP: file {DATABASE_PATH} not found.")
         return (False, None)
 
     os.makedirs(backup_dir, exist_ok=True)
@@ -35,25 +35,25 @@ def _make_backup():
     try:
         with tarfile.open(archive_path, "w:xz") as tar:
             tar.add(DATABASE_PATH, arcname=os.path.basename(DATABASE_PATH))
-        LOGGER.debug(f"Backup created: {archive_path}")
+        logger.debug(f"Backup created: {archive_path}")
         return (True, archive_path)
     except Exception as e:
-        LOGGER.error(f"Error while making backup tar: {e}")
+        logger.error(f"Error while making backup tar: {e}")
         return (False, None)
 
 
-async def _send_to_channel(archive_path):
+async def _send_to_channel(archive_path, *, logger: ILogger):
     """Upload the generated backup archive to the configured Telegram channel.
 
     Args:
         archive_path (str): File path of the backup archive to be sent.
     """
     channel = BACKUP_CHANNEL_ID or CHANNEL_STORAGE_ID
-    bot_info = await bot.bot.get_me()
+    bot_info = await bot.get_me()
     caption = f"📦 **#Backup** for @{bot_info.username or 'bot'}\n📅 {datetime.now(TZ).strftime('%d.%m.%Y %H:%M')}"
     document = FSInputFile(archive_path)
     try:
-        await bot.bot.send_document(
+        await bot.send_document(
             chat_id=channel,
             document=document,
             caption=caption,
@@ -61,15 +61,15 @@ async def _send_to_channel(archive_path):
             disable_notification=True,
             request_timeout=300,
         )
-        LOGGER.info("Backup file was send to channel")
+        logger.info("Backup file was send to channel")
     except Exception as e:
-        LOGGER.error(f"Backup send failed: {e}")
+        logger.error(f"Backup send failed: {e}")
 
 
-async def job():
+async def job(*, logger: ILogger):
     """Execute the full workflow: create backup, send to channel, and remove local archive."""
-    (success, archive_path) = _make_backup()
+    (success, archive_path) = _make_backup(logger)
     if success and archive_path:
-        await _send_to_channel(archive_path)
+        await _send_to_channel(archive_path, logger=logger)
         if os.path.exists(archive_path):
             os.remove(archive_path)

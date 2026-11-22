@@ -17,7 +17,7 @@ from handlers.modules._playlists.callbacks import DownloadPlaylistCallback
 from helpers.regexes import YTM_MIX_PLIST_REGEX, YTM_PLIST_REGEX, YTM_USER_PLIST_REGEX
 from localization import L10N
 from schemas.states import TypedState
-from tools.extract_playlist_info import extract_playlist_info
+from tools.MusicTools import MT
 
 router = Router()
 
@@ -73,7 +73,7 @@ async def _handler(message: Message, link: str, i18n: I18nContext):
     slaves = await DM.playlists.summon_slaves_from_playlist(PLAYLIST_ID)
     playlist = await DM.playlists.get_playlist(PLAYLIST_ID)
     if not slaves or not playlist:
-        r = await extract_playlist_info(PLAYLIST_ID)
+        r = await MT.extract_playlist_info(PLAYLIST_ID)
         if not r:
             return await ANSWER.edit_text(i18n.get(L10N["playlist"].pl_error_not_found))
 

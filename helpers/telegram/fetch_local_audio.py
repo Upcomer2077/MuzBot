@@ -1,6 +1,6 @@
 from aiogram.types import FSInputFile
 
-from overlord.types import TrackDirContentDict
+from interfaces.icache.types import TrackDirContentDict
 
 
 def fetch_audio(cache_data: TrackDirContentDict):

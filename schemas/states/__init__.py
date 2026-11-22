@@ -5,13 +5,13 @@ from aiogram.fsm.storage.base import StateType
 
 from dungeon.models import Albums, Singles, YTPerformers
 from dungeon.types.subs import GetUserSubsResult
-from tools.types import ArtistsShortInfoDict, YoutubeSearchResultDict
+from tools.types import ArtistsShortInfoDict, SearchResultDict
 
 
 class StateData(TypedDict, total=False):
     subs_list: list[GetUserSubsResult]
-    search_result: list[YoutubeSearchResultDict]
-    rec_result: list[YoutubeSearchResultDict]
+    search_result: list[SearchResultDict]
+    rec_result: list[SearchResultDict]
     subs_artists: list[ArtistsShortInfoDict]
     usubs_artists: list[YTPerformers]
     singles_pack: _PlaylistPack[Singles]

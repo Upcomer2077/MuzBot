@@ -1,5 +1,5 @@
 import asyncio
-import tomllib  # Доступно в Python 3.11+. Для Python < 3.11 используйте: import tomli as tomllib
+import tomllib
 from pathlib import Path
 
 from aiogram.exceptions import TelegramNotFound

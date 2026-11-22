@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 
-from _logger.ILogger import ILogger
+from interfaces.ilogger import ILogger
 
 
 class BaseLogger(ILogger, ABC):

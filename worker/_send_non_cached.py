@@ -2,17 +2,17 @@ import asyncio
 
 from aiogram.exceptions import TelegramNetworkError
 
-import bot
-from _logger import LOGGER
+from bot.bot import bot
 from config import CHANNEL_STORAGE_ID
-from helpers import fetch_local_audio
 from helpers.get_hash_tags import get_hash_tags
-from overlord.types import TrackDirContentDict
+from helpers.telegram import fetch_local_audio
+from interfaces.icache.types import TrackDirContentDict
+from interfaces.ilogger import ILogger
 from worker.types import DownloadResult
 
 
 async def send_non_cached_audio_to_telegram(
-    cache: TrackDirContentDict, *, title: str, artist: str
+    cache: TrackDirContentDict, *, title: str, artist: str, logger: ILogger
 ) -> DownloadResult:
     """
     Returns:
@@ -24,9 +24,9 @@ async def send_non_cached_audio_to_telegram(
     a, tn = fetch_local_audio.fetch_audio(cache)
     for attempt in range(1, 4):
         try:
-            LOGGER.debug(f"Sending track {title} to channel")
+            logger.debug(f"Sending track {title} to channel")
             tags = get_hash_tags(artist)
-            m = await bot.bot.send_audio(
+            m = await bot.send_audio(
                 CHANNEL_STORAGE_ID,
                 audio=a,
                 thumbnail=tn,
@@ -35,7 +35,7 @@ async def send_non_cached_audio_to_telegram(
                 request_timeout=300,
                 caption=", ".join(tags),
             )
-            LOGGER.info(f"Sent track {title} to channel")
+            logger.info(f"Sent track {title} to channel")
             break
 
         except TelegramNetworkError as e:
@@ -43,14 +43,14 @@ async def send_non_cached_audio_to_telegram(
                 is_too_large = True
                 is_error = True
 
-                LOGGER.debug(f"Track {title} is too large")
+                logger.debug(f"Track {title} is too large")
                 break
-            LOGGER.error(f"Network error: {e}")
-            LOGGER.warning(
+            logger.error(f"Network error: {e}")
+            logger.warning(
                 f"Sending track to channel failed on attempt {attempt}/3 (timeout after 5 min). {'Retrying in 3 seconds' if attempt < 3 else ''}"
             )
             if attempt == 3:
-                LOGGER.warning("Check your internet speed")
+                logger.warning("Check your internet speed")
                 is_error = True
                 break
 

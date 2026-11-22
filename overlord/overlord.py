@@ -2,34 +2,26 @@ import asyncio
 import shutil
 from pathlib import Path
 
-from _logger import LOGGER
-from overlord.types import TrackDirContentDict
+from interfaces.icache import ICache
+from interfaces.icache.types import TrackDirContentDict
+from interfaces.ilogger import ILogger
 
 
-class CacheOverlord:
-    """Manager for handling physical disk track directories, audio extractions, thumbnails, and cache deletions."""
-
-    def __init__(self, cache_root: str):
+class CacheOverlord(ICache):
+    def __init__(self, cache_root: str, logger: ILogger):
         """Initialize the manager with a root storage directory pathway.
 
         Args:
             cache_root: Filesystem path to the root storage directory.
         """
         self._cache_dir = cache_root
+        self.__logger = logger
 
-    async def _lookup(self, video_id):
-        """Verify the exact existence of a dedicated cache directory on disk using a track identifier.
-
-        Args:
-            video_id: Target YouTube track identifier.
-
-        Returns:
-            True if the directory exists, False otherwise.
-        """
-        target_dir = Path(self._cache_dir) / video_id
+    async def lookup(self, track_id):
+        target_dir = Path(self._cache_dir) / track_id
         return await asyncio.to_thread(target_dir.is_dir)
 
-    async def _get_dir_content(self, video_id: str):
+    async def _get_dir_content(self, track_id: str):
         """Retrieve absolute file pathways contained within a track cached directory structure.
 
         Args:
@@ -38,23 +30,15 @@ class CacheOverlord:
         Returns:
             A list of absolute file paths if the directory exists, otherwise None.
         """
-        if await self._lookup(video_id):
-            target_dir = Path(self._cache_dir) / video_id
+        if await self.lookup(track_id):
+            target_dir = Path(self._cache_dir) / track_id
             return await asyncio.to_thread(
                 lambda: [str(p) for p in target_dir.iterdir()]
             )
 
-    async def demand_tribute(self, video_id: str):
-        """Locate and match audio files and visual thumbnail paths within the track cache directory.
-
-        Args:
-            video_id: Target YouTube track identifier.
-
-        Returns:
-            A structured dictionary containing verified file pathways, or None if the audio file is missing.
-        """
-        LOGGER.debug(f"Getting directory content on {video_id}")
-        content = await self._get_dir_content(video_id)
+    async def demand_tribute(self, track_id: str) -> None | TrackDirContentDict:
+        self.__logger.debug(f"Getting directory content on {track_id}")
+        content = await self._get_dir_content(track_id)
 
         if content is None:
             return None
@@ -67,34 +51,29 @@ class CacheOverlord:
                 audio_path = file
             elif file.endswith((".jpg", ".jpeg", ".webp", ".png")):
                 thumbnail_path = file
-        LOGGER.debug(f"Got audio and thumbnail: {audio_path}, {thumbnail_path}")
+        self.__logger.debug(f"Got audio and thumbnail: {audio_path}, {thumbnail_path}")
         if audio_path is None:
-            LOGGER.error(f"Audio path oа track {video_id} is None")
+            self.__logger.error(f"Audio path oа track {track_id} is None")
             return None
         return TrackDirContentDict(
-            audio_path=audio_path, thumbnail_path=thumbnail_path, _video_id=video_id
+            audio_path=audio_path, thumbnail_path=thumbnail_path, _track_id=track_id
         )
 
-    async def annihilate(self, video_id: str) -> bool:
-        """Permanently erase a specific track directory cache structure from disk storage blocks.
+    async def annihilate(self, track_id: str) -> bool:
 
-        Args:
-            video_id: Target YouTube track identifier.
-
-        Returns:
-            True if the folder was successfully deleted or didn't exist, False if a permission error occurred.
-        """
-        p = f"{self._cache_dir}/{video_id}"
-        if not await self._lookup(video_id):
+        p = f"{self._cache_dir}/{track_id}"
+        if not await self.lookup(track_id):
             return True
         try:
-            LOGGER.debug(f"Removing dir {video_id}")
+            self.__logger.debug(f"Removing dir {track_id}")
             await asyncio.to_thread(shutil.rmtree, p)
-            LOGGER.debug(f"Removed dir {video_id}")
+            self.__logger.debug(f"Removed dir {track_id}")
             return True
         except FileNotFoundError:
-            LOGGER.error(f"Cache drop error: The folder {p} does not exist")
+            self.__logger.error(f"Cache drop error: The folder {p} does not exist")
             return False
         except PermissionError:
-            LOGGER.error(f"Cache drop error: You do not have permission to delete {p}")
+            self.__logger.error(
+                f"Cache drop error: You do not have permission to delete {p}"
+            )
             return False

@@ -6,7 +6,7 @@ from aiogram.filters import CommandObject
 from aiogram.types import Message
 from aiogram_i18n import I18nContext
 
-import bot
+from bot.bot import bot
 from bot.commands import COMMANDS, COMSET
 from localization import L10N
 
@@ -17,7 +17,7 @@ router = Router()
 async def help(message: Message, command: CommandObject, i18n: I18nContext):
     ARGS: Final = command.args
     if not ARGS:
-        bot_info = await bot.Bot.get_me(bot.bot)
+        bot_info = await bot.get_me()
         text = i18n.get(
             L10N["help"].help_full,
             botname=bot_info.username or "bot_username",

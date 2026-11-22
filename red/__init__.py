@@ -1,4 +1,5 @@
-from config import REDIS_CACHE_URL
+from _logger import LOGGER
+from interfaces.imemcache import IMemoryCache
 from red.redis_cache import RedisCache
 
-RED = RedisCache(REDIS_CACHE_URL)
+RED: IMemoryCache = RedisCache(LOGGER)

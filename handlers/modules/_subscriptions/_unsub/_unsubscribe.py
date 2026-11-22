@@ -16,8 +16,8 @@ from handlers.modules._subscriptions._unsub.callbacks import (
     PaginationUSubsArtistsCallback,
     UnSubCallback,
 )
+from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
-from helpers.utils import U
 from localization import L10N
 from schemas.states import TypedState
 
@@ -73,7 +73,7 @@ async def _handler(message: Message, performer: str, S: TypedState, i18n: I18nCo
     if not len(subs):
         return await ANSWER.edit_text(i18n.get(L10N["subs"].usub_not_found))
 
-    content, _nav_markup, _drop_builder, start_idx = U.get_page_content(
+    content, _nav_markup, _drop_builder, start_idx = get_page_content(
         subs, page=0, pag_cb_type=PaginationUSubsArtistsCallback
     )
 

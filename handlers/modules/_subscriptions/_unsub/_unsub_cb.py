@@ -4,8 +4,8 @@ from aiogram import Router
 from aiogram.types import CallbackQuery
 from aiogram_i18n import I18nContext
 
-import bot
 from _logger import LOGGER
+from bot.bot import bot
 from dungeon import DM
 from handlers.modules._subscriptions._unsub.callbacks import UnSubCallback
 from localization import L10N
@@ -29,4 +29,4 @@ async def handle_un_sub(
 
     await DM.subs.drop_sub(AUTHOR_ID, USER_ID)
 
-    return await bot.bot.send_message(USER_ID, i18n.get(L10N["subs"].usub_success))
+    return await bot.send_message(USER_ID, i18n.get(L10N["subs"].usub_success))

@@ -8,12 +8,11 @@ from aiogram.exceptions import TelegramForbiddenError
 from aiogram.types import LinkPreviewOptions
 from aiogram.utils.media_group import MediaGroupBuilder, MediaType
 
-import bot
-from _logger import LOGGER
+from bot.bot import bot
 from dungeon import DM
 from helpers.get_ytm_links import get_browse_link
-from tools.extract_artist_discography import extract_artist_discography
-from tools.extract_playlist_info import extract_playlist_info
+from interfaces.ilogger import ILogger
+from tools.MusicTools import MT
 from tools.types import ArtistInfoDict
 from tools.YTMusic_client import YT
 from worker import TRACK_PIPELINE
@@ -30,16 +29,16 @@ def _get_last(new_info: ArtistInfoDict):
     return last_single_id, last_album_id
 
 
-async def job():
-    LOGGER.info("Starting notification/subs job")
+async def job(*, logger: ILogger):
+    logger.info("Starting notification/subs job")
     async for batch in DM.subs.get_subscripted_authors():
         for author in batch:
             total_media_groups: list[Sequence[MediaType]] = []
-            new_info = await extract_artist_discography(author["performer_id"])
+            new_info = await MT.extract_artist_discography(author["performer_id"])
 
             await asyncio.sleep(uniform(1.0, 3.0))
             if not new_info:
-                LOGGER.error(
+                logger.error(
                     f"No info fetched about performer {author['performer_id']}"
                 )
                 continue
@@ -53,7 +52,7 @@ async def job():
                 author["performer_id"]
             )
             if not local_performer_info:
-                LOGGER.error(f"No info about performer {author['performer_id']}")
+                logger.error(f"No info about performer {author['performer_id']}")
                 continue
 
             if (
@@ -66,11 +65,11 @@ async def job():
                 fresh_album_browse_id
                 and fresh_album_browse_id != local_performer_info.last_album_id
             ):
-                status = await _set_tasks(fresh_album_browse_id)
+                status = await _set_tasks(fresh_album_browse_id, logger=logger)
                 if status:
                     tasks, album_id = status
                     _ = await asyncio.gather(*tasks, return_exceptions=False)
-                    media_groups = await _form_media_groups(album_id)
+                    media_groups = await _form_media_groups(album_id, logger=logger)
                     if media_groups:
                         total_media_groups.extend(media_groups)
             # =========
@@ -79,11 +78,11 @@ async def job():
                 fresh_single_browse_id
                 and fresh_single_browse_id != local_performer_info.last_single_id
             ):
-                status = await _set_tasks(fresh_single_browse_id)
+                status = await _set_tasks(fresh_single_browse_id, logger=logger)
                 if status:
                     tasks, album_id = status
                     _ = await asyncio.gather(*tasks, return_exceptions=False)
-                    media_groups = await _form_media_groups(album_id)
+                    media_groups = await _form_media_groups(album_id, logger=logger)
                     if media_groups:
                         total_media_groups.extend(media_groups)
 
@@ -107,28 +106,28 @@ async def job():
             for u in subscribers:
                 try:
                     await asyncio.sleep(uniform(1.0, 3.0))
-                    await bot.bot.send_message(
+                    await bot.send_message(
                         u,
                         f'Новинка у <a href="{get_browse_link(author["performer_id"])}">{new_info["name"]}</a>!',
                         parse_mode=ParseMode.HTML,
                         link_preview_options=LinkPreviewOptions(is_disabled=True),
                     )
                     for mg in total_media_groups:
-                        await bot.bot.send_media_group(u, list(mg))
+                        await bot.send_media_group(u, list(mg))
                         await asyncio.sleep(1)
                 except TelegramForbiddenError:
                     await DM.subs.toggle_user_subscriptions(u, True)
-                    LOGGER.debug("Bot blocked by user")
+                    logger.debug("Bot blocked by user")
                     continue
 
-    LOGGER.info("Notification/subs job: done")
+    logger.info("Notification/subs job: done")
 
 
-async def _form_media_groups(album_id: str):
+async def _form_media_groups(album_id: str, *, logger: ILogger):
     tracks_info = await DM.playlists.summon_slaves_from_playlist(album_id)
 
     if not tracks_info:
-        LOGGER.error(f"Can not find info about playlist {album_id}.")
+        logger.error(f"Can not find info about playlist {album_id}.")
         return None
 
     v_ids: list[str] = []
@@ -155,20 +154,20 @@ async def _form_media_groups(album_id: str):
     return media_group_cached
 
 
-async def _set_tasks(fresh_id: str):
+async def _set_tasks(fresh_id: str, *, logger: ILogger):
     _tasks: list[Coroutine[Any, Any, tuple[str, DownloadResult]]] = []
     album_info = await asyncio.to_thread(YT.get_album, fresh_id)
     album_id: str = album_info["audioPlaylistId"]
-    res = await extract_playlist_info(album_id)
+    res = await MT.extract_playlist_info(album_id)
     if not res:
-        LOGGER.error(f"No info about playlist {album_id}")
+        logger.error(f"No info about playlist {album_id}")
         return None
 
     (playlist_info, videos) = res
     await DM.playlists.add_playlist_and_tracks(playlist_info, videos)
     tracks_info = await DM.playlists.summon_slaves_from_playlist(album_id)
     if not tracks_info:
-        LOGGER.error(f"Summoning slaves failed on album {album_id}")
+        logger.error(f"Summoning slaves failed on album {album_id}")
         return None
 
     for v in list(tracks_info.values()):

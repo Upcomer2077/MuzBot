@@ -2,11 +2,11 @@ import asyncio
 import os
 from dataclasses import dataclass, field
 
-from _logger import LOGGER
 from config import CPU_COUNT, WORKER_CORES_COUNT
 from dungeon import DM
+from interfaces.ilogger import ILogger
 from overlord import COLD
-from tools.download import download_from_ytm
+from tools.MusicTools import MT
 from worker._send_non_cached import send_non_cached_audio_to_telegram
 from worker.priorities import DownloadTaskPriorities
 from worker.types import DownloadResult
@@ -24,11 +24,12 @@ class _DownloadTask:
 
 
 class WorkerPipe:
-    def __init__(self):
+    def __init__(self, logger: ILogger):
         self._queue: asyncio.Queue[_DownloadTask] = asyncio.PriorityQueue()
         self._q_shift = 0.0
         self._active_downloads: dict[str, list[_F]] = {}
         self._worker_task: asyncio.Task | None = None
+        self.__logger = logger
 
         self._workers_pool_semaphore = asyncio.Semaphore(WORKER_CORES_COUNT + 3)
         """Depends on worker count (CPU threads)"""
@@ -41,7 +42,7 @@ class WorkerPipe:
 
         _CPUs = os.cpu_count()
         if _CPUs and (_CPUs < CPU_COUNT):
-            LOGGER.warning(
+            self.__logger.warning(
                 f"CPU_COUNT is higher than it actually is ({CPU_COUNT} vs {_CPUs}). Worker loop freezing expected!"
             )
 
@@ -51,7 +52,7 @@ class WorkerPipe:
     def stop(self):
         if self._worker_task:
             self._worker_task.cancel()
-        LOGGER.debug("Worker loop stopped.")
+        self.__logger.debug("Worker loop stopped.")
 
     async def submit(
         self,
@@ -70,12 +71,12 @@ class WorkerPipe:
 
         """
         if video_id in self._active_downloads:
-            LOGGER.debug(f"🔗 Already downloading {video_id}. Queued...")
+            self.__logger.debug(f"🔗 Already downloading {video_id}. Queued...")
             fut: _F = asyncio.Future()
             self._active_downloads[video_id].append(fut)
             return await fut
 
-        LOGGER.debug(f"Appending download task to worker queue: {video_id}")
+        self.__logger.debug(f"Appending download task to worker queue: {video_id}")
         task = _DownloadTask(
             video_id=video_id,
             track_title=track_title,
@@ -99,8 +100,8 @@ class WorkerPipe:
         async with self._disk_space_semaphore:
             async with self._workers_pool_semaphore:
                 try:
-                    LOGGER.debug(f"Starting worker task on {v_id}")
-                    success = await asyncio.to_thread(download_from_ytm, v_id)
+                    self.__logger.debug(f"Starting worker task on {v_id}")
+                    success = await asyncio.to_thread(MT.download_track, v_id)
 
                     cache = await COLD.demand_tribute(v_id)
                 except asyncio.CancelledError, KeyboardInterrupt:
@@ -108,14 +109,14 @@ class WorkerPipe:
                     is_error = True
                 except Exception as e:
                     is_error = True
-                    LOGGER.error(f"💥Error in worker loop. Video {v_id}: {e}")
+                    self.__logger.error(f"💥Error in worker loop. Video {v_id}: {e}")
                 finally:
                     self._download_execution_semaphore.release()
 
             if success and cache:
                 async with self._tg_upload_semaphore:
                     R = await send_non_cached_audio_to_telegram(
-                        cache, title=title, artist=artist
+                        cache, title=title, artist=artist, logger=self.__logger
                     )
                     is_too_large = R.is_too_large
                     is_error = R.is_error
@@ -123,7 +124,7 @@ class WorkerPipe:
                     await asyncio.sleep(2)
             else:
                 is_error = True
-            LOGGER.debug(f"Download task completed on {v_id}")
+            self.__logger.debug(f"Download task completed on {v_id}")
 
             if not is_error:
                 await DM.tracks.fisting(
@@ -134,12 +135,12 @@ class WorkerPipe:
         futures_to_wakeup = self._active_downloads.pop(v_id, [])
         for fut in futures_to_wakeup:
             if not fut.done():
-                LOGGER.debug(f"Setting result to worker tasks on {v_id}")
+                self.__logger.debug(f"Setting result to worker tasks on {v_id}")
                 fut.set_result((v_id, DownloadResult(file_id, is_too_large, is_error)))
 
     async def _worker_loop(self):
         """Main loop."""
-        LOGGER.debug(
+        self.__logger.debug(
             f"⚙️ Worker loop has been started. Slots: {self._workers_pool_semaphore._value}"
         )
 
@@ -148,7 +149,7 @@ class WorkerPipe:
                 self._reset_shift()
             task = await self._queue.get()
             await self._download_execution_semaphore.acquire()
-            LOGGER.debug(f"Got new task from worker queue: {task.video_id}")
+            self.__logger.debug(f"Got new task from worker queue: {task.video_id}")
 
             asyncio.create_task(
                 self._execute_download_task(

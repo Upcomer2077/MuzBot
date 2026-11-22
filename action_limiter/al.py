@@ -2,7 +2,6 @@ import asyncio
 import time
 from typing import Required, TypedDict
 
-from _logger import LOGGER
 from config import (
     CATALOG_COOLDOWN_SECS,
     CATALOG_PER_LIMIT,
@@ -15,6 +14,7 @@ from config import (
     SUBSCRIPTIONS_PER_LIMIT,
     TRACKS_PER_LIMIT,
 )
+from interfaces.ilogger import ILogger
 
 
 class _UserQueryLimitDict(TypedDict):
@@ -27,9 +27,8 @@ class _UserQueryLimitDict(TypedDict):
 class LightLimiter:
     """Rate limiter to manage chat action frequencies and track user music download limits."""
 
-    def __init__(
-        self,
-    ):
+    def __init__(self, logger: ILogger):
+        self.__logger = logger
         self._ACTIONS_BANK: dict[int, _UserQueryLimitDict] = {}
         self._ACTIONS_COOLDOWN_SECS = 10
         self._ACTION_PER_LIMIT = 1
@@ -138,7 +137,7 @@ class LightLimiter:
         bank[user_id].update(semaphore=new_semaphore)
         return not new_semaphore < 0
 
-    def garbage_collector(self):
+    def garbage_collector(self, **_):
         """Remove expired records from memory banks to prevent memory leaks. Should be called periodically"""
         try:
             now = time.time()
@@ -153,7 +152,7 @@ class LightLimiter:
             if total_garbage_len < 50:
                 return
 
-            LOGGER.debug(f"Collecting garbage. Total bank: {total_garbage_len}")
+            self.__logger.debug(f"Collecting garbage. Total bank: {total_garbage_len}")
             total_removed = 0
             for item in [
                 (self._ACTIONS_COOLDOWN_SECS, self._ACTIONS_BANK),
@@ -169,7 +168,7 @@ class LightLimiter:
                         bank.pop(key)
                         total_removed += 1
 
-            LOGGER.debug(f"Collecting garbage done. Removed: {total_removed}")
+            self.__logger.debug(f"Collecting garbage done. Removed: {total_removed}")
 
         except asyncio.CancelledError, KeyboardInterrupt:
             pass

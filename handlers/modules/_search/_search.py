@@ -11,12 +11,12 @@ from config import PAGINATION_ITEMS_PER_PAGE, SEARCH_COOLDOWN_SECS, SEARCH_PER_L
 from dungeon import DM
 from handlers.modules._search.callbacks import PaginationSearchCallback
 from handlers.modules._singles.callbacks import DownloadCallback
+from helpers.get_page_content import get_page_content
 from helpers.prettify_incoming_query import prettify_incoming_query
-from helpers.utils import U
 from localization import L10N
 from schemas.states import TypedState
-from tools.search import search_in_ytm
-from tools.types import YoutubeSearchResultDict
+from tools.MusicTools import MT
+from tools.types import SearchResultDict
 
 router = Router()
 
@@ -44,14 +44,14 @@ async def get_list(message: Message, state: FSMContext, i18n: I18nContext):
     if len(clean_text) == 0:
         return None
     STATUS_MESSAGE = await message.answer(i18n.get(L10N["search"].search_searching))
-    search_result: list[YoutubeSearchResultDict] = await search_in_ytm(QUERY, 27 * 2)
+    search_result: list[SearchResultDict] = await MT.search_track_in(QUERY, 27 * 2)
 
     if len(search_result) == 0:
         return STATUS_MESSAGE.edit_text(i18n.get(L10N["search"].search_not_found))
 
     await DM.tracks.enslave_bulk(search_result)
 
-    content, _nav_markup, _drop_builder, start_idx = U.get_page_content(
+    content, _nav_markup, _drop_builder, start_idx = get_page_content(
         search_result, page=0, pag_cb_type=PaginationSearchCallback
     )
 

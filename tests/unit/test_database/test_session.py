@@ -5,6 +5,7 @@ import pytest
 from tortoise import Tortoise, connections
 from tortoise.exceptions import ConfigurationError
 
+from _logger import LOGGER
 from dungeon.session import DungeonDBSession
 
 
@@ -13,7 +14,7 @@ async def test_dungeon_session_lifecycle(tmp_path: Path):
 
     assert not test_db_file.exists()
 
-    await DungeonDBSession.open_dungeon(f"sqlite://{test_db_file}")
+    await DungeonDBSession.open_dungeon(f"sqlite://{test_db_file}", logger=LOGGER)
 
     assert test_db_file.exists(), f"Файл базы данных не найден по пути: {test_db_file}"
     assert test_db_file.stat().st_size > 0
@@ -30,7 +31,7 @@ async def test_dungeon_session_lifecycle(tmp_path: Path):
     _, foreign_keys_rows = await connection.execute_query("PRAGMA foreign_keys;")
     assert foreign_keys_rows[0][0] == 1
 
-    await DungeonDBSession.close_dungeon()
+    await DungeonDBSession.close_dungeon(logger=LOGGER)
 
     with pytest.raises(ConfigurationError):
         connections.get("default")

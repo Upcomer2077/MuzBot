@@ -1,4 +1,4 @@
-from aiogram import Bot, Dispatcher
+from aiogram import Dispatcher
 from aiogram.types import BotCommandScopeDefault
 from aiogram_i18n.cores import FluentCompileCore
 from aiogram_i18n.managers import FSMManager
@@ -6,8 +6,9 @@ from aiogram_i18n.middleware import I18nMiddleware
 
 from _logger import LOGGER
 from bot._setup_jobs import setup_jobs
+from bot.bot import bot
 from bot.commands import COMMANDS
-from config import BOT_TOKEN
+from config import REDIS_CACHE_URL
 from dungeon import DM
 from handlers import get_handlers_router
 from middlewares.handle_errors import BlockedLogMiddleware
@@ -15,14 +16,13 @@ from red import RED
 from scheduler import SHED
 from worker import TRACK_PIPELINE
 
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(storage=RED.get_redis_storage())
+dp = Dispatcher(storage=RED.get_storage(REDIS_CACHE_URL))
 
 
 @dp.startup()
 async def _on_startup():
-    await RED.open()
-    await setup_jobs()
+    await RED.open(REDIS_CACHE_URL)
+    await setup_jobs(logger=LOGGER)
     await SHED.start()
     await DM.open_dungeon()
     TRACK_PIPELINE.start()

@@ -4,29 +4,39 @@ from aiogram.fsm.storage.redis import RedisStorage
 from redis.asyncio.client import Redis
 from redis.exceptions import ConnectionError
 
-from _logger import LOGGER
+from interfaces.ilogger import ILogger
+from interfaces.imemcache import IMemoryCache
 
 
-class RedisCache:
-    def __init__(self, url: str):
-        self._redis = self._get_redis(url)
+class RedisCache(IMemoryCache):
+    def __init__(self, logger: ILogger):
+        self._redis: Redis | None = None
+        self.__logger = logger
 
-    def _get_redis(self, url: str):
-        LOGGER.debug("Connecting redis storage...")
-        redis_client = Redis.from_url(url)
+    def open(self, url: str):
+        self.__logger.info("Connecting redis storage...")
+        self._redis = Redis.from_url(url)
+        self.__logger.info("Done")
 
-        LOGGER.info("Done")
-        return redis_client
+        return self._redis
 
-    def get_redis_storage(self):
-        return RedisStorage(redis=self._redis, state_ttl=timedelta(minutes=10))
-
-    async def open(self):
-        try:
-            await self._redis.get("test")
-        except ConnectionError as e:
-            LOGGER.critical(f"Failed to connect to redis: {e}")
-            await self.close()
+    def get_storage(self, url: str):
+        if not self._redis:
+            self.open(url)
+        else:
+            return RedisStorage(redis=self._redis, state_ttl=timedelta(minutes=10))
 
     async def close(self):
-        await self._redis.aclose()
+        if self._redis:
+            await self._redis.aclose()
+
+    async def healthcheck(self) -> bool:
+        try:
+            if self._redis:
+                await self._redis.get("test")
+                return True
+            return False
+        except ConnectionError as e:
+            self.__logger.critical(f"Failed to connect to redis: {e}")
+            await self.close()
+            return False

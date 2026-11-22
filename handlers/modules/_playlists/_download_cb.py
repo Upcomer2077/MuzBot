@@ -7,15 +7,15 @@ from aiogram.types import CallbackQuery
 from aiogram.utils.media_group import MediaGroupBuilder, MediaType
 from aiogram_i18n import I18nContext
 
-import bot
 from _logger import LOGGER
 from action_limiter import AL
+from bot.bot import bot
 from config import PLAYLIST_DOWNLOAD_COOLDOWN_SECS, PLAYLIST_MAX_TRACKS, PLAYLISTS_LIMIT
 from dungeon import DM
 from handlers.modules._playlists.callbacks import DownloadPlaylistCallback
-from helpers.utils import U
+from helpers.telegram.send_action import send_action
 from localization import L10N
-from tools.extract_playlist_info import extract_playlist_info
+from tools.MusicTools import MT
 from worker import TRACK_PIPELINE
 from worker.priorities import DownloadTaskPriorities
 
@@ -35,9 +35,7 @@ async def handle_playlist_download(
 
     USER_ID = callback.from_user.id
     PLAYLIST_ID = callback_data.playlist_id
-    ANSWER = await bot.bot.send_message(
-        USER_ID, i18n.get(L10N["playlist"].pl_downloading)
-    )
+    ANSWER = await bot.send_message(USER_ID, i18n.get(L10N["playlist"].pl_downloading))
 
     if len(PLAYLIST_ID) == 0:
         LOGGER.error("Video_id param len is 0. Check callback data")
@@ -53,14 +51,14 @@ async def handle_playlist_download(
         )
 
     if AL.is_send_action_allowed(USER_ID):
-        await U.send_action(USER_ID)
+        await send_action(USER_ID)
 
     tracks_info = await DM.playlists.summon_slaves_from_playlist(
         PLAYLIST_ID, PLAYLIST_MAX_TRACKS or None
     )
 
     if not tracks_info:
-        r = await extract_playlist_info(PLAYLIST_ID)
+        r = await MT.extract_playlist_info(PLAYLIST_ID)
         if not r:
             return ANSWER.edit_text(i18n.get(L10N["playlist"].pl_error_not_found))
         (playlist_info, videos) = r
@@ -121,7 +119,7 @@ async def handle_playlist_download(
 
     for t in media_group_cached:
         if len(t):
-            await bot.bot.send_media_group(USER_ID, list(t), disable_notification=True)
+            await bot.send_media_group(USER_ID, list(t), disable_notification=True)
             await asyncio.sleep(1)
 
     and_more = 0
@@ -139,6 +137,6 @@ async def handle_playlist_download(
         if and_more:
             text += i18n.get(L10N["playlist"].pl_and_more, count=and_more)
 
-        await bot.bot.send_message(USER_ID, f"{text}")
+        await bot.send_message(USER_ID, f"{text}")
 
     await ANSWER.delete()

@@ -1,13 +1,13 @@
+from _logger import LOGGER
 from dungeon.models import PlaylistCache, TrackCache, TrackPlaylist
 from dungeon.repos.playlist import PlaylistRepository
 from dungeon.repos.track import TrackRepository
-from tools.extract_playlist_info import PlaylistInfoDict
-from tools.types import YoutubeSearchResultDict
+from tools.types import PlaylistInfoDict, SearchResultDict
 
 
 async def test_get_playlist_returns_correct_data():
     """Проверяем базовое получение мета-информации о плейлисте по ID."""
-    repo = PlaylistRepository()
+    repo = PlaylistRepository(logger=LOGGER)
 
     await PlaylistCache.create(
         playlist_id="pl_123", title="Synthwave Chill", artist="Various Artists"
@@ -27,8 +27,8 @@ async def test_get_playlist_returns_correct_data():
 async def test_add_playlist_and_tracks_creates_records_atomically():
     """Проверяем атомарное создание плейлиста, кэширование треков и генерацию m2m связей."""
     # Передаем явно TrackRepository, чтобы все слои работали в одной memory-сессии
-    track_repo = TrackRepository()
-    repo = PlaylistRepository(track_repo=track_repo)
+    track_repo = TrackRepository(logger=LOGGER)
+    repo = PlaylistRepository(track_repo=track_repo, logger=LOGGER)
 
     playlist_info: PlaylistInfoDict = {
         "id": "pl_rock",
@@ -36,7 +36,7 @@ async def test_add_playlist_and_tracks_creates_records_atomically():
         "author": "John Doe",
     }
 
-    test_tracks: list[YoutubeSearchResultDict] = [
+    test_tracks: list[SearchResultDict] = [
         {
             "video_id": "rock_1",
             "title": "Track One",
@@ -89,14 +89,14 @@ async def test_add_playlist_and_tracks_handles_conflicts():
 
     не падает по IntegrityError благодаря ignore_conflicts=True.
     """
-    repo = PlaylistRepository()
+    repo = PlaylistRepository(logger=LOGGER)
 
     playlist_info: PlaylistInfoDict = {
         "id": "pl_dup",
         "title": "Duplicate Test",
         "author": "Tester",
     }
-    test_tracks: list[YoutubeSearchResultDict] = [
+    test_tracks: list[SearchResultDict] = [
         {
             "video_id": "track_dup",
             "title": "Unique Title",
@@ -119,7 +119,7 @@ async def test_add_playlist_and_tracks_handles_conflicts():
 
 async def test_summon_slaves_from_playlist_sorting_and_limit():
     """Проверяем, что выборка треков из плейлиста строго соблюдает track_order и лимиты."""
-    repo = PlaylistRepository()
+    repo = PlaylistRepository(logger=LOGGER)
 
     # Вручную создаем структуру в памяти
     await PlaylistCache.create(playlist_id="pl_sort", title="Sorted", artist="Dev")

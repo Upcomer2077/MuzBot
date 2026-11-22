@@ -3,15 +3,15 @@ from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_i18n import I18nContext
 
-import bot
 from _logger import LOGGER
+from bot.bot import bot
 from config import MAX_PLAYLIST_TRACKS_REQUEST, PLAYLIST_MAX_TRACKS
 from dungeon import DM
 from handlers._drop_message.callbacks import DropCallback
 from handlers.modules._catalog.callbacks import ShowSinglePlaylistContentCallback
 from handlers.modules._playlists.callbacks import DownloadPlaylistCallback
 from localization import L10N
-from tools.extract_playlist_info import extract_playlist_info
+from tools.MusicTools import MT
 
 router = Router()
 
@@ -25,7 +25,7 @@ async def get_playlist_content(
     await callback.answer()
     PLAYLIST_ID = callback_data.playlist_id
     USER_ID = callback.from_user.id
-    ANSWER = await bot.bot.send_message(
+    ANSWER = await bot.send_message(
         USER_ID, i18n.get(L10N["catalog"].cat_searching_generic)
     )
 
@@ -33,7 +33,7 @@ async def get_playlist_content(
     playlist = await DM.playlists.get_playlist(PLAYLIST_ID)
 
     if not slaves or not playlist:
-        r = await extract_playlist_info(PLAYLIST_ID)
+        r = await MT.extract_playlist_info(PLAYLIST_ID)
         if not r:
             return await ANSWER.edit_text(i18n.get(L10N["playlist"].pl_error_not_found))
 

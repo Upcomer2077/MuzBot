@@ -11,8 +11,8 @@ from handlers.modules._subscriptions._sub.callbacks import (
     PaginationSubsArtistsCallback,
     SubCallback,
 )
+from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
-from helpers.utils import U
 from localization import L10N
 from schemas.states import TypedState
 
@@ -37,7 +37,7 @@ async def process_pagination(
 
     target_page = callback_data.page
 
-    content, _nav_markup, _drop_builder, start_idx = U.get_page_content(
+    content, _nav_markup, _drop_builder, start_idx = get_page_content(
         subs, page=target_page, pag_cb_type=PaginationSubsArtistsCallback, max=0
     )
 

@@ -1,4 +1,5 @@
+from _logger import LOGGER
 from action_limiter.al import LightLimiter
 
-AL = LightLimiter()
+AL = LightLimiter(LOGGER)
 """Global LightLimiter instance used across handlers for rate limiting and download quotas."""

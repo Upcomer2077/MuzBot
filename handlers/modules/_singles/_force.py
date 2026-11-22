@@ -7,19 +7,22 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
 from aiogram_i18n import I18nContext
 
-import bot
 from _logger import LOGGER
 from action_limiter import AL
+from bot.bot import bot
 from bot.commands import COMMANDS, COMSET
 from config import (
     MAX_TRACK_DURATION_SECONDS,
     QUERY_DOWNLOAD_LIMIT_SECS,
     TRACKS_PER_LIMIT,
 )
+from dungeon import DM
+from helpers.get_track import get_track
 from helpers.regexes import YTM_REGEX, YTM_VID_REGEX
-from helpers.utils import U
+from helpers.telegram.send_action import send_action
 from localization import L10N
 from schemas.states import TypedState
+from tools.MusicTools import MT
 from worker import TRACK_PIPELINE
 from worker.priorities import DownloadTaskPriorities
 
@@ -79,7 +82,7 @@ async def _handler(message: Message, ytm_link: str, i18n: I18nContext):
     VIDEO_ID = VIDEO_ID.group(1)
     CHAT_ID = message.chat.id
 
-    track = await U.get_track(VIDEO_ID)
+    track = await get_track(VIDEO_ID, MT=MT, DM=DM)
     if not track:
         return await ANSWER.edit_text(i18n.get(L10N["single"].download_info_not_found))
 
@@ -101,7 +104,7 @@ async def _handler(message: Message, ytm_link: str, i18n: I18nContext):
         )
 
     if AL.is_send_action_allowed(CHAT_ID):
-        await U.send_action(CHAT_ID)
+        await send_action(CHAT_ID)
 
     if not track.telegram_file_id:
         _, cache = await TRACK_PIPELINE.submit(
@@ -118,7 +121,7 @@ async def _handler(message: Message, ytm_link: str, i18n: I18nContext):
                         limit_min=int(MAX_TRACK_DURATION_SECONDS / 60),
                     )
                 )
-            track = await U.get_track(VIDEO_ID, extract_info_from_ytm=False)
+            track = await get_track(VIDEO_ID, extract_info_from_ytm=False, MT=MT, DM=DM)
             if not (track and track.telegram_file_id):
                 return await ANSWER.edit_text(
                     i18n.get(L10N["single"].download_info_not_found)
@@ -133,5 +136,5 @@ async def _handler(message: Message, ytm_link: str, i18n: I18nContext):
                 )
             )
 
-    await bot.bot.send_audio(CHAT_ID, track.telegram_file_id)
+    await bot.send_audio(CHAT_ID, track.telegram_file_id)
     return await ANSWER.delete()

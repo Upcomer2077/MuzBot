@@ -2,17 +2,21 @@ from aiogram import Router
 from aiogram.types import CallbackQuery, Message
 from aiogram_i18n import I18nContext
 
-import bot
 from _logger import LOGGER
 from action_limiter import AL
+from bot.bot import bot
 from config import (
     MAX_TRACK_DURATION_SECONDS,
     QUERY_DOWNLOAD_LIMIT_SECS,
     TRACKS_PER_LIMIT,
 )
+from dungeon import DM
 from handlers.modules._singles.callbacks import DownloadCallback
-from helpers.utils import U
+from helpers.get_track import get_track
+from helpers.telegram.send_action import send_action
+from helpers.telegram.send_anchor_message import send_anchor_message
 from localization import L10N
+from tools.MusicTools import MT
 from worker import TRACK_PIPELINE
 from worker.priorities import DownloadTaskPriorities
 
@@ -33,7 +37,7 @@ async def handle_download(
         return callback.answer(i18n.get(L10N["single"].download_error_generic, idx=IDX))
     # --------------
 
-    ANCHOR_MESSAGE = callback.message or await U.send_anchor_message(
+    ANCHOR_MESSAGE = callback.message or await send_anchor_message(
         callback.from_user.id
     )
     ANSWER = await ANCHOR_MESSAGE.answer(i18n.get(L10N["single"].download_processing))
@@ -43,7 +47,7 @@ async def handle_download(
     if IS_FROM_INLINE_QUERY and isinstance(ANCHOR_MESSAGE, Message):
         await ANCHOR_MESSAGE.delete()
 
-    track = await U.get_track(VIDEO_ID)
+    track = await get_track(VIDEO_ID, MT=MT, DM=DM)
     if not track:
         return ANCHOR_MESSAGE.answer(i18n.get(L10N["single"].download_info_not_found))
 
@@ -65,7 +69,7 @@ async def handle_download(
         )
 
     if AL.is_send_action_allowed(CHAT_ID):
-        await U.send_action(CHAT_ID)
+        await send_action(CHAT_ID)
 
     if not track.telegram_file_id:
         _, cache = await TRACK_PIPELINE.submit(
@@ -82,7 +86,7 @@ async def handle_download(
                         limit_min=int(MAX_TRACK_DURATION_SECONDS / 60),
                     )
                 )
-            track = await U.get_track(VIDEO_ID, extract_info_from_ytm=False)
+            track = await get_track(VIDEO_ID, extract_info_from_ytm=False, MT=MT, DM=DM)
             if not (track and track.telegram_file_id):
                 return ANCHOR_MESSAGE.answer(
                     i18n.get(L10N["single"].download_info_not_found)
@@ -97,5 +101,5 @@ async def handle_download(
                 )
             )
 
-    await bot.bot.send_audio(CHAT_ID, track.telegram_file_id)
+    await bot.send_audio(CHAT_ID, track.telegram_file_id)
     return ANSWER.delete()

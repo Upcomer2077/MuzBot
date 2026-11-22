@@ -1,14 +1,15 @@
+from _logger import LOGGER
 from config import MAX_TRACK_DURATION_SECONDS
 from dungeon.models import TrackCache
 from dungeon.repos.track import TrackRepository
-from tools.types import YoutubeSearchResultDict
+from tools.types import SearchResultDict
 
 
 async def test_enslave_bulk_success(setup_track_db):
     """Проверяем массовую вставку треков и расчет флага is_too_large."""
-    repo = TrackRepository()
+    repo = TrackRepository(logger=LOGGER)
 
-    test_tracks: list[YoutubeSearchResultDict] = [
+    test_tracks: list[SearchResultDict] = [
         {
             "video_id": "short_id",
             "title": "Short Track",
@@ -41,7 +42,7 @@ async def test_enslave_bulk_success(setup_track_db):
 
 async def test_summon_slaves_mapping(setup_track_db):
     """Проверяем выборку пачки треков по списку ID и корректность маппинга в словарь."""
-    repo = TrackRepository()
+    repo = TrackRepository(logger=LOGGER)
 
     await TrackCache.create(
         video_id="id_1", title="Track 1", artist="A1", track_duration=100
@@ -61,7 +62,7 @@ async def test_summon_slaves_mapping(setup_track_db):
 
 async def test_fisting_single_and_bulk_update(setup_track_db):
     """Проверяем обновление полей telegram_file_id и is_too_large (метод fisting)."""
-    repo = TrackRepository()
+    repo = TrackRepository(logger=LOGGER)
 
     await TrackCache.create(
         video_id="track_x", title="X", artist="A", track_duration=100
@@ -91,7 +92,7 @@ async def test_fisting_single_and_bulk_update(setup_track_db):
 
 async def test_next_door_deletion(setup_track_db):
     """Проверяем удаление трека из кэша по ID."""
-    repo = TrackRepository()
+    repo = TrackRepository(logger=LOGGER)
 
     await TrackCache.create(
         video_id="target_id", title="To Delete", artist="A", track_duration=100

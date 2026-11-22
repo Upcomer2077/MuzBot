@@ -1,8 +1,8 @@
 from typing import Literal
 
-from _logger.ILogger import ILogger
 from _logger.lokilogger import LokiLogger
 from _logger.stdlogger import StdLogger
+from interfaces.ilogger import ILogger
 
 
 class MultiLogger(ILogger):

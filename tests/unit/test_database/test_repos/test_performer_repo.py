@@ -1,3 +1,4 @@
+from _logger import LOGGER
 from dungeon.models import Albums, Singles, Subscriptions, TgUsers, YTPerformers
 from dungeon.repos.ytperformers import YTPerformersRepository
 from tools.types import ArtistConcreteEntityInfoDict
@@ -5,7 +6,7 @@ from tools.types import ArtistConcreteEntityInfoDict
 
 async def test_set_performer_last_release_upsert():
     """Проверяем update_or_create: создание и обновление профиля артиста при конфликте."""
-    repo = YTPerformersRepository()
+    repo = YTPerformersRepository(logger=LOGGER)
 
     # 1. Проверяем вставку (создание новой записи)
     await repo.set_performer_releases_v2(
@@ -33,7 +34,7 @@ async def test_set_performer_last_release_upsert():
 
 async def test_get_artists_by_name_prefix_search():
     """Проверяем регистронезависимый поиск по началу имени артиста (__istartswith)."""
-    repo = YTPerformersRepository()
+    repo = YTPerformersRepository(logger=LOGGER)
 
     # Создаем артистов
     await YTPerformers.create(id="1", name="Linkin Park")

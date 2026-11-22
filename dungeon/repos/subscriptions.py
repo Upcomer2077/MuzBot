@@ -2,10 +2,11 @@ from collections.abc import AsyncGenerator
 from typing import Any, cast
 
 from dungeon.models import Subscriptions, TgUsers, YTPerformers
+from dungeon.repos.base import BaseRepo
 from dungeon.types.subs import GetUserSubsResult
 
 
-class SubscriptionRepository:
+class SubscriptionRepository(BaseRepo):
     """Manages users subscriptions, artists caching profiles, and bulk queries mappings."""
 
     async def set_performer_last_release(

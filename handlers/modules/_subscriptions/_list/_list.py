@@ -14,8 +14,8 @@ from dungeon import DM
 from dungeon.types.subs import GetUserSubsResult
 from handlers.modules._subscriptions._list.callbacks import PaginationSubsListCallback
 from handlers.modules._subscriptions._unsub.callbacks import UnSubCallback
+from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
-from helpers.utils import U
 from localization import L10N
 from schemas.states import TypedState
 
@@ -46,7 +46,7 @@ async def subs_list(
 
     builder = InlineKeyboardBuilder()
 
-    content, _nav_markup, drop_builder, start_idx = U.get_page_content(
+    content, _nav_markup, drop_builder, start_idx = get_page_content(
         subs, page=0, pag_cb_type=PaginationSubsListCallback, max=0
     )
 

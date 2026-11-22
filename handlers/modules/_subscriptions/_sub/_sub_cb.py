@@ -4,14 +4,14 @@ from aiogram import Router
 from aiogram.types import CallbackQuery
 from aiogram_i18n import I18nContext
 
-import bot
 from _logger import LOGGER
 from action_limiter import AL
+from bot.bot import bot
 from config import SUBSCRIPTION_COOLDOWN_SECS, SUBSCRIPTIONS_PER_LIMIT
 from dungeon import DM
 from handlers.modules._subscriptions._sub.callbacks import SubCallback
 from localization import L10N
-from tools.extract_artist_discography import extract_artist_discography
+from tools.MusicTools import MT
 
 router = Router()
 
@@ -35,7 +35,7 @@ async def handle_sub(
         return await __subscribe(USER_ID, AUTHOR_ID, local_author_info.name, i18n)
 
     if not AL.is_subscription_allowed(USER_ID):
-        return await bot.bot.send_message(
+        return await bot.send_message(
             USER_ID,
             i18n.get(
                 L10N["subs"].sub_limit_exceeded,
@@ -44,7 +44,7 @@ async def handle_sub(
             ),
         )
 
-    AUTHOR_INFO: Final = await extract_artist_discography(AUTHOR_ID)
+    AUTHOR_INFO: Final = await MT.extract_artist_discography(AUTHOR_ID)
     if not AUTHOR_INFO:
         return callback.answer(i18n.get(L10N["subs"].sub_error_generic))
 
@@ -64,6 +64,6 @@ async def handle_sub(
 
 async def __subscribe(USER_ID: int, AUTHOR_ID: str, a_name: str, i18n: I18nContext):
     await DM.subs.subscribe_to_performer(USER_ID, AUTHOR_ID)
-    return await bot.bot.send_message(
+    return await bot.send_message(
         USER_ID, i18n.get(L10N["subs"].sub_success, name=a_name)
     )

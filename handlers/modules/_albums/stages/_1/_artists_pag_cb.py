@@ -10,8 +10,8 @@ from aiogram_i18n import I18nContext
 from action_limiter import AL
 from config import SUBSCRIPTION_COOLDOWN_SECS, SUBSCRIPTIONS_PER_LIMIT
 from handlers.modules._albums.callbacks import AlbumsCallback, PaginationAlbums1Callback
+from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
-from helpers.utils import U
 from localization import L10N
 from schemas.states import TypedState
 from tools.types import ArtistsShortInfoDict
@@ -49,7 +49,7 @@ async def process_pagination(
 
     target_page = callback_data.page
 
-    content, _nav_markup, _drop_builder, start_idx = U.get_page_content(
+    content, _nav_markup, _drop_builder, start_idx = get_page_content(
         artists, page=target_page, pag_cb_type=PaginationAlbums1Callback, max=0
     )
 

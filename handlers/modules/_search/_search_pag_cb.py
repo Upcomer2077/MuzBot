@@ -8,7 +8,7 @@ from aiogram_i18n import I18nContext
 
 from handlers.modules._search.callbacks import PaginationSearchCallback
 from handlers.modules._singles.callbacks import DownloadCallback
-from helpers.utils import U
+from helpers.get_page_content import get_page_content
 from localization import L10N
 from schemas.states import TypedState
 
@@ -33,7 +33,7 @@ async def process_pagination(
 
     target_page = callback_data.page
 
-    content, _nav_markup, _drop_markup, start_idx = U.get_page_content(
+    content, _nav_markup, _drop_markup, start_idx = get_page_content(
         search_result, page=target_page, pag_cb_type=PaginationSearchCallback
     )
 

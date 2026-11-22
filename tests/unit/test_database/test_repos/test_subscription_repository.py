@@ -1,3 +1,4 @@
+from _logger import LOGGER
 from dungeon.models import Subscriptions, TgUsers, YTPerformers
 from dungeon.repos.subscriptions import SubscriptionRepository
 from dungeon.repos.ytperformers import YTPerformersRepository
@@ -5,7 +6,7 @@ from dungeon.repos.ytperformers import YTPerformersRepository
 
 async def test_set_performer_last_release_upsert():
     """Проверяем update_or_create: создание и обновление профиля артиста при конфликте."""
-    repo = SubscriptionRepository()
+    repo = SubscriptionRepository(logger=LOGGER)
 
     # 1. Проверяем вставку (создание новой записи)
     await repo.set_performer_last_release(
@@ -35,7 +36,7 @@ async def test_set_performer_last_release_upsert():
 
 async def test_subscribe_and_drop_operations():
     """Проверяем создание пользователя, оформление подписки и отписку."""
-    repo = SubscriptionRepository()
+    repo = SubscriptionRepository(logger=LOGGER)
 
     # ВАЖНО: Сначала создаем артиста, чтобы не упал FOREIGN KEY constraint
     await YTPerformers.create(id="perf_rock", name="Rock Artist")
@@ -66,7 +67,7 @@ async def test_subscribe_and_drop_operations():
 
 async def test_get_artists_by_name_prefix_search():
     """Проверяем регистронезависимый поиск по началу имени артиста (__istartswith)."""
-    repo = YTPerformersRepository()
+    repo = YTPerformersRepository(logger=LOGGER)
 
     # Создаем артистов
     await YTPerformers.create(id="1", name="Linkin Park")
@@ -93,7 +94,7 @@ async def test_get_artists_by_name_prefix_search():
 
 async def test_get_subscripted_authors_batch_generator():
     """Проверяем асинхронный генератор батчей активных авторов."""
-    repo = SubscriptionRepository()
+    repo = SubscriptionRepository(logger=LOGGER)
 
     # Создаем 5 исполнителей
     for i in range(1, 6):
@@ -127,7 +128,7 @@ async def test_get_subscripted_authors_batch_generator():
 
 async def test_toggle_user_subscriptions():
     """Проверяем массовое переключение флага заморозки подписок пользователя."""
-    repo = SubscriptionRepository()
+    repo = SubscriptionRepository(logger=LOGGER)
 
     await TgUsers.create(id=500)
     await YTPerformers.create(id="perf_1", name="A")

@@ -1,7 +1,7 @@
 from typing import TypedDict
 
 
-class YoutubeSearchResultDict(TypedDict):
+class SearchResultDict(TypedDict):
     """Normalized data structure representing a track item pulled directly from YouTube Music search responses."""
 
     duration: str | None

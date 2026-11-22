@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from datetime import datetime
-from typing import Required, TypedDict
+from typing import Any, Required, TypedDict
 
 from scheduler.triggers import JobTrigger
 
@@ -8,6 +8,7 @@ from scheduler.triggers import JobTrigger
 class BaseJob(TypedDict):
     trigger: JobTrigger
     func: Required[Callable]
+    func_kwargs: Any
     id: str
     on_setup: Callable | None
 

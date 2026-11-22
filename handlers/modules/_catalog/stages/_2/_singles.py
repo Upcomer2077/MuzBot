@@ -7,9 +7,9 @@ from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_i18n import I18nContext
 
-import bot
 from _logger import LOGGER
 from action_limiter import AL
+from bot.bot import bot
 from config import CATALOG_COOLDOWN_SECS, CATALOG_PER_LIMIT, PAGINATION_ITEMS_PER_PAGE
 from dungeon import DM
 from handlers.modules._catalog.callbacks import (
@@ -17,11 +17,11 @@ from handlers.modules._catalog.callbacks import (
     PaginationSingles2Callback,
     ShowSinglePlaylistContentCallback,
 )
+from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
-from helpers.utils import U
 from localization import L10N
 from schemas.states import TypedState
-from tools.extract_artist_discography import extract_artist_discography
+from tools.MusicTools import MT
 
 router = Router()
 
@@ -36,7 +36,7 @@ async def get_singles_list(
     await callback.answer()
     USER_ID = callback.from_user.id
     if not AL.is_catalog_action_allowed(USER_ID):
-        return await bot.bot.send_message(
+        return await bot.send_message(
             USER_ID,
             i18n.get(
                 L10N["catalog"].cat_action_limit_rate,
@@ -46,7 +46,7 @@ async def get_singles_list(
         )
 
     S: Final = TypedState(state)
-    ANSWER = await bot.bot.send_message(
+    ANSWER = await bot.send_message(
         callback.from_user.id, i18n.get(L10N["catalog"].cat_searching_generic)
     )
     AUTHOR_ID = callback_data.author_id
@@ -55,7 +55,7 @@ async def get_singles_list(
         f"Found info about artist {AUTHOR_ID} singles: {len(releases) if releases else None}"
     )
     if not releases:
-        res = await extract_artist_discography(AUTHOR_ID, top_only=False)
+        res = await MT.extract_artist_discography(AUTHOR_ID, top_only=False)
         if not res:
             LOGGER.error(
                 f"Cannot extract performer {AUTHOR_ID} releases on catalog/stage/2"
@@ -84,7 +84,7 @@ async def get_singles_list(
     if not singles:
         return await ANSWER.edit_text(i18n.get(L10N["catalog"].cat_no_releases))
 
-    content, _nav_markup, _drop_builder, start_idx = U.get_page_content(
+    content, _nav_markup, _drop_builder, start_idx = get_page_content(
         singles, page=0, pag_cb_type=PaginationSingles2Callback
     )
 

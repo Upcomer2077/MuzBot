@@ -2,12 +2,12 @@ from typing import Final
 
 from tortoise.transactions import in_transaction
 
-from _logger import LOGGER
 from dungeon.models import Albums, PlaylistCache, Singles, YTPerformers
+from dungeon.repos.base import BaseRepo
 from tools.types import ArtistInfoDict
 
 
-class YTPerformersRepository:
+class YTPerformersRepository(BaseRepo):
     async def set_performer_releases_v2(
         self, performer_id: str, *, info: ArtistInfoDict
     ):
@@ -57,7 +57,7 @@ class YTPerformersRepository:
                 await Albums.bulk_create(db_albums, ignore_conflicts=True)
                 return True
         except Exception as e:
-            LOGGER.error(str(e))
+            self._logger.error(str(e))
             return False
 
     async def get_performer_info(self, performer_id: str) -> YTPerformers | None:

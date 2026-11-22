@@ -7,18 +7,18 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_i18n import I18nContext
 from tortoise.expressions import Q
 
-import bot
 from action_limiter import AL
+from bot.bot import bot
 from bot.commands import COMSET
 from config import PAGINATION_ITEMS_PER_PAGE, SEARCH_COOLDOWN_SECS, SEARCH_PER_LIMIT
 from dungeon import DM
 from dungeon.models import TrackCache
 from handlers.modules._recom.callbacks import PaginationRecCallback
 from handlers.modules._singles.callbacks import DownloadCallback
-from helpers.utils import U
+from helpers.get_page_content import get_page_content
 from localization import L10N
 from schemas.states import TypedState
-from tools.get_watch_pl import get_watch_pl
+from tools.MusicTools import MT
 
 router = Router()
 
@@ -59,7 +59,7 @@ async def handle_audio(message: Message, state: FSMContext, i18n: I18nContext):
     ).first()
 
     if not track:
-        bot_info = await bot.Bot.get_me(bot.bot)
+        bot_info = await bot.get_me()
         botname = f"@{bot_info.username}" if bot_info else "этого бота"
         return await STATUS_MESSAGE.edit_text(
             i18n.get(
@@ -69,7 +69,7 @@ async def handle_audio(message: Message, state: FSMContext, i18n: I18nContext):
             )
         )
 
-    watch_pl = await get_watch_pl(track.video_id)
+    watch_pl = await MT.get_like_pl(track.video_id)
     if not watch_pl:
         return await STATUS_MESSAGE.edit_text(
             i18n.get(L10N["recommendations"].rec_error_not_found)
@@ -77,7 +77,7 @@ async def handle_audio(message: Message, state: FSMContext, i18n: I18nContext):
 
     await DM.tracks.enslave_bulk(watch_pl)
 
-    content, _nav_markup, _drop_builder, start_idx = U.get_page_content(
+    content, _nav_markup, _drop_builder, start_idx = get_page_content(
         watch_pl, page=0, pag_cb_type=PaginationRecCallback
     )
 

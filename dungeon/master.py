@@ -3,19 +3,20 @@ from dungeon.repos.subscriptions import SubscriptionRepository
 from dungeon.repos.track import TrackRepository
 from dungeon.repos.ytperformers import YTPerformersRepository
 from dungeon.session import DungeonDBSession
+from interfaces.idatabase import IDataBase
+from interfaces.ilogger import ILogger
 
 
-class DungeonMaster:
-    """Unified Facade managing connection states and direct routing endpoints to segmented repositories."""
-
-    def __init__(self):
-        self.tracks = TrackRepository()
-        self.playlists = PlaylistRepository(track_repo=self.tracks)
-        self.subs = SubscriptionRepository()
-        self.performers = YTPerformersRepository()
+class DungeonMaster(IDataBase):
+    def __init__(self, logger: ILogger):
+        super().__init__(logger)
+        self.tracks = TrackRepository(logger=logger)
+        self.playlists = PlaylistRepository(track_repo=self.tracks, logger=logger)
+        self.subs = SubscriptionRepository(logger=logger)
+        self.performers = YTPerformersRepository(logger=logger)
 
     async def open_dungeon(self):
-        await DungeonDBSession.open_dungeon()
+        await DungeonDBSession.open_dungeon(logger=self._logger)
 
     async def close_dungeon(self):
-        await DungeonDBSession.close_dungeon()
+        await DungeonDBSession.close_dungeon(logger=self._logger)
