@@ -2,7 +2,7 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Any, Required, TypedDict
 
-from infra.scheduler.triggers import JobTrigger
+from interfaces.ischeduler.triggers import JobTrigger
 
 
 class BaseJob(TypedDict):

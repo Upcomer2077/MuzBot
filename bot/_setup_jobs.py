@@ -1,18 +1,23 @@
 import asyncio
 
 from config import BACKUP_EVERY_N_DAYS
-from infra.action_limiter import AL
-from infra.scheduler import SHED
 from infra.scheduler.jobs.backup import job as backup_job
 from infra.scheduler.jobs.sub_notifications import job as sub_notification_job
-from infra.scheduler.triggers import JobTrigger
 from interfaces.idatabase import IDataBase
+from interfaces.ilimiter import IActionLimiter
 from interfaces.ilogger import ILogger
+from interfaces.ischeduler import IScheduler
+from interfaces.ischeduler.triggers import JobTrigger
 from interfaces.iworkerpipe import IWorkerPipeline
 
 
 async def setup_jobs(
-    *, logger: ILogger, DM: IDataBase, TRACK_PIPELINE: IWorkerPipeline
+    *,
+    logger: ILogger,
+    DM: IDataBase,
+    TRACK_PIPELINE: IWorkerPipeline,
+    AL: IActionLimiter,
+    SHED: IScheduler,
 ) -> tuple[None, None, None]:
     j1 = SHED.register_job(
         backup_job,
