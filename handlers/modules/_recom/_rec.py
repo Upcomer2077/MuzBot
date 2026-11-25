@@ -14,9 +14,9 @@ from handlers.modules._recom.callbacks import PaginationRecCallback
 from handlers.modules._singles.callbacks import DownloadCallback
 from helpers.get_page_content import get_page_content
 from infra.action_limiter import AL
-from infra.dungeon import DM
 from infra.dungeon.models import TrackCache
 from infra.tools.MusicTools import MT
+from interfaces.idatabase import IDataBase
 from localization import L10N
 from schemas.states import TypedState
 
@@ -24,7 +24,9 @@ router = Router()
 
 
 @router.message(F.audio)
-async def handle_audio(message: Message, state: FSMContext, i18n: I18nContext):
+async def handle_audio(
+    message: Message, state: FSMContext, i18n: I18nContext, DM: IDataBase
+):
     S: Final = TypedState(state)
     if not message.from_user:
         return await message.answer(i18n.get(L10N["recommendations"].rec_error_unknown))

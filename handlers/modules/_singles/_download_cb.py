@@ -13,11 +13,11 @@ from helpers.get_track import get_track
 from helpers.telegram.send_action import send_action
 from helpers.telegram.send_anchor_message import send_anchor_message
 from infra.action_limiter import AL
-from infra.dungeon import DM
 from infra.tools.MusicTools import MT
-from infra.worker import TRACK_PIPELINE
-from infra.worker.priorities import DownloadTaskPriorities
+from interfaces.idatabase import IDataBase
 from interfaces.ilogger import ILogger
+from interfaces.iworkerpipe import IWorkerPipeline
+from interfaces.iworkerpipe.priorities import DownloadTaskPriorities
 from localization import L10N
 
 router = Router()
@@ -29,6 +29,8 @@ async def handle_download(
     callback_data: DownloadCallback,
     i18n: I18nContext,
     logger: ILogger,
+    DM: IDataBase,
+    TRACK_PIPELINE: IWorkerPipeline,
 ):
     await callback.answer()  # Reset button timer
 

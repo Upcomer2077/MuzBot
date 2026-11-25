@@ -17,7 +17,7 @@ from handlers.modules._subscriptions._unsub.callbacks import (
 )
 from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
-from infra.dungeon import DM
+from interfaces.idatabase import IDataBase
 from localization import L10N
 from schemas.states import TypedState
 
@@ -30,7 +30,11 @@ class _USubscriptionState(StatesGroup):
 
 @router.message(COMMANDS[COMSET.UNSUBSCRIBE]["backend"])
 async def subscribe(
-    message: Message, command: CommandObject, state: FSMContext, i18n: I18nContext
+    message: Message,
+    command: CommandObject,
+    state: FSMContext,
+    i18n: I18nContext,
+    DM: IDataBase,
 ):
     S: Final = TypedState(state)
 
@@ -43,11 +47,13 @@ async def subscribe(
             )
         )
 
-    await _handler(message, performer, S, i18n)
+    await _handler(message, performer, S, i18n, DM)
 
 
 @router.message(_USubscriptionState.first_state)
-async def unsubscribe_step_2(message: Message, state: FSMContext, i18n: I18nContext):
+async def unsubscribe_step_2(
+    message: Message, state: FSMContext, i18n: I18nContext, DM: IDataBase
+):
     S: Final = TypedState(state)
 
     performer = message.text
@@ -59,10 +65,12 @@ async def unsubscribe_step_2(message: Message, state: FSMContext, i18n: I18nCont
         )
 
     await S.clear()
-    await _handler(message, performer, S, i18n)
+    await _handler(message, performer, S, i18n, DM)
 
 
-async def _handler(message: Message, performer: str, S: TypedState, i18n: I18nContext):
+async def _handler(
+    message: Message, performer: str, S: TypedState, i18n: I18nContext, DM: IDataBase
+):
     ANSWER = await message.answer(i18n.get(L10N["subs"].sub_searching))
     if not message.from_user:
         return await ANSWER.edit_text(i18n.get(L10N["subs"].list_unknown_error))

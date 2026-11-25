@@ -12,11 +12,11 @@ from config import PLAYLIST_DOWNLOAD_COOLDOWN_SECS, PLAYLIST_MAX_TRACKS, PLAYLIS
 from handlers.modules._playlists.callbacks import DownloadPlaylistCallback
 from helpers.telegram.send_action import send_action
 from infra.action_limiter import AL
-from infra.dungeon import DM
 from infra.tools.MusicTools import MT
-from infra.worker import TRACK_PIPELINE
-from infra.worker.priorities import DownloadTaskPriorities
+from interfaces.idatabase import IDataBase
 from interfaces.ilogger import ILogger
+from interfaces.iworkerpipe import IWorkerPipeline
+from interfaces.iworkerpipe.priorities import DownloadTaskPriorities
 from localization import L10N
 
 router = Router()
@@ -33,6 +33,8 @@ async def handle_playlist_download(
     callback_data: DownloadPlaylistCallback,
     i18n: I18nContext,
     logger: ILogger,
+    DM: IDataBase,
+    TRACK_PIPELINE: IWorkerPipeline,
 ):
     await callback.answer()
 

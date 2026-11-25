@@ -8,8 +8,8 @@ from bot.bot import bot
 from config import SUBSCRIPTION_COOLDOWN_SECS, SUBSCRIPTIONS_PER_LIMIT
 from handlers.modules._subscriptions._sub.callbacks import SubCallback
 from infra.action_limiter import AL
-from infra.dungeon import DM
 from infra.tools.MusicTools import MT
+from interfaces.idatabase import IDataBase
 from interfaces.ilogger import ILogger
 from localization import L10N
 
@@ -22,6 +22,7 @@ async def handle_sub(
     callback_data: SubCallback,
     i18n: I18nContext,
     logger: ILogger,
+    DM: IDataBase,
 ):
     await callback.answer()  # Reset button timer
 
@@ -35,7 +36,7 @@ async def handle_sub(
     local_author_info = await DM.performers.get_performer_info(AUTHOR_ID)
 
     if local_author_info:
-        return await __subscribe(USER_ID, AUTHOR_ID, local_author_info.name, i18n)
+        return await __subscribe(USER_ID, AUTHOR_ID, local_author_info.name, i18n, DM)
 
     if not AL.is_subscription_allowed(USER_ID):
         return await bot.send_message(
@@ -62,10 +63,12 @@ async def handle_sub(
         last_single_id=SINGLES[0]["browseId"] if len(SINGLES) else None,
     )
 
-    return await __subscribe(USER_ID, AUTHOR_ID, AUTHOR_INFO["name"], i18n)
+    return await __subscribe(USER_ID, AUTHOR_ID, AUTHOR_INFO["name"], i18n, DM)
 
 
-async def __subscribe(USER_ID: int, AUTHOR_ID: str, a_name: str, i18n: I18nContext):
+async def __subscribe(
+    USER_ID: int, AUTHOR_ID: str, a_name: str, i18n: I18nContext, DM: IDataBase
+):
     await DM.subs.subscribe_to_performer(USER_ID, AUTHOR_ID)
     return await bot.send_message(
         USER_ID, i18n.get(L10N["subs"].sub_success, name=a_name)

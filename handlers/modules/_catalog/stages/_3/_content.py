@@ -8,8 +8,8 @@ from config import MAX_PLAYLIST_TRACKS_REQUEST, PLAYLIST_MAX_TRACKS
 from handlers._drop_message.callbacks import DropCallback
 from handlers.modules._catalog.callbacks import ShowSinglePlaylistContentCallback
 from handlers.modules._playlists.callbacks import DownloadPlaylistCallback
-from infra.dungeon import DM
 from infra.tools.MusicTools import MT
+from interfaces.idatabase import IDataBase
 from interfaces.ilogger import ILogger
 from localization import L10N
 
@@ -22,6 +22,7 @@ async def get_playlist_content(
     callback_data: ShowSinglePlaylistContentCallback,
     i18n: I18nContext,
     logger: ILogger,
+    DM: IDataBase,
 ):
     await callback.answer()
     PLAYLIST_ID = callback_data.playlist_id

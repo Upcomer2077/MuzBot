@@ -18,11 +18,11 @@ from helpers.get_track import get_track
 from helpers.regexes import YTM_REGEX, YTM_VID_REGEX
 from helpers.telegram.send_action import send_action
 from infra.action_limiter import AL
-from infra.dungeon import DM
 from infra.tools.MusicTools import MT
-from infra.worker import TRACK_PIPELINE
-from infra.worker.priorities import DownloadTaskPriorities
+from interfaces.idatabase import IDataBase
 from interfaces.ilogger import ILogger
+from interfaces.iworkerpipe import IWorkerPipeline
+from interfaces.iworkerpipe.priorities import DownloadTaskPriorities
 from localization import L10N
 from schemas.states import TypedState
 
@@ -40,6 +40,8 @@ async def force(
     state: FSMContext,
     i18n: I18nContext,
     logger: ILogger,
+    DM: IDataBase,
+    TRACK_PIPELINE: IWorkerPipeline,
 ):
     if not command.args:
         S: Final = TypedState(state)
@@ -55,12 +57,17 @@ async def force(
     if YTM_REGEX.match(YTM_LINK) is None:
         return await message.answer(i18n.get(L10N["single"].force_invalid_link))
 
-    return await _handler(message, YTM_LINK, i18n, logger)
+    return await _handler(message, YTM_LINK, i18n, logger, DM, TRACK_PIPELINE)
 
 
 @router.message(_ForceState.first_enter_link)
 async def force_step_2(
-    message: Message, state: FSMContext, i18n: I18nContext, logger: ILogger
+    message: Message,
+    state: FSMContext,
+    i18n: I18nContext,
+    logger: ILogger,
+    DM: IDataBase,
+    TRACK_PIPELINE: IWorkerPipeline,
 ):
     YTM_LINK = message.text
 
@@ -72,14 +79,21 @@ async def force_step_2(
             )
         )
 
-    await _handler(message, YTM_LINK, i18n, logger)
+    await _handler(message, YTM_LINK, i18n, logger, DM, TRACK_PIPELINE)
     return await state.clear()
 
 
 # ======================================================================
 
 
-async def _handler(message: Message, ytm_link: str, i18n: I18nContext, logger: ILogger):
+async def _handler(
+    message: Message,
+    ytm_link: str,
+    i18n: I18nContext,
+    logger: ILogger,
+    DM: IDataBase,
+    TRACK_PIPELINE: IWorkerPipeline,
+):
     VIDEO_ID = YTM_VID_REGEX.search(ytm_link)
     if not VIDEO_ID:
         logger.warning(f"Video id not recognized: {ytm_link}")

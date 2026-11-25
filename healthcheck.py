@@ -7,8 +7,11 @@ from aiogram.enums import ChatMemberStatus
 from _logger import LOGGER
 from bot.bot import bot
 from config import CHANNEL_STORAGE_ID, DATABASE_PATH, LOKI_URL
-from infra.dungeon import DM
+from infra.dungeon.master import DungeonMaster
 from infra.tools.types import SearchResultDict
+from interfaces.idatabase import IDataBase
+
+DM: IDataBase = DungeonMaster(logger=LOGGER)
 
 
 async def _check_loki():

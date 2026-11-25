@@ -6,7 +6,7 @@ from aiogram_i18n import I18nContext
 
 from bot.bot import bot
 from handlers.modules._subscriptions._unsub.callbacks import UnSubCallback
-from infra.dungeon import DM
+from interfaces.idatabase import IDataBase
 from interfaces.ilogger import ILogger
 from localization import L10N
 
@@ -19,6 +19,7 @@ async def handle_un_sub(
     callback_data: UnSubCallback,
     i18n: I18nContext,
     logger: ILogger,
+    DM: IDataBase,
 ):
     await callback.answer()  # Reset button timer
 

@@ -6,10 +6,14 @@ from infra.scheduler import SHED
 from infra.scheduler.jobs.backup import job as backup_job
 from infra.scheduler.jobs.sub_notifications import job as sub_notification_job
 from infra.scheduler.triggers import JobTrigger
+from interfaces.idatabase import IDataBase
 from interfaces.ilogger import ILogger
+from interfaces.iworkerpipe import IWorkerPipeline
 
 
-async def setup_jobs(*, logger: ILogger) -> tuple[None, None, None]:
+async def setup_jobs(
+    *, logger: ILogger, DM: IDataBase, TRACK_PIPELINE: IWorkerPipeline
+) -> tuple[None, None, None]:
     j1 = SHED.register_job(
         backup_job,
         "backup_job",
@@ -37,7 +41,7 @@ async def setup_jobs(*, logger: ILogger) -> tuple[None, None, None]:
         day_of_week="tue,fri",
         hour="3,11,20",
         minute=0,
-        func_kwargs={"logger": logger},
+        func_kwargs={"logger": logger, "DM": DM, "TRACK_PIPELINE": TRACK_PIPELINE},
         on_setup=lambda _logger: _logger.info(
             "Notification job planned on TUE and FRI at 3am, 11am and 8pm."
         ),

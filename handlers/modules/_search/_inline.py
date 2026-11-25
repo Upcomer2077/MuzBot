@@ -10,15 +10,15 @@ from aiogram.types import (
 )
 
 from helpers.prettify_incoming_query import prettify_incoming_query
-from infra.dungeon import DM
 from infra.tools.MusicTools import MT
 from infra.tools.types import SearchResultDict
+from interfaces.idatabase import IDataBase
 
 router = Router()
 
 
 @router.inline_query()
-async def inline(q: InlineQuery):
+async def inline(q: InlineQuery, DM: IDataBase):
     if not q.query:
         return q.answer([])
 

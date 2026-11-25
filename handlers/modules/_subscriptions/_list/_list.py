@@ -14,8 +14,8 @@ from handlers.modules._subscriptions._list.callbacks import PaginationSubsListCa
 from handlers.modules._subscriptions._unsub.callbacks import UnSubCallback
 from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
-from infra.dungeon import DM
 from infra.dungeon.types.subs import GetUserSubsResult
+from interfaces.idatabase import IDataBase
 from localization import L10N
 from schemas.states import TypedState
 
@@ -24,7 +24,11 @@ router = Router()
 
 @router.message(COMMANDS[COMSET.SUBSCRIPTIONS]["backend"])
 async def subs_list(
-    message: Message, state: FSMContext, command: CommandObject, i18n: I18nContext
+    message: Message,
+    state: FSMContext,
+    command: CommandObject,
+    i18n: I18nContext,
+    DM: IDataBase,
 ):
     S: Final = TypedState(state)
     ANSWER = await message.answer(i18n.get(L10N["subs"].list_searching))

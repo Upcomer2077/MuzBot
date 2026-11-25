@@ -13,8 +13,8 @@ from config import MAX_PLAYLIST_TRACKS_REQUEST, PLAYLIST_MAX_TRACKS
 from handlers._drop_message.callbacks import DropCallback
 from handlers.modules._playlists.callbacks import DownloadPlaylistCallback
 from helpers.regexes import YTM_MIX_PLIST_REGEX, YTM_PLIST_REGEX, YTM_USER_PLIST_REGEX
-from infra.dungeon import DM
 from infra.tools.MusicTools import MT
+from interfaces.idatabase import IDataBase
 from interfaces.ilogger import ILogger
 from localization import L10N
 from schemas.states import TypedState
@@ -33,6 +33,7 @@ async def playlist(
     state: FSMContext,
     i18n: I18nContext,
     logger: ILogger,
+    DM: IDataBase,
 ):
     link = command.args
     if not link:
@@ -42,12 +43,16 @@ async def playlist(
             i18n.get(L10N["playlist"].pl_prompt_link, cancelcommand=COMSET.CANCEL.value)
         )
 
-    await _handler(message, link, i18n, logger)
+    await _handler(message, link, i18n, logger, DM)
 
 
 @router.message(_PlaylistStates.first_step)
 async def playlist_step_2(
-    message: Message, state: FSMContext, i18n: I18nContext, logger: ILogger
+    message: Message,
+    state: FSMContext,
+    i18n: I18nContext,
+    logger: ILogger,
+    DM: IDataBase,
 ):
     link = message.text
     if link is None:
@@ -57,11 +62,13 @@ async def playlist_step_2(
             )
         )
 
-    await _handler(message, link, i18n, logger)
+    await _handler(message, link, i18n, logger, DM)
     await state.clear()
 
 
-async def _handler(message: Message, link: str, i18n: I18nContext, logger: ILogger):
+async def _handler(
+    message: Message, link: str, i18n: I18nContext, logger: ILogger, DM: IDataBase
+):
     ANSWER = await message.answer(i18n.get(L10N["playlist"].pl_searching))
 
     _regex_res = (

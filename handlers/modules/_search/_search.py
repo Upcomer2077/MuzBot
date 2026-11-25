@@ -12,9 +12,9 @@ from handlers.modules._singles.callbacks import DownloadCallback
 from helpers.get_page_content import get_page_content
 from helpers.prettify_incoming_query import prettify_incoming_query
 from infra.action_limiter import AL
-from infra.dungeon import DM
 from infra.tools.MusicTools import MT
 from infra.tools.types import SearchResultDict
+from interfaces.idatabase import IDataBase
 from localization import L10N
 from schemas.states import TypedState
 
@@ -22,7 +22,9 @@ router = Router()
 
 
 @router.message()
-async def get_list(message: Message, state: FSMContext, i18n: I18nContext):
+async def get_list(
+    message: Message, state: FSMContext, i18n: I18nContext, DM: IDataBase
+):
     S: Final = TypedState(state)
     QUERY = message.text
     if QUERY is None or message.from_user is None:

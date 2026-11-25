@@ -3,14 +3,14 @@ from aiogram.types import Message
 from aiogram_i18n import I18nContext
 
 from bot.commands import COMMANDS, COMSET
-from infra.dungeon import DM
+from interfaces.idatabase import IDataBase
 from localization import L10N
 
 router = Router()
 
 
 @router.message(COMMANDS[COMSET.START]["backend"])
-async def echo(message: Message, i18n: I18nContext):
+async def echo(message: Message, i18n: I18nContext, DM: IDataBase):
     await message.answer(
         i18n.get(L10N["start"].start, help=COMSET.HELP.value, lang=COMSET.LANG.value)
     )
