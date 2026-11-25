@@ -9,9 +9,11 @@ from config import CACHE_ROOT_DIR
 from handlers import get_handlers_router
 from infra.dungeon.master import DungeonMaster
 from infra.overlord.overlord import CacheOverlord
+from infra.red.redis_cache import RedisCache
 from infra.worker.new_worker import WorkerPipe
 from interfaces.icache import ICache
 from interfaces.idatabase import IDataBase
+from interfaces.imemcache import IMemoryCache
 
 
 async def main():
@@ -21,9 +23,10 @@ async def main():
     """Global CacheOverlord instance handling local filesystem interactions for media storage files."""
     TRACK_PIPELINE = WorkerPipe(LOGGER, DM=DM, COLD=COLD)
     "Instance of worker loop"
+    RED: IMemoryCache = RedisCache(LOGGER)
 
     bot_dispatcher = TGDispatcher(
-        logger=LOGGER, dungeon_master=DM, track_pipeline=TRACK_PIPELINE
+        logger=LOGGER, dungeon_master=DM, track_pipeline=TRACK_PIPELINE, memcache=RED
     )
     dp = bot_dispatcher.get_dispatcher()
     dp.include_router(get_handlers_router())

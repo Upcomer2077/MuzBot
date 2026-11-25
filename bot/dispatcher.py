@@ -2,10 +2,10 @@ from aiogram import Dispatcher
 
 from bot._setup_jobs import setup_jobs
 from config import REDIS_CACHE_URL
-from infra.red import RED
 from infra.scheduler import SHED
 from interfaces.idatabase import IDataBase
 from interfaces.ilogger import ILogger
+from interfaces.imemcache import IMemoryCache
 from interfaces.iworkerpipe import IWorkerPipeline
 from middlewares.handle_errors import BlockedLogMiddleware
 
@@ -17,13 +17,15 @@ class TGDispatcher:
         logger: ILogger,
         dungeon_master: IDataBase,
         track_pipeline: IWorkerPipeline,
+        memcache: IMemoryCache,
     ):
         self._logger = logger
         self._dungeon_master = dungeon_master
         self._t_pipe = track_pipeline
+        self._red = memcache
 
     def get_dispatcher(self):
-        dp = Dispatcher(storage=RED.get_storage(REDIS_CACHE_URL))
+        dp = Dispatcher(storage=self._red.get_storage(REDIS_CACHE_URL))
         dp["logger"] = self._logger
         dp["DM"] = self._dungeon_master
         dp["TRACK_PIPELINE"] = self._t_pipe
@@ -31,8 +33,8 @@ class TGDispatcher:
         @dp.startup()
         async def _on_startup():
 
-            RED.open(REDIS_CACHE_URL)
-            await RED.healthcheck()
+            self._red.open(REDIS_CACHE_URL)
+            await self._red.healthcheck()
 
             await setup_jobs(
                 logger=self._logger,
@@ -46,7 +48,7 @@ class TGDispatcher:
 
         @dp.shutdown()
         async def _on_shutdown():
-            await RED.close()
+            await self._red.close()
             self._t_pipe.stop()
             await self._dungeon_master.close_dungeon()
             await SHED.stop()
