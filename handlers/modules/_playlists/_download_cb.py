@@ -7,7 +7,6 @@ from aiogram.types import CallbackQuery
 from aiogram.utils.media_group import MediaGroupBuilder, MediaType
 from aiogram_i18n import I18nContext
 
-from _logger import LOGGER
 from bot.bot import bot
 from config import PLAYLIST_DOWNLOAD_COOLDOWN_SECS, PLAYLIST_MAX_TRACKS, PLAYLISTS_LIMIT
 from handlers.modules._playlists.callbacks import DownloadPlaylistCallback
@@ -17,6 +16,7 @@ from infra.dungeon import DM
 from infra.tools.MusicTools import MT
 from infra.worker import TRACK_PIPELINE
 from infra.worker.priorities import DownloadTaskPriorities
+from interfaces.ilogger import ILogger
 from localization import L10N
 
 router = Router()
@@ -29,7 +29,10 @@ class _UnableToDownload(NamedTuple):
 
 @router.callback_query(DownloadPlaylistCallback.filter())
 async def handle_playlist_download(
-    callback: CallbackQuery, callback_data: DownloadPlaylistCallback, i18n: I18nContext
+    callback: CallbackQuery,
+    callback_data: DownloadPlaylistCallback,
+    i18n: I18nContext,
+    logger: ILogger,
 ):
     await callback.answer()
 
@@ -38,7 +41,7 @@ async def handle_playlist_download(
     ANSWER = await bot.send_message(USER_ID, i18n.get(L10N["playlist"].pl_downloading))
 
     if len(PLAYLIST_ID) == 0:
-        LOGGER.error("Video_id param len is 0. Check callback data")
+        logger.error("Video_id param len is 0. Check callback data")
         return ANSWER.edit_text(i18n.get(L10N["playlist"].pl_download_error_generic))
 
     if not AL.is_playlist_download_allowed(USER_ID):
@@ -67,7 +70,7 @@ async def handle_playlist_download(
             PLAYLIST_ID, PLAYLIST_MAX_TRACKS or None
         )
         if not tracks_info:
-            LOGGER.error(
+            logger.error(
                 f"Cannot extract info about playlist {PLAYLIST_ID} in playlist_cb"
             )
             return ANSWER.edit_text(
@@ -101,7 +104,7 @@ async def handle_playlist_download(
     )
 
     if not tracks_info:
-        LOGGER.error(f"Can not find info about playlist {PLAYLIST_ID} in worker loop.")
+        logger.error(f"Can not find info about playlist {PLAYLIST_ID} in worker loop.")
         return ANSWER.edit_text(i18n.get(L10N["playlist"].pl_error_db_failed))
 
     group_count = 0

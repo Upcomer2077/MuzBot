@@ -2,7 +2,6 @@ from aiogram import Router
 from aiogram.types import CallbackQuery, Message
 from aiogram_i18n import I18nContext
 
-from _logger import LOGGER
 from bot.bot import bot
 from config import (
     MAX_TRACK_DURATION_SECONDS,
@@ -18,6 +17,7 @@ from infra.dungeon import DM
 from infra.tools.MusicTools import MT
 from infra.worker import TRACK_PIPELINE
 from infra.worker.priorities import DownloadTaskPriorities
+from interfaces.ilogger import ILogger
 from localization import L10N
 
 router = Router()
@@ -25,7 +25,10 @@ router = Router()
 
 @router.callback_query(DownloadCallback.filter())
 async def handle_download(
-    callback: CallbackQuery, callback_data: DownloadCallback, i18n: I18nContext
+    callback: CallbackQuery,
+    callback_data: DownloadCallback,
+    i18n: I18nContext,
+    logger: ILogger,
 ):
     await callback.answer()  # Reset button timer
 
@@ -33,7 +36,7 @@ async def handle_download(
     IDX = callback_data.idx
 
     if len(VIDEO_ID) == 0:
-        LOGGER.error("Video_id param len is 0. Check callback data")
+        logger.error("Video_id param len is 0. Check callback data")
         return callback.answer(i18n.get(L10N["single"].download_error_generic, idx=IDX))
     # --------------
 

@@ -8,7 +8,6 @@ from aiogram.types import Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_i18n import I18nContext
 
-from _logger import LOGGER
 from bot.commands import COMMANDS, COMSET
 from config import MAX_PLAYLIST_TRACKS_REQUEST, PLAYLIST_MAX_TRACKS
 from handlers._drop_message.callbacks import DropCallback
@@ -16,6 +15,7 @@ from handlers.modules._playlists.callbacks import DownloadPlaylistCallback
 from helpers.regexes import YTM_MIX_PLIST_REGEX, YTM_PLIST_REGEX, YTM_USER_PLIST_REGEX
 from infra.dungeon import DM
 from infra.tools.MusicTools import MT
+from interfaces.ilogger import ILogger
 from localization import L10N
 from schemas.states import TypedState
 
@@ -28,7 +28,11 @@ class _PlaylistStates(StatesGroup):
 
 @router.message(COMMANDS[COMSET.PLAYLIST]["backend"])
 async def playlist(
-    message: Message, command: CommandObject, state: FSMContext, i18n: I18nContext
+    message: Message,
+    command: CommandObject,
+    state: FSMContext,
+    i18n: I18nContext,
+    logger: ILogger,
 ):
     link = command.args
     if not link:
@@ -38,11 +42,13 @@ async def playlist(
             i18n.get(L10N["playlist"].pl_prompt_link, cancelcommand=COMSET.CANCEL.value)
         )
 
-    await _handler(message, link, i18n)
+    await _handler(message, link, i18n, logger)
 
 
 @router.message(_PlaylistStates.first_step)
-async def playlist_step_2(message: Message, state: FSMContext, i18n: I18nContext):
+async def playlist_step_2(
+    message: Message, state: FSMContext, i18n: I18nContext, logger: ILogger
+):
     link = message.text
     if link is None:
         return await message.answer(
@@ -51,11 +57,11 @@ async def playlist_step_2(message: Message, state: FSMContext, i18n: I18nContext
             )
         )
 
-    await _handler(message, link, i18n)
+    await _handler(message, link, i18n, logger)
     await state.clear()
 
 
-async def _handler(message: Message, link: str, i18n: I18nContext):
+async def _handler(message: Message, link: str, i18n: I18nContext, logger: ILogger):
     ANSWER = await message.answer(i18n.get(L10N["playlist"].pl_searching))
 
     _regex_res = (
@@ -84,7 +90,7 @@ async def _handler(message: Message, link: str, i18n: I18nContext):
 
         if not (slaves and playlist):
             ANSWER.edit_text(i18n.get(L10N["playlist"].pl_error_db_failed))
-            LOGGER.error(
+            logger.error(
                 f"Unable to get playlist-slaves from database. pl_id: {PLAYLIST_ID}. Has slaves: {bool(slaves)}. Has playlist {bool(playlist)}"
             )
             raise Exception(

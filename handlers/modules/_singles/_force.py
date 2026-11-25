@@ -7,7 +7,6 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
 from aiogram_i18n import I18nContext
 
-from _logger import LOGGER
 from bot.bot import bot
 from bot.commands import COMMANDS, COMSET
 from config import (
@@ -23,6 +22,7 @@ from infra.dungeon import DM
 from infra.tools.MusicTools import MT
 from infra.worker import TRACK_PIPELINE
 from infra.worker.priorities import DownloadTaskPriorities
+from interfaces.ilogger import ILogger
 from localization import L10N
 from schemas.states import TypedState
 
@@ -35,7 +35,11 @@ class _ForceState(StatesGroup):
 
 @router.message(COMMANDS[COMSET.FORCE]["backend"])
 async def force(
-    message: Message, command: CommandObject, state: FSMContext, i18n: I18nContext
+    message: Message,
+    command: CommandObject,
+    state: FSMContext,
+    i18n: I18nContext,
+    logger: ILogger,
 ):
     if not command.args:
         S: Final = TypedState(state)
@@ -51,11 +55,13 @@ async def force(
     if YTM_REGEX.match(YTM_LINK) is None:
         return await message.answer(i18n.get(L10N["single"].force_invalid_link))
 
-    return await _handler(message, YTM_LINK, i18n)
+    return await _handler(message, YTM_LINK, i18n, logger)
 
 
 @router.message(_ForceState.first_enter_link)
-async def force_step_2(message: Message, state: FSMContext, i18n: I18nContext):
+async def force_step_2(
+    message: Message, state: FSMContext, i18n: I18nContext, logger: ILogger
+):
     YTM_LINK = message.text
 
     if YTM_LINK is None or YTM_REGEX.match(YTM_LINK) is None:
@@ -66,17 +72,17 @@ async def force_step_2(message: Message, state: FSMContext, i18n: I18nContext):
             )
         )
 
-    await _handler(message, YTM_LINK, i18n)
+    await _handler(message, YTM_LINK, i18n, logger)
     return await state.clear()
 
 
 # ======================================================================
 
 
-async def _handler(message: Message, ytm_link: str, i18n: I18nContext):
+async def _handler(message: Message, ytm_link: str, i18n: I18nContext, logger: ILogger):
     VIDEO_ID = YTM_VID_REGEX.search(ytm_link)
     if not VIDEO_ID:
-        LOGGER.warning(f"Video id not recognized: {ytm_link}")
+        logger.warning(f"Video id not recognized: {ytm_link}")
         return await message.answer(i18n.get(L10N["single"].force_id_not_recognized))
     ANSWER = await message.answer(i18n.get(L10N["single"].download_processing))
     VIDEO_ID = VIDEO_ID.group(1)

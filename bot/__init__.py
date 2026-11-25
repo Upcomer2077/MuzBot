@@ -17,6 +17,7 @@ from infra.worker import TRACK_PIPELINE
 from middlewares.handle_errors import BlockedLogMiddleware
 
 dp = Dispatcher(storage=RED.get_storage(REDIS_CACHE_URL))
+dp["logger"] = LOGGER
 
 
 @dp.startup()

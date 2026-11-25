@@ -4,13 +4,13 @@ from aiogram import Router
 from aiogram.types import CallbackQuery
 from aiogram_i18n import I18nContext
 
-from _logger import LOGGER
 from bot.bot import bot
 from config import SUBSCRIPTION_COOLDOWN_SECS, SUBSCRIPTIONS_PER_LIMIT
 from handlers.modules._subscriptions._sub.callbacks import SubCallback
 from infra.action_limiter import AL
 from infra.dungeon import DM
 from infra.tools.MusicTools import MT
+from interfaces.ilogger import ILogger
 from localization import L10N
 
 router = Router()
@@ -18,14 +18,17 @@ router = Router()
 
 @router.callback_query(SubCallback.filter())
 async def handle_sub(
-    callback: CallbackQuery, callback_data: SubCallback, i18n: I18nContext
+    callback: CallbackQuery,
+    callback_data: SubCallback,
+    i18n: I18nContext,
+    logger: ILogger,
 ):
     await callback.answer()  # Reset button timer
 
     AUTHOR_ID: Final[str] = callback_data.author_id
 
     if len(AUTHOR_ID) == 0:
-        LOGGER.error("AUTHOR_ID param len is 0. Check callback data")
+        logger.error("AUTHOR_ID param len is 0. Check callback data")
         return callback.answer(i18n.get(L10N["subs"].sub_error_generic))
     # --------------
     USER_ID: Final = callback.from_user.id

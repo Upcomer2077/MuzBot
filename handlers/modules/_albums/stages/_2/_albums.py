@@ -7,7 +7,6 @@ from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_i18n import I18nContext
 
-from _logger import LOGGER
 from bot.bot import bot
 from config import CATALOG_COOLDOWN_SECS, CATALOG_PER_LIMIT, PAGINATION_ITEMS_PER_PAGE
 from handlers.modules._albums.callbacks import (
@@ -20,6 +19,7 @@ from helpers.get_ytm_links import get_browse_link
 from infra.action_limiter import AL
 from infra.dungeon import DM
 from infra.tools.MusicTools import MT
+from interfaces.ilogger import ILogger
 from localization import L10N
 from schemas.states import TypedState
 
@@ -32,6 +32,7 @@ async def get_albums_list(
     state: FSMContext,
     callback_data: AlbumsCallback,
     i18n: I18nContext,
+    logger: ILogger,
 ):
     await callback.answer()
     USER_ID = callback.from_user.id
@@ -52,29 +53,29 @@ async def get_albums_list(
     AUTHOR_ID = callback_data.author_id
 
     releases = await DM.performers.get_artist_albums(AUTHOR_ID)
-    LOGGER.debug(
+    logger.debug(
         f"Found info about artist {AUTHOR_ID} albums: {len(releases) if releases else None}"
     )
     if not releases:
         res = await MT.extract_artist_discography(AUTHOR_ID, top_only=False)
 
         if not res:
-            LOGGER.error(
+            logger.error(
                 f"Cannot extract performer {AUTHOR_ID} releases on albums/stage/2"
             )
             return await ANSWER.edit_text(i18n.get(L10N["albums"].alb_error_failed))
         await DM.performers.set_performer_releases_v2(AUTHOR_ID, info=res)
 
         if not res["albums"] or not len(res["albums"]):
-            LOGGER.debug(f"Performer {res['name']} has no albums")
+            logger.debug(f"Performer {res['name']} has no albums")
             return await ANSWER.edit_text(i18n.get(L10N["albums"].alb_pl_has_no_albums))
 
         releases = await DM.performers.get_artist_albums(AUTHOR_ID)
-        LOGGER.debug(
+        logger.debug(
             f"2 Found info about artist {AUTHOR_ID} albums: {len(releases) if releases else None}"
         )
         if not releases:
-            LOGGER.error(f"Cannot set performer {AUTHOR_ID} releases on albums/stage/2")
+            logger.error(f"Cannot set performer {AUTHOR_ID} releases on albums/stage/2")
             return await ANSWER.edit_text(i18n.get(L10N["albums"].alb_error_failed))
 
     albums = releases
