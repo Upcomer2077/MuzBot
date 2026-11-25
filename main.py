@@ -5,7 +5,7 @@ from pathlib import Path
 from aiogram.exceptions import TelegramNotFound
 
 from _logger import LOGGER
-from bot import main
+from bot.main import main
 from config import EXPERIMENTAL, SHOW_ON_STARTUP
 
 
