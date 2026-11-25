@@ -5,16 +5,20 @@ from bot.bot import bot
 from bot.commands import COMMANDS
 from bot.dispatcher import TGDispatcher
 from bot.i18n import i18n
+from config import CACHE_ROOT_DIR
 from handlers import get_handlers_router
 from infra.dungeon.master import DungeonMaster
-from infra.overlord import COLD
+from infra.overlord.overlord import CacheOverlord
 from infra.worker.new_worker import WorkerPipe
+from interfaces.icache import ICache
 from interfaces.idatabase import IDataBase
 
 
 async def main():
     DM: IDataBase = DungeonMaster(LOGGER)
     """DungeonMaster instance managing track db-persistence operations."""
+    COLD: ICache = CacheOverlord(CACHE_ROOT_DIR, LOGGER)
+    """Global CacheOverlord instance handling local filesystem interactions for media storage files."""
     TRACK_PIPELINE = WorkerPipe(LOGGER, DM=DM, COLD=COLD)
     "Instance of worker loop"
 
