@@ -8,9 +8,9 @@ from config import MAX_PLAYLIST_TRACKS_REQUEST, PLAYLIST_MAX_TRACKS
 from handlers._drop_message.callbacks import DropCallback
 from handlers.modules._albums.callbacks import ShowAlbumPlaylistContentCallback
 from handlers.modules._playlists.callbacks import DownloadPlaylistCallback
-from infra.tools.MusicTools import MT
 from interfaces.idatabase import IDataBase
 from interfaces.ilogger import ILogger
+from interfaces.imusictools import IMusicTools
 from localization import L10N
 
 router = Router()
@@ -23,6 +23,7 @@ async def get_playlist_content(
     i18n: I18nContext,
     logger: ILogger,
     DM: IDataBase,
+    MT: IMusicTools,
 ):
     await callback.answer()
     PLAYLIST_ID = callback_data.playlist_id

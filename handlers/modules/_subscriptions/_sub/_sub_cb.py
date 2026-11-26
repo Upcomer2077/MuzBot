@@ -7,10 +7,10 @@ from aiogram_i18n import I18nContext
 from bot.bot import bot
 from config import SUBSCRIPTION_COOLDOWN_SECS, SUBSCRIPTIONS_PER_LIMIT
 from handlers.modules._subscriptions._sub.callbacks import SubCallback
-from infra.tools.MusicTools import MT
 from interfaces.idatabase import IDataBase
 from interfaces.ilimiter import IActionLimiter
 from interfaces.ilogger import ILogger
+from interfaces.imusictools import IMusicTools
 from localization import L10N
 
 router = Router()
@@ -24,6 +24,7 @@ async def handle_sub(
     logger: ILogger,
     DM: IDataBase,
     AL: IActionLimiter,
+    MT: IMusicTools,
 ):
     await callback.answer()  # Reset button timer
 

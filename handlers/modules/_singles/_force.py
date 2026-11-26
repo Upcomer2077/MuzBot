@@ -17,10 +17,10 @@ from config import (
 from helpers.get_track import get_track
 from helpers.regexes import YTM_REGEX, YTM_VID_REGEX
 from helpers.telegram.send_action import send_action
-from infra.tools.MusicTools import MT
 from interfaces.idatabase import IDataBase
 from interfaces.ilimiter import IActionLimiter
 from interfaces.ilogger import ILogger
+from interfaces.imusictools import IMusicTools
 from interfaces.iworkerpipe import IWorkerPipeline
 from interfaces.iworkerpipe.priorities import DownloadTaskPriorities
 from localization import L10N
@@ -43,6 +43,7 @@ async def force(
     DM: IDataBase,
     TRACK_PIPELINE: IWorkerPipeline,
     AL: IActionLimiter,
+    MT: IMusicTools,
 ):
     if not command.args:
         S: Final = TypedState(state)
@@ -58,7 +59,7 @@ async def force(
     if YTM_REGEX.match(YTM_LINK) is None:
         return await message.answer(i18n.get(L10N["single"].force_invalid_link))
 
-    return await _handler(message, YTM_LINK, i18n, logger, DM, TRACK_PIPELINE, AL)
+    return await _handler(message, YTM_LINK, i18n, logger, DM, TRACK_PIPELINE, AL, MT)
 
 
 @router.message(_ForceState.first_enter_link)
@@ -70,6 +71,7 @@ async def force_step_2(
     DM: IDataBase,
     TRACK_PIPELINE: IWorkerPipeline,
     AL: IActionLimiter,
+    MT: IMusicTools,
 ):
     YTM_LINK = message.text
 
@@ -81,7 +83,7 @@ async def force_step_2(
             )
         )
 
-    await _handler(message, YTM_LINK, i18n, logger, DM, TRACK_PIPELINE, AL)
+    await _handler(message, YTM_LINK, i18n, logger, DM, TRACK_PIPELINE, AL, MT)
     return await state.clear()
 
 
@@ -96,6 +98,7 @@ async def _handler(
     DM: IDataBase,
     TRACK_PIPELINE: IWorkerPipeline,
     AL: IActionLimiter,
+    MT: IMusicTools,
 ):
     VIDEO_ID = YTM_VID_REGEX.search(ytm_link)
     if not VIDEO_ID:

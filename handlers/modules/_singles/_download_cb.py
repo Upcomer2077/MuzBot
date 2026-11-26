@@ -12,10 +12,10 @@ from handlers.modules._singles.callbacks import DownloadCallback
 from helpers.get_track import get_track
 from helpers.telegram.send_action import send_action
 from helpers.telegram.send_anchor_message import send_anchor_message
-from infra.tools.MusicTools import MT
 from interfaces.idatabase import IDataBase
 from interfaces.ilimiter import IActionLimiter
 from interfaces.ilogger import ILogger
+from interfaces.imusictools import IMusicTools
 from interfaces.iworkerpipe import IWorkerPipeline
 from interfaces.iworkerpipe.priorities import DownloadTaskPriorities
 from localization import L10N
@@ -32,6 +32,7 @@ async def handle_download(
     DM: IDataBase,
     TRACK_PIPELINE: IWorkerPipeline,
     AL: IActionLimiter,
+    MT: IMusicTools,
 ):
     await callback.answer()  # Reset button timer
 

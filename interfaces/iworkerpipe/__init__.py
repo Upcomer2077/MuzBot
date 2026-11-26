@@ -13,6 +13,7 @@ from interfaces.icache import ICache
 from interfaces.icache.types import TrackDirContentDict
 from interfaces.idatabase import IDataBase
 from interfaces.ilogger import ILogger
+from interfaces.imusictools import IMusicTools
 from interfaces.iworkerpipe.priorities import DownloadTaskPriorities
 from interfaces.iworkerpipe.types import DownloadResult
 
@@ -29,14 +30,15 @@ class _DownloadTask:
 
 
 class IWorkerPipeline(ABC):
-    def __init__(self, logger: ILogger, DM: IDataBase, COLD: ICache):
+    def __init__(self, logger: ILogger, DM: IDataBase, COLD: ICache, MT: IMusicTools):
         self._queue: asyncio.Queue[_DownloadTask] = asyncio.PriorityQueue()
         self._q_shift = 0.0
         self._active_downloads: dict[str, list[_F]] = {}
         self._worker_task: asyncio.Task | None = None
-        self.__logger = logger
-        self.__DM = DM
-        self.__COLD = COLD
+        self._logger = logger
+        self._DM = DM
+        self._COLD = COLD
+        self._MT = MT
 
         self._workers_pool_semaphore = asyncio.Semaphore(WORKER_CORES_COUNT + 3)
         """Depends on worker count (CPU threads)"""
@@ -49,7 +51,7 @@ class IWorkerPipeline(ABC):
 
         _CPUs = os.cpu_count()
         if _CPUs and (_CPUs < CPU_COUNT):
-            self.__logger.warning(
+            self._logger.warning(
                 f"CPU_COUNT is higher than it actually is ({CPU_COUNT} vs {_CPUs}). Worker loop freezing expected!"
             )
 
@@ -59,7 +61,7 @@ class IWorkerPipeline(ABC):
     def stop(self):
         if self._worker_task:
             self._worker_task.cancel()
-        self.__logger.debug("Worker loop stopped.")
+        self._logger.debug("Worker loop stopped.")
 
     async def submit(
         self,
@@ -78,12 +80,12 @@ class IWorkerPipeline(ABC):
 
         """
         if video_id in self._active_downloads:
-            self.__logger.debug(f"🔗 Already downloading {video_id}. Queued...")
+            self._logger.debug(f"🔗 Already downloading {video_id}. Queued...")
             fut: _F = asyncio.Future()
             self._active_downloads[video_id].append(fut)
             return await fut
 
-        self.__logger.debug(f"Appending download task to worker queue: {video_id}")
+        self._logger.debug(f"Appending download task to worker queue: {video_id}")
         task = _DownloadTask(
             video_id=video_id,
             track_title=track_title,
@@ -110,23 +112,23 @@ class IWorkerPipeline(ABC):
         async with self._disk_space_semaphore:
             async with self._workers_pool_semaphore:
                 try:
-                    self.__logger.debug(f"Starting worker task on {v_id}")
+                    self._logger.debug(f"Starting worker task on {v_id}")
                     success = await asyncio.to_thread(self.download_track, v_id)
 
-                    cache = await self.__COLD.demand_tribute(v_id)
+                    cache = await self._COLD.demand_tribute(v_id)
                 except asyncio.CancelledError, KeyboardInterrupt:
                     success = False
                     is_error = True
                 except Exception as e:
                     is_error = True
-                    self.__logger.error(f"💥Error in worker loop. Video {v_id}: {e}")
+                    self._logger.error(f"💥Error in worker loop. Video {v_id}: {e}")
                 finally:
                     self._download_execution_semaphore.release()
 
             if success and cache:
                 async with self._tg_upload_semaphore:
                     R = await self._send_non_cached_audio_to_telegram(
-                        cache, title=title, artist=artist, logger=self.__logger
+                        cache, title=title, artist=artist, logger=self._logger
                     )
                     is_too_large = R.is_too_large
                     is_error = R.is_error
@@ -134,23 +136,23 @@ class IWorkerPipeline(ABC):
                     await asyncio.sleep(2)
             else:
                 is_error = True
-            self.__logger.debug(f"Download task completed on {v_id}")
+            self._logger.debug(f"Download task completed on {v_id}")
 
             if not is_error:
-                await self.__DM.tracks.fisting(
+                await self._DM.tracks.fisting(
                     video_id=v_id, telegram_file_id=file_id, is_too_large=is_too_large
                 )
-            await self.__COLD.annihilate(v_id)
+            await self._COLD.annihilate(v_id)
 
         futures_to_wakeup = self._active_downloads.pop(v_id, [])
         for fut in futures_to_wakeup:
             if not fut.done():
-                self.__logger.debug(f"Setting result to worker tasks on {v_id}")
+                self._logger.debug(f"Setting result to worker tasks on {v_id}")
                 fut.set_result((v_id, DownloadResult(file_id, is_too_large, is_error)))
 
     async def _worker_loop(self):
         """Main loop."""
-        self.__logger.debug(
+        self._logger.debug(
             f"⚙️ Worker loop has been started. Slots: {self._workers_pool_semaphore._value}"
         )
 
@@ -159,7 +161,7 @@ class IWorkerPipeline(ABC):
                 self._reset_shift()
             task = await self._queue.get()
             await self._download_execution_semaphore.acquire()
-            self.__logger.debug(f"Got new task from worker queue: {task.video_id}")
+            self._logger.debug(f"Got new task from worker queue: {task.video_id}")
 
             asyncio.create_task(
                 self._execute_download_task(

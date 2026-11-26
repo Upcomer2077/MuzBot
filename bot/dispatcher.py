@@ -6,6 +6,7 @@ from interfaces.idatabase import IDataBase
 from interfaces.ilimiter import IActionLimiter
 from interfaces.ilogger import ILogger
 from interfaces.imemcache import IMemoryCache
+from interfaces.imusictools import IMusicTools
 from interfaces.ischeduler import IScheduler
 from interfaces.iworkerpipe import IWorkerPipeline
 from middlewares.handle_errors import BlockedLogMiddleware
@@ -21,6 +22,7 @@ class TGDispatcher:
         memcache: IMemoryCache,
         limiter: IActionLimiter,
         scheduler: IScheduler,
+        music_tools: IMusicTools,
     ):
         self._logger = logger
         self._dungeon_master = dungeon_master
@@ -28,6 +30,7 @@ class TGDispatcher:
         self._red = memcache
         self._action_limiter = limiter
         self._scheduler = scheduler
+        self._music_tools = music_tools
 
     def get_dispatcher(self):
         dp = Dispatcher(storage=self._red.get_storage(REDIS_CACHE_URL))
@@ -35,6 +38,7 @@ class TGDispatcher:
         dp["DM"] = self._dungeon_master
         dp["TRACK_PIPELINE"] = self._t_pipe
         dp["AL"] = self._action_limiter
+        dp["MT"] = self._music_tools
 
         @dp.startup()
         async def _on_startup():
@@ -48,6 +52,7 @@ class TGDispatcher:
                 TRACK_PIPELINE=self._t_pipe,
                 AL=self._action_limiter,
                 SHED=self._scheduler,
+                MT=self._music_tools,
             )
             await self._scheduler.start()
             await self._dungeon_master.open_dungeon()

@@ -22,8 +22,8 @@ from handlers.modules._catalog.callbacks import (
 from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
 from helpers.prettify_incoming_query import prettify_incoming_query
-from infra.tools.MusicTools import MT
 from interfaces.ilimiter import IActionLimiter
+from interfaces.imusictools import IMusicTools
 from localization import L10N
 from schemas.states import TypedState
 
@@ -41,6 +41,7 @@ async def get_artists(
     state: FSMContext,
     i18n: I18nContext,
     AL: IActionLimiter,
+    MT: IMusicTools,
 ):
     if not AL.is_subscription_allowed(message.chat.id):
         return await message.answer(
@@ -61,11 +62,13 @@ async def get_artists(
             )
         )
 
-    await _handler(message, performer, S, i18n)
+    await _handler(message, performer, S, i18n, MT)
 
 
 @router.message(_CatalogState.first_state)
-async def get_artists_step_2(message: Message, state: FSMContext, i18n: I18nContext):
+async def get_artists_step_2(
+    message: Message, state: FSMContext, i18n: I18nContext, MT: IMusicTools
+):
     S: Final = TypedState(state)
 
     performer = message.text
@@ -77,10 +80,12 @@ async def get_artists_step_2(message: Message, state: FSMContext, i18n: I18nCont
         )
 
     await S.clear()
-    await _handler(message, performer, S, i18n)
+    await _handler(message, performer, S, i18n, MT)
 
 
-async def _handler(message: Message, performer: str, S: TypedState, i18n: I18nContext):
+async def _handler(
+    message: Message, performer: str, S: TypedState, i18n: I18nContext, MT: IMusicTools
+):
     ANSWER = await message.answer(i18n.get(L10N["catalog"].cat_searching))
 
     performer = prettify_incoming_query(performer)

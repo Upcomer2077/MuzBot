@@ -10,11 +10,11 @@ from aiogram.utils.media_group import MediaGroupBuilder, MediaType
 
 from bot.bot import bot
 from helpers.get_ytm_links import get_browse_link
-from infra.tools.MusicTools import MT
 from infra.tools.types import ArtistInfoDict
 from infra.tools.YTMusic_client import YT
 from interfaces.idatabase import IDataBase
 from interfaces.ilogger import ILogger
+from interfaces.imusictools import IMusicTools
 from interfaces.iworkerpipe import IWorkerPipeline
 from interfaces.iworkerpipe.priorities import DownloadTaskPriorities
 from interfaces.iworkerpipe.types import DownloadResult
@@ -29,7 +29,9 @@ def _get_last(new_info: ArtistInfoDict):
     return last_single_id, last_album_id
 
 
-async def job(*, logger: ILogger, DM: IDataBase, TRACK_PIPELINE: IWorkerPipeline):
+async def job(
+    *, logger: ILogger, DM: IDataBase, TRACK_PIPELINE: IWorkerPipeline, MT: IMusicTools
+):
     logger.info("Starting notification/subs job")
     async for batch in DM.subs.get_subscripted_authors():
         for author in batch:
@@ -70,12 +72,13 @@ async def job(*, logger: ILogger, DM: IDataBase, TRACK_PIPELINE: IWorkerPipeline
                     logger=logger,
                     DM=DM,
                     TRACK_PIPELINE=TRACK_PIPELINE,
+                    MT=MT,
                 )
                 if status:
                     tasks, album_id = status
                     _ = await asyncio.gather(*tasks, return_exceptions=False)
                     media_groups = await _form_media_groups(
-                        album_id, logger=logger, DM=DM
+                        album_id, logger=logger, DM=DM, MT=MT
                     )
                     if media_groups:
                         total_media_groups.extend(media_groups)
@@ -90,12 +93,13 @@ async def job(*, logger: ILogger, DM: IDataBase, TRACK_PIPELINE: IWorkerPipeline
                     logger=logger,
                     DM=DM,
                     TRACK_PIPELINE=TRACK_PIPELINE,
+                    MT=MT,
                 )
                 if status:
                     tasks, album_id = status
                     _ = await asyncio.gather(*tasks, return_exceptions=False)
                     media_groups = await _form_media_groups(
-                        album_id, logger=logger, DM=DM
+                        album_id, logger=logger, DM=DM, MT=MT
                     )
                     if media_groups:
                         total_media_groups.extend(media_groups)
@@ -137,7 +141,9 @@ async def job(*, logger: ILogger, DM: IDataBase, TRACK_PIPELINE: IWorkerPipeline
     logger.info("Notification/subs job: done")
 
 
-async def _form_media_groups(album_id: str, *, logger: ILogger, DM: IDataBase):
+async def _form_media_groups(
+    album_id: str, *, logger: ILogger, DM: IDataBase, MT: IMusicTools
+):
     tracks_info = await DM.playlists.summon_slaves_from_playlist(album_id)
 
     if not tracks_info:
@@ -169,7 +175,12 @@ async def _form_media_groups(album_id: str, *, logger: ILogger, DM: IDataBase):
 
 
 async def _set_tasks(
-    fresh_id: str, *, logger: ILogger, DM: IDataBase, TRACK_PIPELINE: IWorkerPipeline
+    fresh_id: str,
+    *,
+    logger: ILogger,
+    DM: IDataBase,
+    TRACK_PIPELINE: IWorkerPipeline,
+    MT: IMusicTools,
 ):
     _tasks: list[Coroutine[Any, Any, tuple[str, DownloadResult]]] = []
     album_info = await asyncio.to_thread(YT.get_album, fresh_id)

@@ -14,9 +14,9 @@ from handlers.modules._recom.callbacks import PaginationRecCallback
 from handlers.modules._singles.callbacks import DownloadCallback
 from helpers.get_page_content import get_page_content
 from infra.dungeon.models import TrackCache
-from infra.tools.MusicTools import MT
 from interfaces.idatabase import IDataBase
 from interfaces.ilimiter import IActionLimiter
+from interfaces.imusictools import IMusicTools
 from localization import L10N
 from schemas.states import TypedState
 
@@ -30,6 +30,7 @@ async def handle_audio(
     i18n: I18nContext,
     DM: IDataBase,
     AL: IActionLimiter,
+    MT: IMusicTools,
 ):
     S: Final = TypedState(state)
     if not message.from_user:

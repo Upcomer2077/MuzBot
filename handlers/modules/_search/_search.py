@@ -11,10 +11,10 @@ from handlers.modules._search.callbacks import PaginationSearchCallback
 from handlers.modules._singles.callbacks import DownloadCallback
 from helpers.get_page_content import get_page_content
 from helpers.prettify_incoming_query import prettify_incoming_query
-from infra.tools.MusicTools import MT
 from infra.tools.types import SearchResultDict
 from interfaces.idatabase import IDataBase
 from interfaces.ilimiter import IActionLimiter
+from interfaces.imusictools import IMusicTools
 from localization import L10N
 from schemas.states import TypedState
 
@@ -28,6 +28,7 @@ async def get_list(
     i18n: I18nContext,
     DM: IDataBase,
     AL: IActionLimiter,
+    MT: IMusicTools,
 ):
     S: Final = TypedState(state)
     QUERY = message.text

@@ -18,7 +18,7 @@ from handlers.modules._subscriptions._sub.callbacks import (
 from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
 from helpers.prettify_incoming_query import prettify_incoming_query
-from infra.tools.MusicTools import MT
+from interfaces.imusictools import IMusicTools
 from localization import L10N
 from schemas.states import TypedState
 
@@ -31,7 +31,11 @@ class _SubscriptionState(StatesGroup):
 
 @router.message(COMMANDS[COMSET.SUBSCRIBE]["backend"])
 async def subscribe(
-    message: Message, command: CommandObject, state: FSMContext, i18n: I18nContext
+    message: Message,
+    command: CommandObject,
+    state: FSMContext,
+    i18n: I18nContext,
+    MT: IMusicTools,
 ):
     S: Final = TypedState(state)
 
@@ -44,11 +48,13 @@ async def subscribe(
             )
         )
 
-    await _handler(message, performer, S, i18n)
+    await _handler(message, performer, S, i18n, MT)
 
 
 @router.message(_SubscriptionState.first_state)
-async def subscribe_step_2(message: Message, state: FSMContext, i18n: I18nContext):
+async def subscribe_step_2(
+    message: Message, state: FSMContext, i18n: I18nContext, MT: IMusicTools
+):
     S: Final = TypedState(state)
 
     performer = message.text
@@ -60,10 +66,12 @@ async def subscribe_step_2(message: Message, state: FSMContext, i18n: I18nContex
         )
 
     await S.clear()
-    await _handler(message, performer, S, i18n)
+    await _handler(message, performer, S, i18n, MT)
 
 
-async def _handler(message: Message, performer: str, S: TypedState, i18n: I18nContext):
+async def _handler(
+    message: Message, performer: str, S: TypedState, i18n: I18nContext, MT: IMusicTools
+):
     ANSWER = await message.answer(i18n.get(L10N["subs"].sub_searching))
 
     performer = prettify_incoming_query(performer)
