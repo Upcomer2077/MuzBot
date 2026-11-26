@@ -16,9 +16,9 @@ from handlers.modules._albums.callbacks import (
 )
 from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
-from infra.action_limiter import AL
 from infra.tools.MusicTools import MT
 from interfaces.idatabase import IDataBase
+from interfaces.ilimiter import IActionLimiter
 from interfaces.ilogger import ILogger
 from localization import L10N
 from schemas.states import TypedState
@@ -34,6 +34,7 @@ async def get_albums_list(
     i18n: I18nContext,
     logger: ILogger,
     DM: IDataBase,
+    AL: IActionLimiter,
 ):
     await callback.answer()
     USER_ID = callback.from_user.id

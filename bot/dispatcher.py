@@ -34,6 +34,7 @@ class TGDispatcher:
         dp["logger"] = self._logger
         dp["DM"] = self._dungeon_master
         dp["TRACK_PIPELINE"] = self._t_pipe
+        dp["AL"] = self._action_limiter
 
         @dp.startup()
         async def _on_startup():

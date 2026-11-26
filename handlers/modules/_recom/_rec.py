@@ -13,10 +13,10 @@ from config import PAGINATION_ITEMS_PER_PAGE, SEARCH_COOLDOWN_SECS, SEARCH_PER_L
 from handlers.modules._recom.callbacks import PaginationRecCallback
 from handlers.modules._singles.callbacks import DownloadCallback
 from helpers.get_page_content import get_page_content
-from infra.action_limiter import AL
 from infra.dungeon.models import TrackCache
 from infra.tools.MusicTools import MT
 from interfaces.idatabase import IDataBase
+from interfaces.ilimiter import IActionLimiter
 from localization import L10N
 from schemas.states import TypedState
 
@@ -25,7 +25,11 @@ router = Router()
 
 @router.message(F.audio)
 async def handle_audio(
-    message: Message, state: FSMContext, i18n: I18nContext, DM: IDataBase
+    message: Message,
+    state: FSMContext,
+    i18n: I18nContext,
+    DM: IDataBase,
+    AL: IActionLimiter,
 ):
     S: Final = TypedState(state)
     if not message.from_user:

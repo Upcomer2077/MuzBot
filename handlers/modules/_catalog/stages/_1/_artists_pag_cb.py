@@ -14,8 +14,8 @@ from handlers.modules._catalog.callbacks import (
 )
 from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
-from infra.action_limiter import AL
 from infra.tools.types import ArtistsShortInfoDict
+from interfaces.ilimiter import IActionLimiter
 from localization import L10N
 from schemas.states import TypedState
 
@@ -28,6 +28,7 @@ async def process_pagination(
     callback_data: PaginationSingles1Callback,
     state: FSMContext,
     i18n: I18nContext,
+    AL: IActionLimiter,
 ):
     if not AL.is_subscription_allowed(callback.from_user.id):
         return await callback.answer(

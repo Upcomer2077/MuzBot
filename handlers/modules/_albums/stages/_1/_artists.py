@@ -19,8 +19,8 @@ from handlers.modules._albums.callbacks import AlbumsCallback, PaginationAlbums1
 from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
 from helpers.prettify_incoming_query import prettify_incoming_query
-from infra.action_limiter import AL
 from infra.tools.MusicTools import MT
+from interfaces.ilimiter import IActionLimiter
 from localization import L10N
 from schemas.states import TypedState
 
@@ -33,7 +33,11 @@ class _AlbumsState(StatesGroup):
 
 @router.message(COMMANDS[COMSET.ALBUMS]["backend"])
 async def get_artists(
-    message: Message, command: CommandObject, state: FSMContext, i18n: I18nContext
+    message: Message,
+    command: CommandObject,
+    state: FSMContext,
+    i18n: I18nContext,
+    AL: IActionLimiter,
 ):
     if not AL.is_subscription_allowed(message.chat.id):
         return await message.answer(

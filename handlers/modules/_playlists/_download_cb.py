@@ -11,9 +11,9 @@ from bot.bot import bot
 from config import PLAYLIST_DOWNLOAD_COOLDOWN_SECS, PLAYLIST_MAX_TRACKS, PLAYLISTS_LIMIT
 from handlers.modules._playlists.callbacks import DownloadPlaylistCallback
 from helpers.telegram.send_action import send_action
-from infra.action_limiter import AL
 from infra.tools.MusicTools import MT
 from interfaces.idatabase import IDataBase
+from interfaces.ilimiter import IActionLimiter
 from interfaces.ilogger import ILogger
 from interfaces.iworkerpipe import IWorkerPipeline
 from interfaces.iworkerpipe.priorities import DownloadTaskPriorities
@@ -35,6 +35,7 @@ async def handle_playlist_download(
     logger: ILogger,
     DM: IDataBase,
     TRACK_PIPELINE: IWorkerPipeline,
+    AL: IActionLimiter,
 ):
     await callback.answer()
 

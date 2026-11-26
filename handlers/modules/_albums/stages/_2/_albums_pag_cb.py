@@ -14,8 +14,8 @@ from handlers.modules._albums.callbacks import (
 )
 from helpers.get_page_content import get_page_content
 from helpers.get_ytm_links import get_browse_link
-from infra.action_limiter import AL
 from infra.dungeon.models import Albums
+from interfaces.ilimiter import IActionLimiter
 from localization import L10N
 from schemas.states import TypedState
 
@@ -28,6 +28,7 @@ async def process_pagination(
     callback_data: PaginationAlbums2Callback,
     state: FSMContext,
     i18n: I18nContext,
+    AL: IActionLimiter,
 ):
     USER_ID = callback.from_user.id
     if not AL.is_catalog_action_allowed(USER_ID):
